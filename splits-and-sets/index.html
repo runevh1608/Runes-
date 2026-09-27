@@ -172,12 +172,23 @@
     margin-bottom: 18px;
   }
   .topbar h1 {
-    font-size: clamp(2.1rem, 4vw, 2.8rem);
-    line-height: 0.95;
+    font-size: clamp(2.6rem, 7vw, 4rem);
+    line-height: 0.86;
     text-transform: uppercase;
+    display: flex; align-items: baseline; gap: 0.18em; flex-wrap: wrap;
+  }
+  /* The name is the page's two halves, each in the colour it wears everywhere
+     else on the dashboard — run orange, strength blue. */
+  .topbar h1 .w-run { color: var(--accent-run); }
+  .topbar h1 .w-amp { color: var(--text-muted); font-weight: 700; font-size: 0.72em; }
+  .topbar h1 .w-str { color: var(--accent-strength); }
+  .topbar .dateline {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.74rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text-secondary); margin-bottom: 8px;
   }
   .topbar .subtitle {
-    margin-top: 6px;
+    margin-top: 8px;
     color: var(--text-secondary);
     font-size: 0.9rem;
   }
@@ -245,7 +256,9 @@
   .spin {
     width: 13px; height: 13px;
     border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.35);
+    /* The button inverts with the theme, so the track follows its text colour
+       rather than assuming a dark button. */
+    border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
     border-top-color: currentColor;
     animation: spin 0.7s linear infinite;
     display: none;
@@ -254,31 +267,41 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ---------- Tabs ---------- */
+  /* A segmented control that stays in reach while scrolling a long tab. */
   .tabbar {
+    position: sticky;
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
+    z-index: 20;
     display: flex;
-    gap: 6px;
-    margin-bottom: 18px;
-    border-bottom: 1px solid var(--border);
+    gap: 3px;
+    padding: 4px;
+    width: fit-content;
+    max-width: 100%;
     overflow-x: auto;
+    background: color-mix(in srgb, var(--surface) 86%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
   }
   .tab-btn {
     appearance: none;
     background: none;
     border: none;
-    border-bottom: 2px solid transparent;
+    border-radius: 9px;
     color: var(--text-secondary);
     font: inherit;
     font-weight: 600;
-    font-size: 0.92rem;
-    padding: 10px 4px 12px;
-    margin-right: 22px;
+    font-size: 0.9rem;
+    padding: 8px 16px;
     cursor: pointer;
     white-space: nowrap;
-    transition: color 0.12s ease, border-color 0.12s ease;
+    transition: color 0.12s ease, background-color 0.12s ease;
   }
-  .tab-btn:hover { color: var(--text-primary); }
+  .tab-btn:hover { color: var(--text-primary); background: var(--surface-2); }
   .tab-btn:focus-visible { outline: 2px solid var(--accent-strength); outline-offset: 2px; }
-  .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--text-primary); }
+  .tab-btn.active { color: var(--bg); background: var(--text-primary); }
   .tab-btn .tab-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
   .tab-btn[data-tab="running"] .tab-dot { background: var(--accent-run); }
   .tab-btn[data-tab="strength"] .tab-dot { background: var(--accent-strength); }
@@ -373,32 +396,96 @@
     .row-2, .row-2.even, .row-3 { grid-template-columns: 1fr; }
   }
 
+  /* Cards sit flat on the ground with a hairline; the lift is kept for the
+     things you press (briefing tiles, the tab bar, the modal). */
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 20px 22px 22px;
-    box-shadow: var(--shadow);
     min-width: 0;
+    scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 72px);
   }
   .card[hidden] { display: none; }
   .card-head {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
+    gap: 6px 12px;
+    margin-bottom: 16px;
     flex-wrap: wrap;
   }
   .card-head h2 {
-    font-size: 0.72rem;
+    font-family: "Big Shoulders Display", "IBM Plex Sans", sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1.05;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-secondary);
-    font-weight: 600;
-    font-family: "IBM Plex Sans", sans-serif;
+    letter-spacing: 0.02em;
+    color: var(--text-primary);
   }
-  .card-head .hint { font-size: 0.78rem; color: var(--text-muted); }
+  .card-head .hint {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  /* ---------- Briefing: the day in four numbers ---------- */
+  .brief {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+  @media (max-width: 860px) { .brief { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .brief-tile {
+    appearance: none; font: inherit; color: inherit; text-align: left; cursor: pointer;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 13px 15px 14px;
+    display: flex; flex-direction: column; gap: 5px;
+    min-width: 0;
+    transition: border-color 0.12s ease, transform 0.12s ease;
+  }
+  .brief-tile:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+  .brief-tile:focus-visible { outline: 2px solid var(--accent-strength); outline-offset: 2px; }
+  .brief-k {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .brief-k .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; background: var(--text-muted); }
+  .brief-k .dot.good { background: var(--status-good); }
+  .brief-k .dot.warning { background: var(--status-warning); }
+  .brief-k .dot.critical { background: var(--status-critical); }
+  .brief-k .dot.run { background: var(--accent-run); }
+  .brief-k .dot.strength { background: var(--accent-strength); }
+  .brief-v {
+    font-family: "Big Shoulders Display", "IBM Plex Sans", sans-serif;
+    font-weight: 800; font-size: 2.15rem; line-height: 0.95;
+    font-variant-numeric: tabular-nums; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .brief-v .u {
+    font-family: "IBM Plex Sans", sans-serif; font-size: 0.78rem; font-weight: 500;
+    color: var(--text-muted); margin-left: 4px; letter-spacing: 0;
+  }
+  .brief-s {
+    font-size: 0.78rem; line-height: 1.35; color: var(--text-secondary);
+    overflow-wrap: anywhere;
+  }
+
+  /* Loading shimmer — the shape of a section, not the word "Loading". */
+  .skeleton {
+    height: 96px; border-radius: 10px;
+    background: linear-gradient(90deg, var(--surface-2) 0%, color-mix(in srgb, var(--text-primary) 7%, var(--surface-2)) 50%, var(--surface-2) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+  }
+  .skeleton.tall { height: 200px; }
+  .brief .skeleton { height: 94px; border-radius: 14px; }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
   .section-note {
     font-size: 0.78rem;
     color: var(--text-muted);
@@ -554,6 +641,8 @@
   .modal-head .modal-date { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); font-weight: 700; }
   .modal-head h3 { font-size: 1.05rem; font-weight: 700; margin: 3px 0 0; color: var(--text-primary); }
   .modal-status-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .modal-status-row .hint { font-size: 0.78rem; color: var(--text-muted); }
+  .modal-head h3 { font-family: "Big Shoulders Display", "IBM Plex Sans", sans-serif; font-size: 1.55rem; font-weight: 800; text-transform: uppercase; line-height: 1.02; letter-spacing: 0.01em; }
   .modal-section { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
   .modal-section:first-of-type { margin-top: 16px; }
   .modal-section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 700; margin-bottom: 10px; }
@@ -1149,10 +1238,20 @@
   }
 
   footer.foot {
-    margin-top: 30px;
-    font-size: 0.78rem;
+    margin-top: 36px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    line-height: 1.6;
     color: var(--text-muted);
-    text-align: center;
+    max-width: 72ch;
+  }
+  @media (max-width: 480px) {
+    .shell { padding: 20px 16px 48px; }
+    .card { padding: 16px 16px 18px; border-radius: 14px; }
+    .card-head h2 { font-size: 1.15rem; }
+    .brief-v { font-size: 1.8rem; }
   }
 
   .sr-only {
@@ -1165,8 +1264,9 @@
 
   <div class="topbar">
     <div>
-      <h1 class="display">Splits &amp; Sets</h1>
-      <div class="subtitle">Running &amp; strength, live from intervals.icu</div>
+      <div class="dateline" id="dateline"></div>
+      <h1 class="display"><span class="w-run">Splits</span><span class="w-amp">&amp;</span><span class="w-str">Sets</span></h1>
+      <div class="subtitle">Running and strength, live from intervals.icu</div>
     </div>
     <div class="top-actions">
       <span class="conn" id="conn-status"><span class="conn-dot pending" id="conn-dot"></span><span id="conn-text">Connecting…</span></span>
@@ -1190,14 +1290,18 @@
 
   <main class="dashboard" id="dashboard">
 
-    <nav class="tabbar" role="tablist" aria-label="Dashboard sections">
-      <button class="tab-btn active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
-      <button class="tab-btn" data-tab="running" role="tab" aria-selected="false"><span class="tab-dot"></span>Running</button>
-      <button class="tab-btn" data-tab="strength" role="tab" aria-selected="false"><span class="tab-dot"></span>Strength</button>
-    </nav>
+    <div class="tabbar" role="tablist" aria-label="Dashboard sections">
+      <button class="tab-btn active" id="tab-overview" data-tab="overview" role="tab" aria-selected="true" aria-controls="panel-overview">Overview</button>
+      <button class="tab-btn" id="tab-running" data-tab="running" role="tab" aria-selected="false" aria-controls="panel-running" tabindex="-1"><span class="tab-dot"></span>Running</button>
+      <button class="tab-btn" id="tab-strength" data-tab="strength" role="tab" aria-selected="false" aria-controls="panel-strength" tabindex="-1"><span class="tab-dot"></span>Strength</button>
+    </div>
 
     <!-- ============ OVERVIEW ============ -->
-    <div class="tab-panel" id="panel-overview">
+    <div class="tab-panel" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
+
+      <section class="brief" id="brief" aria-label="Today at a glance">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+      </section>
 
       <section class="card" id="card-race" hidden>
         <div class="card-head">
@@ -1212,7 +1316,7 @@
           <h2>This week</h2>
           <span class="hint" id="week-progress-hint"></span>
         </div>
-        <div id="week-progress-body"><div class="placeholder">Loading…</div></div>
+        <div id="week-progress-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
       <section class="card" id="card-calendar">
@@ -1220,7 +1324,7 @@
           <h2>Next 14 days</h2>
           <span class="hint" id="calendar-range-hint"></span>
         </div>
-        <div id="calendar-body"><div class="placeholder">Loading…</div></div>
+        <div id="calendar-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
       <section class="card" id="card-recovery">
@@ -1228,7 +1332,7 @@
           <h2>Recovery status</h2>
           <span class="hint" id="recovery-hint"></span>
         </div>
-        <div id="recovery-body"><div class="placeholder">Loading…</div></div>
+        <div id="recovery-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
       <section class="card" id="card-consistency">
@@ -1236,13 +1340,13 @@
           <h2>Consistency &amp; load rhythm</h2>
           <span class="hint" id="consistency-hint"></span>
         </div>
-        <div id="consistency-body"><div class="placeholder">Loading…</div></div>
+        <div id="consistency-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
     </div>
 
     <!-- ============ RUNNING ============ -->
-    <div class="tab-panel" id="panel-running" hidden>
+    <div class="tab-panel" id="panel-running" role="tabpanel" aria-labelledby="tab-running" hidden>
 
       <section class="card" id="card-bench-trend">
         <div class="card-head">
@@ -1250,7 +1354,7 @@
           <span class="hint" id="bench-trend-hint"></span>
         </div>
         <div class="section-note" id="bench-trend-note"></div>
-        <div id="bench-trend-body"><div class="placeholder">Loading…</div></div>
+        <div id="bench-trend-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
       <section class="card" id="card-run-fitness">
@@ -1258,7 +1362,7 @@
           <h2>Fitness, fatigue &amp; form</h2>
           <span class="hint" id="run-fitness-hint"></span>
         </div>
-        <div id="run-fitness-body"><div class="placeholder">Loading…</div></div>
+        <div id="run-fitness-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
       <section class="card" id="card-records">
@@ -1266,17 +1370,17 @@
           <h2>Records</h2>
           <span class="hint" id="records-hint"></span>
         </div>
-        <div id="records-body"><div class="placeholder">Loading…</div></div>
+        <div id="records-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
       <section class="row-2 even">
         <div class="card" id="card-run-distance">
           <div class="card-head"><h2>Weekly running distance</h2></div>
-          <div id="run-distance-body"><div class="placeholder">Loading…</div></div>
+          <div id="run-distance-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
         </div>
         <div class="card" id="card-run-time">
           <div class="card-head"><h2>Weekly running time</h2></div>
-          <div id="run-time-body"><div class="placeholder">Loading…</div></div>
+          <div id="run-time-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
         </div>
       </section>
 
@@ -1285,7 +1389,7 @@
           <h2>Easy vs quality</h2>
           <span class="hint" id="easy-hard-hint"></span>
         </div>
-        <div id="easy-hard-body"><div class="placeholder">Loading…</div></div>
+        <div id="easy-hard-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
       <section class="card" id="card-pace-hr">
@@ -1294,7 +1398,7 @@
           <span class="hint" id="pace-hr-hint"></span>
         </div>
         <div class="section-note" id="pace-hr-note"></div>
-        <div id="pace-hr-body"><div class="placeholder">Loading…</div></div>
+        <div id="pace-hr-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
       <section class="card" id="card-run-zones">
@@ -1302,7 +1406,7 @@
           <h2>My zones</h2>
           <span class="hint">From your intervals.icu settings</span>
         </div>
-        <div id="run-zones-body"><div class="placeholder">Loading…</div></div>
+        <div id="run-zones-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
       <section class="card" id="card-shoe-fleet">
@@ -1311,13 +1415,13 @@
           <span class="hint" id="shoe-fleet-hint"></span>
         </div>
         <div class="section-note">How far each pair has run, and how close it is to needing replacing.</div>
-        <div id="shoe-fleet-body"><div class="placeholder">Loading…</div></div>
+        <div id="shoe-fleet-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
     </div>
 
     <!-- ============ STRENGTH ============ -->
-    <div class="tab-panel" id="panel-strength" hidden>
+    <div class="tab-panel" id="panel-strength" role="tabpanel" aria-labelledby="tab-strength" hidden>
 
       <section class="stat-grid" id="strength-tiles" aria-label="Strength snapshot"></section>
 
@@ -1326,7 +1430,7 @@
           <h2>Weekly tonnage</h2>
           <span class="hint" id="strength-volume-hint"></span>
         </div>
-        <div id="strength-volume-body"><div class="placeholder">Loading…</div></div>
+        <div id="strength-volume-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
       <section class="card" id="card-strength-index">
@@ -1334,7 +1438,7 @@
           <h2>Strength progression</h2>
           <span class="hint" id="strength-index-hint"></span>
         </div>
-        <div id="strength-index-body"><div class="placeholder">Loading…</div></div>
+        <div id="strength-index-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
       <section class="card" id="card-muscle-volume">
@@ -1343,7 +1447,7 @@
           <span class="hint" id="muscle-volume-hint"></span>
         </div>
         <div class="section-note">Grouped from exercise names in your set notes (e.g. "bench press" → chest, "row" → back) — a rough guide, not exact.</div>
-        <div id="muscle-volume-body"><div class="placeholder">Loading…</div></div>
+        <div id="muscle-volume-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
       <section class="card" id="card-exercises">
@@ -1357,7 +1461,7 @@
           <div id="exercise-search-results" class="ex-search-results" hidden></div>
         </div>
         <div id="exercise-detail"></div>
-        <div id="exercises-body"><div class="placeholder">Loading…</div></div>
+        <div id="exercises-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
       <section class="card" id="card-strength-log">
@@ -1365,7 +1469,7 @@
           <h2>Recent sessions</h2>
           <span class="hint">Last 6 months</span>
         </div>
-        <div id="strength-log-body"><div class="placeholder">Loading…</div></div>
+        <div id="strength-log-body"><div class="skeleton" role="status" aria-label="Loading"></div></div>
       </section>
 
     </div>
@@ -1542,9 +1646,13 @@
       if (btn) {
         btn.classList.toggle("active", t === name);
         btn.setAttribute("aria-selected", t === name ? "true" : "false");
+        btn.tabIndex = t === name ? 0 : -1;
       }
     });
     try { localStorage.setItem(TAB_KEY, name); } catch (e) {}
+    // A bare #running / #strength in the link opens that tab, so a tab can be
+    // bookmarked or sent on its own.
+    try { if (location.hash.slice(1) !== name) history.replaceState(null, "", "#" + name); } catch (e) {}
   }
   // ================= Shoes =================
   //
@@ -1838,6 +1946,24 @@
 
   document.querySelectorAll(".tab-btn").forEach(function (btn) {
     btn.addEventListener("click", function () { setTab(btn.getAttribute("data-tab")); });
+    // Arrow keys move between tabs, the way a tablist is expected to behave.
+    btn.addEventListener("keydown", function (evt) {
+      var i = TABS.indexOf(btn.getAttribute("data-tab"));
+      var next = null;
+      if (evt.key === "ArrowRight") next = TABS[(i + 1) % TABS.length];
+      else if (evt.key === "ArrowLeft") next = TABS[(i - 1 + TABS.length) % TABS.length];
+      else if (evt.key === "Home") next = TABS[0];
+      else if (evt.key === "End") next = TABS[TABS.length - 1];
+      if (!next) return;
+      evt.preventDefault();
+      setTab(next);
+      var nb = document.querySelector('.tab-btn[data-tab="' + next + '"]');
+      if (nb) nb.focus();
+    });
+  });
+  window.addEventListener("hashchange", function () {
+    var h = location.hash.slice(1);
+    if (TABS.indexOf(h) !== -1) setTab(h);
   });
 
   // ---------------- error copy ----------------
@@ -1929,7 +2055,10 @@
   document.addEventListener("DOMContentLoaded", function () {
     var initialTab = "overview";
     try { var saved = localStorage.getItem(TAB_KEY); if (saved) initialTab = saved; } catch (e) {}
+    var fromHash = location.hash.slice(1);
+    if (TABS.indexOf(fromHash) !== -1) initialTab = fromHash;
     setTab(initialTab);
+    renderDateline();
     $("refresh-btn").addEventListener("click", function () { refreshAll(true); });
     $("retry-btn").addEventListener("click", function () { boot(); });
 
@@ -2046,34 +2175,8 @@
           if (state.events) attachPlannedRemaining(state.analysis.weeks, toEventsArray(state.events), state.profile, new Date());
         }
 
-        renderWarnings(profileR);
-        renderGarminAttribution();
-
-        // Overview
-        renderRaceCountdown(racesR);
-        renderWeekProgress(historyR, eventsR);
-        renderCalendar(historyR, eventsR);
-        renderRecoveryStatus(wellnessR);
-        renderConsistency(historyR, eventsR);
-
-        // Running
-        renderBenchTrend(historyR);
-      renderShoes();
-        renderRecords(bestsR, historyR);
-        renderEasyHard(historyR);
-        renderRunWeekly(historyR);
-        renderPaceAtHr(historyR);
-        renderRunZones(summaryR, profileR);
-        renderRunFitness(fitnessR, wellnessR, profileR);
-
-        // Strength
-        renderStrengthTiles(historyR);
-        renderStrengthVolume(historyR);
-        renderStrengthIndex(historyR);
-        renderMuscleGroupVolume(historyR);
-        renderMuscleGroupSections(historyR);
-        renderExerciseDetail();
-        renderStrengthLog(historyR);
+        state.lastResults = results;
+        renderAll(results);
       } catch (e) {
         // A section failing to render is never a reason to stay stuck loading.
       }
@@ -2082,8 +2185,164 @@
       else if (anyOk) setConn("pending", "Partially loaded");
       else setConn("err", "Couldn't load");
 
+      lastLoadedAt = Date.now();
       $("last-updated").textContent = "Updated " + new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
       setRefreshing(false);
+    });
+  }
+
+  // Every section, drawn from what the last fetch returned. Kept separate from
+  // the fetch so a theme switch or a phone rotation can redraw the charts
+  // without asking intervals.icu for anything again.
+  function renderAll(results) {
+    var profileR = results[0], historyR = results[1], summaryR = results[2],
+        fitnessR = results[3], wellnessR = results[4], bestsR = results[5],
+        eventsR = results[6], racesR = results[7];
+    // Each section is fenced off on its own: one that throws on odd data
+    // leaves the rest of the dashboard standing.
+    function safe(fn) { try { fn(); } catch (e) {} }
+
+    safe(function () { renderWarnings(profileR); });
+    safe(renderGarminAttribution);
+
+    // Overview
+    safe(function () { renderRaceCountdown(racesR); });
+    safe(function () { renderWeekProgress(historyR, eventsR); });
+    safe(function () { renderCalendar(historyR, eventsR); });
+    safe(function () { renderRecoveryStatus(wellnessR); });
+    safe(function () { renderConsistency(historyR, eventsR); });
+
+    // Running
+    safe(function () { renderBenchTrend(historyR); });
+    safe(renderShoes);
+    safe(function () { renderRecords(bestsR, historyR); });
+    safe(function () { renderEasyHard(historyR); });
+    safe(function () { renderRunWeekly(historyR); });
+    safe(function () { renderPaceAtHr(historyR); });
+    safe(function () { renderRunZones(summaryR, profileR); });
+    safe(function () { renderRunFitness(fitnessR, wellnessR, profileR); });
+
+    // Strength
+    safe(function () { renderStrengthTiles(historyR); });
+    safe(function () { renderStrengthVolume(historyR); });
+    safe(function () { renderStrengthIndex(historyR); });
+    safe(function () { renderMuscleGroupVolume(historyR); });
+    safe(function () { renderMuscleGroupSections(historyR); });
+    safe(renderExerciseDetail);
+    safe(function () { renderStrengthLog(historyR); });
+
+    // Last, because it reads what the sections above worked out.
+    safe(renderBrief);
+  }
+
+  // The charts are drawn with colours read from the theme at draw time, so a
+  // theme switch used to leave them in the old palette until the next refresh.
+  // Redraw from memory whenever the theme or the phone/desktop breakpoint the
+  // fitness chart sizes itself by changes.
+  var redrawQueued = false;
+  function queueRedraw() {
+    if (redrawQueued || !state.lastResults) return;
+    redrawQueued = true;
+    requestAnimationFrame(function () {
+      redrawQueued = false;
+      if (state.lastResults) renderAll(state.lastResults);
+    });
+  }
+  try {
+    var darkMq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (darkMq.addEventListener) darkMq.addEventListener("change", queueRedraw);
+    var narrowMq = window.matchMedia("(max-width: 619px)");
+    if (narrowMq.addEventListener) narrowMq.addEventListener("change", queueRedraw);
+  } catch (e) {}
+  try {
+    new MutationObserver(queueRedraw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  } catch (e) {}
+
+  // Coming back to a tab left open since the morning shouldn't mean looking at
+  // the morning's numbers.
+  var lastLoadedAt = 0;
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState !== "visible" || !state.mcp || !lastLoadedAt) return;
+    if (Date.now() - lastLoadedAt > 30 * 60 * 1000 && !$("refresh-btn").disabled) refreshAll(true);
+  });
+
+  function isoWeek(d) {
+    var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    var dayNum = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - dayNum);
+    var yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil(((t - yearStart) / 86400000 + 1) / 7);
+  }
+  function renderDateline() {
+    var d = new Date();
+    $("dateline").textContent = d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }) +
+      " · Week " + isoWeek(d);
+  }
+
+  // ---------------- briefing ----------------
+  // The four things worth knowing before anything else: how the week is going,
+  // how recovered you are, where form sits, and what is coming. Each tile opens
+  // the card that explains it.
+  function briefTile(id, target, tab, dotCls, label, value, unit, sub) {
+    return '<button type="button" class="brief-tile" id="' + id + '" data-target="' + target + '" data-tab="' + tab + '">' +
+      '<span class="brief-k"><span class="dot ' + dotCls + '"></span>' + escapeHtml(label) + '</span>' +
+      '<span class="brief-v">' + value + (unit ? '<span class="u">' + escapeHtml(unit) + '</span>' : '') + '</span>' +
+      '<span class="brief-s">' + escapeHtml(sub) + '</span></button>';
+  }
+  function renderBrief() {
+    var host = $("brief");
+    var tiles = [];
+
+    var wk = state.weekSummary;
+    if (wk) {
+      var wkSub = wk.km > 0 ? fmt1(wk.km) + " km run" : (wk.min > 0 ? fmtInt(wk.min) + " min trained" : "Nothing logged yet");
+      if (wk.stillPlanned > 0) wkSub += " · " + wk.stillPlanned + " to go";
+      tiles.push(briefTile("brief-week", "card-week-progress", "overview",
+        wk.total && wk.done >= wk.total ? "good" : "run", "This week",
+        String(wk.done), wk.total ? "of " + wk.total : (wk.done === 1 ? "session" : "sessions"), wkSub));
+    }
+
+    var rec = null;
+    try { rec = computeRecoveryStatus(); } catch (e) {}
+    if (rec) {
+      var hrv = rec.signals.filter(function (s) { return s.key === "hrv"; })[0];
+      var recSub = hrv ? "HRV " + fmtInt(hrv.recent) + " ms · " + (hrv.delta >= 0 ? "+" : "") + fmtInt(hrv.delta) + "% vs baseline"
+        : (rec.flags ? rec.flags + " caution flag" + (rec.flags === 1 ? "" : "s") : "No caution flags");
+      tiles.push(briefTile("brief-recovery", "card-recovery", "overview", rec.status.cls, "Recovery",
+        escapeHtml(rec.status.label), "", recSub));
+    }
+
+    var fit = state.fitness ? toFitnessArray(state.fitness) : [];
+    if (fit.length) {
+      var last = fit[fit.length - 1];
+      var z = formZoneFor(last.tsb);
+      var fCls = { optimal: "good", fresh: "good", grey: "", transition: "warning", risk: "critical" }[z.cls];
+      tiles.push(briefTile("brief-form", "card-run-fitness", "running", fCls, "Form",
+        (last.tsb > 0 ? "+" : "") + fmtInt(last.tsb), z.label,
+        "Fitness " + fmtInt(last.ctl) + " · fatigue " + fmtInt(last.atl)));
+    }
+
+    var race = state.nextRace;
+    if (race) {
+      tiles.push(briefTile("brief-race", "card-race", "overview", "run", race.prio ? race.prio + "-race" : "Next race",
+        String(race.days), race.days === 1 ? "day" : "days", race.name));
+    } else if (state.streak) {
+      tiles.push(briefTile("brief-streak", "card-consistency", "overview", "strength", "Streak",
+        String(state.streak.weeks), state.streak.weeks === 1 ? "week" : "weeks", "In a row with training logged"));
+    }
+
+    if (!tiles.length) { host.hidden = true; return; }
+    host.hidden = false;
+    host.style.gridTemplateColumns = tiles.length < 4 ? "repeat(auto-fit, minmax(160px, 1fr))" : "";
+    host.innerHTML = tiles.join("");
+    host.querySelectorAll(".brief-tile").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        setTab(btn.getAttribute("data-tab"));
+        var card = $(btn.getAttribute("data-target"));
+        if (!card) return;
+        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        card.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      });
     });
   }
 
@@ -2729,7 +2988,9 @@
   function modalStatTile(label, value) {
     return '<div class="modal-stat"><div class="label">' + escapeHtml(label) + '</div><div class="value">' + escapeHtml(value) + '</div></div>';
   }
+  var modalReturnFocus = null;
   function openDayModal(day, activity, event) {
+    modalReturnFocus = document.activeElement;
     var dowFull = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     var dateLabel = dowFull[day.getDay()] + " · " + shortDate(day);
     var name = (activity && activity.name) || (event && event.name) || "Session";
@@ -2824,6 +3085,9 @@
     var overlay = $("day-modal-overlay");
     overlay.hidden = true;
     $("day-modal-body").innerHTML = "";
+    // Back to the chip or day that opened it, so keyboard users keep their place.
+    if (modalReturnFocus && document.contains(modalReturnFocus) && modalReturnFocus.focus) modalReturnFocus.focus();
+    modalReturnFocus = null;
   }
 
   // Pair each planned event with the session that actually fulfilled it.
@@ -2989,6 +3253,7 @@
     var weekSessions = completedSessions + stillPlanned;
 
     if (!plannedSessions && !completedSessions) {
+      state.weekSummary = { done: 0, total: 0, km: 0, min: 0, stillPlanned: 0 };
       body.innerHTML = '<div class="placeholder">No plan or activity found for this week yet.</div>';
       return;
     }
@@ -3018,6 +3283,8 @@
         isToday: sameDay(day, today), isFuture: day > today
       });
     }
+
+    state.weekSummary = { done: completedSessions, total: weekSessions, km: weekKm, min: weekMin, stillPlanned: stillPlanned };
 
     var days = dayModels.map(function (d, i) {
       var segs = "";
@@ -3214,7 +3481,7 @@
       var d = parseISO(e.start_date_local);
       return d && d >= today;
     });
-    if (!upcoming.length) { card.hidden = true; return; }
+    if (!upcoming.length) { card.hidden = true; state.nextRace = null; return; }
 
     var race = upcoming[0]; // toEventsArray sorts by date, so this is the nearest
     var raceDate = parseISO(race.start_date_local);
@@ -3240,6 +3507,7 @@
     var dowShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     $("race-hint").textContent = "";
+    state.nextRace = { name: raceName(race), days: days, prio: prio };
 
     var meta = [];
     if (prio) meta.push(prio + "-race");
@@ -3313,6 +3581,7 @@
 
     var heat = buildTrainingHeatmap(acts, thisMonday, today);
     var s = heat.stats;
+    state.streak = { weeks: s.streakWeeks };
     $("consistency-hint").textContent = "Last " + heat.weeks + " weeks";
 
     // Everything here only ever counts up. A percentage of the plan belongs on
