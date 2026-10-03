@@ -678,7 +678,7 @@
   var TZ = (function () { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Copenhagen"; } catch (e) { return "Europe/Copenhagen"; } })();
   var ICU = "IcuSync";
   var GCAL = "Google Calendar";
-  var WX = "AccuWeather";
+  var WX = "AccuWeather®";
   var S = {
     mcp: null, db: null,
     wellness: null, fitness: null, events: null, history: null,
@@ -745,7 +745,7 @@
   }
 
   // ---------- error copy (per source, plain Danish) ----------
-  var SRC_NAME = { IcuSync: "IcuSync", "Google Calendar": "Google Kalender", "AccuWeather": "AccuWeather" };
+  var SRC_NAME = { IcuSync: "IcuSync", "Google Calendar": "Google Kalender", "AccuWeather®": "AccuWeather" };
   // A connector the viewer hasn't approved for this page yet: offer a button
   // that asks claude.ai for consent (needs a click, so it can't happen on its own).
   function needsConsent(err) {
