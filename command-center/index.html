@@ -746,9 +746,21 @@
 
   // ---------- error copy (per source, plain Danish) ----------
   var SRC_NAME = { IcuSync: "IcuSync", "Google Calendar": "Google Kalender", "AccuWeather": "AccuWeather" };
+  // A connector the viewer hasn't approved for this page yet: offer a button
+  // that asks claude.ai for consent (needs a click, so it can't happen on its own).
+  function needsConsent(err) {
+    var code = (err && err.code) || "";
+    if (code === "not_granted" || code === "not_in_manifest") return true;
+    return /access isn.t confirmed|not confirmed|consent/i.test(String((err && err.message) || ""));
+  }
+  function grantBtn(server) {
+    if (!S.perms) return "";
+    return '<div style="margin-top:8px"><button class="btn small" type="button" data-grant="' + esc(server) + '">Giv adgang til ' + esc(SRC_NAME[server] || server) + "</button></div>";
+  }
   function errCopy(server, err) {
     var n = SRC_NAME[server] || server;
     var code = (err && err.code) || "unknown";
+    if (needsConsent(err) && S.mcp) return "<b>" + n + " mangler din godkendelse.</b> Tryk på knappen, og sig ja, når claude.ai spørger." + grantBtn(server);
     switch (code) {
       case "server_not_connected": return "<b>" + n + " ikke forbundet.</b> Tilføj den under Indstillinger → Connectors på claude.ai, og tryk Opdater.";
       case "needs_reauth": return "<b>" + n + " skal forbindes igen.</b> Gå til Indstillinger → Connectors på claude.ai.";
@@ -1683,6 +1695,17 @@
     });
   }
   $("refresh").addEventListener("click", function () { refresh(true); });
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-grant]");
+    if (!b || !S.perms) return;
+    var server = b.getAttribute("data-grant");
+    b.disabled = true; b.textContent = "Venter på svar…";
+    S.perms.request(["mcp:" + server]).then(function (st) {
+      var v = st && st["mcp:" + server];
+      if (v === "denied") { b.disabled = false; b.textContent = "Adgang afvist. Genindlæs siden for at prøve igen"; return; }
+      refresh(true);
+    }, function () { refresh(true); });
+  });
   $("refresh-m").addEventListener("click", function () { refresh(true); });
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState === "visible" && S.mcp && lastLoad && Date.now() - lastLoad > 20 * 60 * 1000) refresh(true);
@@ -1708,6 +1731,7 @@
   function boot() {
     renderDateline();
     setPage(location.hash.slice(1) || "idag");
+    useCap("permissions").then(function (pm) { S.perms = pm; });
     Promise.all([useCap("mcp"), useCap("db")]).then(function (caps) {
       S.mcp = caps[0]; S.db = caps[1];
       if (!S.mcp && !S.db) { $("no-runtime").hidden = false; }
