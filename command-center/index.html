@@ -124,6 +124,16 @@
   }
   .clock-t .sec { color: var(--ink-3); font-size: 0.42em; margin-left: 3px; letter-spacing: 0; }
   .clock-d { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-2); }
+  .side-wx { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.84rem; color: var(--ink-2); min-height: 26px; }
+  .side-wx .wi { width: 24px; height: 24px; flex: none; }
+  .side-wx b { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: 1.15rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .side-wx .ph { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Weather icons: line glyphs in ink, the sun in the calendar yellow */
+  .wi { stroke: var(--ink-2); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .wi .sun { stroke: var(--a-cal); }
+  .wi .sunf { fill: var(--a-cal); stroke: none; }
+  .wi .drop { stroke: var(--a-study); }
 
   /* Collapsed rail (desktop only) */
   @media (min-width: 900px) {
@@ -134,8 +144,10 @@
     .app.collapsed .brand-top { flex-direction: column-reverse; gap: 10px; }
     .app.collapsed .brand-top .eyebrow, .app.collapsed .brand-name, .app.collapsed .clock-d,
     .app.collapsed .nav a .lbl, .app.collapsed .nav a .ad, .app.collapsed .side-foot .k,
-    .app.collapsed .src .sn, .app.collapsed .src .s, .app.collapsed .updated, .app.collapsed #refresh-l { display: none; }
+    .app.collapsed .src .sn, .app.collapsed .src .s, .app.collapsed .side-wx .ph, .app.collapsed .updated, .app.collapsed #refresh-l { display: none; }
     .app.collapsed .clock { align-items: center; }
+    .app.collapsed .side-wx { flex-direction: column; gap: 2px; margin-top: 6px; }
+    .app.collapsed .side-wx b { font-size: 0.95rem; }
     .app.collapsed .clock { align-items: center; }
     .app.collapsed .clock-t { font-size: 1.45rem; }
     .app.collapsed .clock-t .sec { display: none; }
@@ -259,7 +271,7 @@
   @media (max-width: 1099px) {
     .today { grid-template-columns: minmax(0, 1fr); }
     .col { display: contents; }
-    #c-recovery { order: 1; } #c-workout { order: 2; } #c-agenda { order: 3; }
+    #c-weather { order: 0; } #c-recovery { order: 1; } #c-workout { order: 2; } #c-agenda { order: 3; }
     #c-tasks { order: 4; } #c-habits { order: 5; } #c-deadlines { order: 6; }
   }
 
@@ -311,6 +323,25 @@
   .note.open { max-height: none; }
   .note b { color: var(--ink); font-weight: 600; }
 
+  /* Weather card */
+  .wx-now { display: flex; align-items: center; gap: 14px; }
+  .wx-now .wi { width: 52px; height: 52px; flex: none; }
+  .wx-now .big { font-size: 2.8rem; }
+  .wx-side { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .wx-side .ph { font-weight: 600; font-size: 0.95rem; }
+  .wx-hours { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+  .wx-h { background: var(--surface-2); border-radius: 10px; padding: 7px 4px; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
+  .wx-h .t { font-family: var(--f-mono); font-size: 0.68rem; color: var(--ink-3); }
+  .wx-h .wi { width: 22px; height: 22px; }
+  .wx-h .v { font-weight: 700; font-size: 0.86rem; font-variant-numeric: tabular-nums; }
+  .wx-h .r { font-size: 0.66rem; color: var(--a-study); font-weight: 600; min-height: 1em; }
+  .wx-h.wo { box-shadow: inset 0 0 0 2px var(--a-health); }
+  .wx-run { font-size: 0.82rem; color: var(--ink-2); }
+  .wx-run b { color: var(--ink); }
+  .wx-loc { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.76rem; color: var(--ink-3); }
+  .linkbtn { appearance: none; border: none; background: none; padding: 0; color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; font-size: inherit; }
+  .linkbtn:hover { color: var(--ink); }
+
   /* Lists */
   .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
   .list li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); min-width: 0; }
@@ -360,6 +391,7 @@
 
   /* Inline add form */
   .add { display: flex; gap: 6px; flex-wrap: wrap; }
+  .add[hidden] { display: none; }
   .add input[type="text"] { flex: 1 1 160px; min-width: 0; }
   .field {
     border: 1px solid var(--line-2); background: var(--surface); border-radius: 9px; padding: 7px 10px; font-size: 0.86rem; min-height: 36px;
@@ -453,6 +485,7 @@
       <div class="clock">
         <span class="clock-t" id="clock-t">--:--</span>
         <span class="clock-d" id="clock-d"></span>
+        <div class="side-wx" id="side-wx" aria-live="off"></div>
       </div>
     </div>
     <nav class="nav">
@@ -470,6 +503,7 @@
         <span class="src" data-src="icu" title="IcuSync"><span class="d"></span><span class="sn">IcuSync</span><span class="s"></span></span>
         <span class="src" data-src="cal" title="Google Kalender"><span class="d"></span><span class="sn">Google Kalender</span><span class="s"></span></span>
         <span class="src" data-src="db" title="Database"><span class="d"></span><span class="sn">Database</span><span class="s"></span></span>
+        <span class="src" data-src="wx" title="AccuWeather"><span class="d"></span><span class="sn">AccuWeather</span><span class="s"></span></span>
       </div>
       <button class="btn" id="refresh" type="button" title="Hent nye data"><svg class="rf" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg><span id="refresh-l">Opdater</span></button>
       <span class="updated" data-updated></span>
@@ -485,6 +519,7 @@
           <span class="src" data-src="icu" title="IcuSync"><span class="d"></span>Icu<span class="s"></span></span>
           <span class="src" data-src="cal" title="Google Kalender"><span class="d"></span>Kal<span class="s"></span></span>
           <span class="src" data-src="db" title="Database"><span class="d"></span>DB<span class="s"></span></span>
+          <span class="src" data-src="wx" title="AccuWeather"><span class="d"></span>Vejr<span class="s"></span></span>
         </div>
         <button class="btn ghost icon" id="refresh-m" type="button" aria-label="Opdater"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg></button>
       </div>
@@ -532,6 +567,17 @@
 
         </div>
         <div class="col">
+    <!-- Weather -->
+    <article class="card" id="c-weather">
+      <div class="card-k"><span class="ad cal"></span>Vejret<span class="src-note" id="wx-src"></span></div>
+      <div id="wx-body"><div class="skel"></div></div>
+      <form class="add" id="wx-form" autocomplete="off" hidden>
+        <input class="field" type="text" id="wx-city" placeholder="By, fx Aarhus" aria-label="By til vejret" maxlength="60">
+        <button class="btn" type="submit">Brug by</button>
+        <button class="btn ghost" type="button" id="wx-cancel">Annuller</button>
+      </form>
+    </article>
+
     <!-- Recovery -->
     <article class="card" id="c-recovery">
       <div class="card-k"><span class="ad health"></span>Restitution<span class="src-note" id="rec-src"></span></div>
@@ -632,6 +678,7 @@
   var TZ = (function () { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Copenhagen"; } catch (e) { return "Europe/Copenhagen"; } })();
   var ICU = "IcuSync";
   var GCAL = "Google Calendar";
+  var WX = "AccuWeather";
   var S = {
     mcp: null, db: null,
     wellness: null, fitness: null, events: null, history: null,
@@ -698,7 +745,7 @@
   }
 
   // ---------- error copy (per source, plain Danish) ----------
-  var SRC_NAME = { IcuSync: "IcuSync", "Google Calendar": "Google Kalender" };
+  var SRC_NAME = { IcuSync: "IcuSync", "Google Calendar": "Google Kalender", "AccuWeather": "AccuWeather" };
   function errCopy(server, err) {
     var n = SRC_NAME[server] || server;
     var code = (err && err.code) || "unknown";
@@ -758,6 +805,7 @@
       var okN = r.filter(function (x) { return x.ok; }).length;
       setSrc("src-icu", okN === 4 ? "ok" : (okN ? "" : "err"), okN === 4 ? "OK" : (okN ? "Delvist" : "Fejl"));
       renderHealthAll();
+      try { if (S.wx) renderWeather(); } catch (e) {}
     });
   }
 
@@ -821,10 +869,159 @@
     sub(db.collection("habits").limit(50), "habits");
     sub(db.collection("habitLog").where("date", ">=", addDays(t, -120)).limit(1000), "hlog");
     sub(db.collection("deadlines").where("date", ">=", addDays(t, -1)).limit(300), "deadlines");
+    db.doc("settings/weather").onSnapshot(function (d) {
+      var city = d.exists ? ((d.data() || {}).city || "") : "";
+      var changed = city !== (S.wxCity || "");
+      S.wxCity = city; S.wxCityLoaded = true;
+      if (changed && S.mcp) loadWeather(false);
+    }, function () { S.wxCityLoaded = true; });
   }
   function dbWrite(p) {
     return p.catch(function (e) { S.dbErr = e; renderTodayDb(); setTimeout(function () { S.dbErr = null; renderTodayDb(); }, 5000); });
   }
+
+
+  // =================================================================
+  // VEJR (AccuWeather). The page can't read GPS, so it follows the device's
+  // time zone city (Europe/Budapest → Budapest) unless Rune picks a city.
+  // =================================================================
+  function autoCity() {
+    var city = (TZ.split("/").pop() || "Copenhagen").replace(/_/g, " ");
+    return city;
+  }
+  function wxCity() { return S.wxCity || autoCity(); }
+  var wxSeq = 0;
+  function loadWeather(force) {
+    if (!S.mcp) return Promise.resolve();
+    var seq = ++wxSeq, city = wxCity();
+    setSrc("src-wx", "", "Henter…");
+    var ck = S.wxKeys = S.wxKeys || {};
+    var keyP = ck[city] ? Promise.resolve({ ok: true, key: ck[city] }) :
+      settle(call(WX, "widgets-search-claude", { queryParams: { query: city } }, force)).then(function (r) {
+        if (!r.ok) return { ok: false, error: r.error };
+        var hit = ((r.data && r.data.results) || [])[0];
+        if (!hit) return { ok: false, error: { code: "no_city" } };
+        ck[city] = hit.locationKey; return { ok: true, key: hit.locationKey };
+      });
+    return keyP.then(function (k) {
+      if (seq !== wxSeq) return;
+      if (!k.ok) { S.wx = null; S.wxErr = k.error; return; }
+      var q = { locationKey: k.key, unit: "metric", lang: "da" };
+      return Promise.all([
+        settle(call(WX, "widgets-current-claude", { queryParams: q }, force)),
+        settle(call(WX, "widgets-todayTonightForecast-claude", { queryParams: { locationKey: k.key, unit: "metric", lang: "da", days: 2 } }, force)),
+        settle(call(WX, "widgets-hourly-claude", { queryParams: q }, force))
+      ]).then(function (r) {
+        if (seq !== wxSeq) return;
+        if (!r[0].ok) { S.wx = null; S.wxErr = r[0].error; return; }
+        S.wxErr = null;
+        S.wx = { cur: r[0].data, daily: r[1].ok ? r[1].data : null, hourly: r[2].ok ? r[2].data : null, city: city };
+      });
+    }).then(function () {
+      if (seq !== wxSeq) return;
+      setSrc("src-wx", S.wxErr ? "err" : "ok", S.wxErr ? "Fejl" : "OK");
+      renderWeather();
+    });
+  }
+
+  // AccuWeather icon codes → one of a few line glyphs.
+  function wxIcon(code, cls) {
+    code = +code || 0;
+    var sun = '<circle class="sun" cx="12" cy="12" r="4"/><path class="sun" d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/>';
+    var moon = '<path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/>';
+    var cloud = '<path d="M7 18h10a4 4 0 0 0 .5-8A5.5 5.5 0 0 0 7 9.5 4.3 4.3 0 0 0 7 18z"/>';
+    var cloudS = '<path d="M8 19h9a3.5 3.5 0 0 0 .4-7A4.8 4.8 0 0 0 8.3 11 4 4 0 0 0 8 19z"/>';
+    var smallSun = '<circle class="sun" cx="8" cy="8" r="3"/><path class="sun" d="M8 2.5v1.2M2.5 8h1.2M4.1 4.1l.9.9M11.9 4.1l-.9.9"/>';
+    var smallMoon = '<path d="M11.5 9.5A4.5 4.5 0 0 1 6 4a4.5 4.5 0 1 0 5.5 5.5z"/>';
+    var rain = '<path class="drop" d="M9 20l-1 2M13 20l-1 2M17 20l-1 2"/>';
+    var snow = '<path d="M9 21h.01M13 21h.01M17 21h.01M11 23h.01M15 23h.01" stroke-width="2.4"/>';
+    var bolt = '<path class="sun" d="M13 17l-2 3h3l-2 3"/>';
+    var g;
+    if (code === 1 || code === 2 || code === 30) g = sun;
+    else if (code >= 3 && code <= 5) g = smallSun + cloudS;
+    else if (code >= 6 && code <= 8) g = cloud;
+    else if (code === 11) g = '<path d="M4 9h16M3 13h18M5 17h14"/>';
+    else if ([12, 13, 14, 18, 39, 40].indexOf(code) !== -1) g = '<g transform="translate(0,-2)">' + cloud + '</g>' + rain;
+    else if ([15, 16, 17, 41, 42].indexOf(code) !== -1) g = '<g transform="translate(0,-2)">' + cloud + '</g>' + bolt;
+    else if ((code >= 19 && code <= 29) || code === 43 || code === 44) g = '<g transform="translate(0,-2)">' + cloud + '</g>' + snow;
+    else if (code === 31) g = '<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/>';
+    else if (code === 32) g = '<path d="M3 9h11a3 3 0 1 0-3-3M3 15h15a3 3 0 1 1-3 3M3 12h8"/>';
+    else if (code === 33 || code === 34) g = moon;
+    else if (code >= 35 && code <= 38) g = smallMoon + cloudS;
+    else g = cloud;
+    return '<svg class="wi ' + (cls || "") + '" viewBox="0 0 24 24" aria-hidden="true">' + g + "</svg>";
+  }
+  function wxErrCopy(err) {
+    if (err && err.code === "no_city") return "<b>Kunne ikke finde “" + esc(wxCity()) + "”.</b> Vælg en anden by.";
+    return errCopy(WX, err);
+  }
+  function renderWeather() {
+    var host = $("wx-body"), side = $("side-wx");
+    if (!S.wx) {
+      side.innerHTML = "";
+      if (S.wxErr) host.innerHTML = '<div class="err">' + wxErrCopy(S.wxErr) + '</div><div class="wx-loc"><button class="linkbtn" type="button" data-wx-pick>Vælg by</button></div>';
+      else if (!S.mcp) host.innerHTML = '<div class="err">' + errCopy(WX, { code: "not_granted" }) + "</div>";
+      else host.innerHTML = '<div class="skel"></div>';
+      bindWxButtons(); return;
+    }
+    var c = S.wx.cur.currentConditions || {}, loc = S.wx.cur.location || {};
+    var aq = S.wx.cur.currentAirQuality;
+    side.innerHTML = wxIcon(c.iconCode) + "<b>" + esc(c.temperature || "–") + '</b><span class="ph">' + esc(c.phrase || "") + "</span>";
+    side.title = (loc.localizedName || S.wx.city) + ": " + (c.phrase || "") + ", føles som " + (c.realFeel || "");
+    $("wx-src").textContent = loc.localizedName || S.wx.city;
+
+    var d0 = S.wx.daily && S.wx.daily.dailyForecast && S.wx.daily.dailyForecast[0];
+    var dayLine = d0 ? "I dag " + esc(d0.day.displayTemperature) + " / i nat " + esc(d0.night.displayTemperature) + " · regn " + esc(d0.day.rainProbability || "0 pct.").replace(" pct.", " %") : "";
+    var html = '<div class="wx-now">' + wxIcon(c.iconCode) +
+      '<span class="big">' + esc(c.temperature || "–") + '</span><div class="wx-side"><span class="ph">' + esc(c.phrase || "") + "</span>" +
+      '<span class="sub">Føles som ' + esc(c.realFeel || "–") + (c.extended && c.extended.wind ? " · vind " + esc(c.extended.wind) : "") + "</span>" +
+      (dayLine ? '<span class="sub muted">' + dayLine + "</span>" : "") + "</div></div>";
+
+    // Next hours, with the hour of today's planned session outlined.
+    var hours = ((S.wx.hourly && S.wx.hourly.hourlyForecast) || []).slice(0, 6);
+    var woHours = {};
+    var t = todayISO();
+    if (S.events) eventsArr().forEach(function (e) { if (e.start_date_local.slice(0, 10) === t) woHours[e.start_date_local.slice(11, 13)] = e; });
+    if (hours.length) {
+      html += '<div class="wx-hours">' + hours.map(function (h) {
+        var hh = (h.date || "").slice(11, 13), rp = h.extended && h.extended.rainProbability ? parseInt(h.extended.rainProbability, 10) : 0;
+        return '<div class="wx-h' + (woHours[hh] ? " wo" : "") + '" title="' + esc(h.phrase || "") + (woHours[hh] ? " · " + esc(woHours[hh].name) : "") + '"><span class="t">' + hh + "</span>" + wxIcon(h.icon) +
+          '<span class="v">' + esc(h.temperature) + '</span><span class="r">' + (rp >= 20 ? rp + " %" : "") + "</span></div>";
+      }).join("") + "</div>";
+    }
+    // Weather at the time of today's run, when it falls inside the hourly window.
+    var all = (S.wx.hourly && S.wx.hourly.hourlyForecast) || [];
+    var runs = Object.keys(woHours).map(function (hh) {
+      var e = woHours[hh], h = all.filter(function (x) { return (x.date || "").slice(0, 10) === t && (x.date || "").slice(11, 13) === hh; })[0];
+      if (!h) return "";
+      return "<b>" + esc(e.name) + "</b> kl. " + e.start_date_local.slice(11, 16) + ": " + esc(h.temperature) + ", føles som " + esc(h.realFeel) + ", " + esc((h.phrase || "").toLowerCase()) +
+        (h.extended && h.extended.wind ? ", vind " + esc(h.extended.wind) : "");
+    }).filter(Boolean);
+    if (runs.length) html += '<div class="wx-run">' + runs.join("<br>") + "</div>";
+    if (aq && aq.overallPlumeLabsIndex >= 60) html += '<div class="wx-run"><span class="chip warning"><span class="d"></span>Luft: ' + esc(aq.category) + "</span></div>";
+    html += '<div class="wx-loc">' + (S.wxCity ? "Fast by: " + esc(S.wxCity) + ' · <button class="linkbtn" type="button" data-wx-auto>Følg min tidszone</button> · ' : "Følger din tidszone · ") +
+      '<button class="linkbtn" type="button" data-wx-pick>Vælg by</button></div>';
+    host.innerHTML = html;
+    bindWxButtons();
+  }
+  function bindWxButtons() {
+    var pick = document.querySelector("[data-wx-pick]"), auto = document.querySelector("[data-wx-auto]");
+    if (pick) pick.addEventListener("click", function () {
+      if (!S.db) return;
+      $("wx-form").hidden = false; $("wx-city").value = S.wxCity || ""; $("wx-city").focus();
+    });
+    if (auto) auto.addEventListener("click", function () {
+      if (!S.db) return;
+      dbWrite(S.db.doc("settings/weather").set({ city: "", updatedAt: Date.now() }));
+    });
+  }
+  $("wx-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var city = $("wx-city").value.trim(); if (!city || !S.db) return;
+    dbWrite(S.db.doc("settings/weather").set({ city: city, updatedAt: Date.now() }));
+    $("wx-form").hidden = true;
+  });
+  $("wx-cancel").addEventListener("click", function () { $("wx-form").hidden = true; });
 
   // =================================================================
   // I DAG
@@ -1421,7 +1618,7 @@
   function refresh(force) {
     busy(true);
     renderDateline();
-    return withTimeout(Promise.all([loadIcu(force), loadCal(force)]), 45000, null).then(function () {
+    return withTimeout(Promise.all([loadIcu(force), loadCal(force), loadWeather(force)]), 45000, null).then(function () {
       busy(false);
       lastLoad = Date.now();
       var p = partsInTZ(new Date());
@@ -1465,6 +1662,7 @@
         S.icuErr = { wellness: { code: "not_granted" }, fitness: { code: "not_granted" }, events: { code: "not_granted" }, history: { code: "not_granted" } };
         S.calErr = { code: "not_granted" };
         setSrc("src-icu", "err", "Ingen adgang"); setSrc("src-cal", "err", "Ingen adgang");
+        setSrc("src-wx", "err", "Ingen adgang"); renderWeather();
         renderHealthAll(); renderAgenda();
       }
     });
