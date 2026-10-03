@@ -116,25 +116,32 @@
   .collapse:hover { background: var(--surface-2); color: var(--ink); }
   .collapse svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s ease; }
 
-  /* Live clock + where-am-I-in-the-day line (06–24) */
-  .clock { display: flex; flex-direction: column; gap: 2px; }
-  .clock-t {
-    font-family: var(--f-display); font-stretch: 72%; font-weight: 800; font-size: 3rem; line-height: 0.88;
-    font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+  /* Live flip clock (HH:MM) */
+  .clock { display: flex; flex-direction: column; gap: 8px; }
+  .flip { display: flex; align-items: center; gap: 4px; --fw: 40px; --fh: 56px; --fs: 2.6rem; }
+  .flip .colon { display: flex; flex-direction: column; gap: 9px; padding: 0 3px; }
+  .flip .colon i { width: 5px; height: 5px; border-radius: 50%; background: var(--ink-3); display: block; }
+  .fd {
+    position: relative; width: var(--fw); height: var(--fh); border-radius: 8px; perspective: 300px;
+    font-family: var(--f-display); font-stretch: 75%; font-weight: 800; font-size: var(--fs); font-variant-numeric: tabular-nums;
+    color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 4px 10px -4px rgba(0,0,0,0.18);
   }
-  .clock-t .sec { color: var(--ink-3); font-size: 0.42em; margin-left: 3px; letter-spacing: 0; }
+  .fd .h {
+    position: absolute; left: 0; right: 0; height: 50%; overflow: hidden; background: var(--surface-2);
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  }
+  .fd .h span { display: block; height: var(--fh); line-height: var(--fh); text-align: center; }
+  .fd .h.t { top: 0; border-radius: 8px 8px 0 0; }
+  .fd .h.b { bottom: 0; border-radius: 0 0 8px 8px; }
+  .fd .h.b span { transform: translateY(-50%); }
+  .fd .h.t::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: color-mix(in srgb, var(--ink) 16%, transparent); }
+  .fd .flap-t { transform-origin: 50% 100%; z-index: 2; background: color-mix(in srgb, var(--ink) 3%, var(--surface-2)); }
+  .fd .flap-b { transform-origin: 50% 0%; z-index: 2; transform: rotateX(90deg); }
+  .fd.go .flap-t { animation: flipT .26s ease-in forwards; }
+  .fd.go .flap-b { animation: flipB .26s .26s ease-out forwards; }
+  @keyframes flipT { from { transform: rotateX(0deg); } to { transform: rotateX(-90deg); } }
+  @keyframes flipB { from { transform: rotateX(90deg); } to { transform: rotateX(0deg); } }
   .clock-d { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-2); }
-  .dayline { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
-  .dl-track { position: relative; height: 10px; border-radius: 5px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
-  .dl-fill { position: absolute; left: 0; top: 0; bottom: 0; background: color-mix(in srgb, var(--ink) 14%, transparent); border-radius: 5px 0 0 5px; }
-  .dl-ev { position: absolute; top: 2px; bottom: 2px; min-width: 4px; border-radius: 3px; }
-  .dl-ev.cal { background: var(--a-cal); }
-  .dl-ev.wo { background: var(--a-health); }
-  .dl-ev.past { opacity: 0.45; }
-  .dl-now { position: absolute; top: -1px; bottom: -1px; width: 2px; margin-left: -1px; background: var(--ink); border-radius: 1px; }
-  .dl-axis { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 0.62rem; color: var(--ink-3); }
-  .dl-next { font-size: 0.78rem; color: var(--ink-2); line-height: 1.35; min-height: 1.35em; }
-  .dl-next b { color: var(--ink); font-weight: 600; }
 
   /* Collapsed rail (desktop only) */
   @media (min-width: 900px) {
@@ -143,12 +150,11 @@
     .app.collapsed .side { padding-left: 10px; padding-right: 10px; overflow: hidden; }
     .app.collapsed .brand { padding: 0; align-items: center; }
     .app.collapsed .brand-top { flex-direction: column-reverse; gap: 10px; }
-    .app.collapsed .brand-top .eyebrow, .app.collapsed .brand-name, .app.collapsed .clock-d, .app.collapsed .dayline,
+    .app.collapsed .brand-top .eyebrow, .app.collapsed .brand-name, .app.collapsed .clock-d, .app.collapsed .flip .colon,
     .app.collapsed .nav a .lbl, .app.collapsed .nav a .ad, .app.collapsed .side-foot .k,
     .app.collapsed .src .sn, .app.collapsed .src .s, .app.collapsed .updated, .app.collapsed #refresh-l { display: none; }
     .app.collapsed .clock { align-items: center; }
-    .app.collapsed .clock-t { font-size: 1.45rem; }
-    .app.collapsed .clock-t .sec { display: none; }
+    .app.collapsed .flip { --fw: 24px; --fh: 32px; --fs: 1.45rem; flex-wrap: wrap; width: 52px; justify-content: center; gap: 4px; }
     .app.collapsed .collapse svg { transform: rotate(180deg); }
     .app.collapsed .nav a { justify-content: center; padding: 10px 0; }
     .app.collapsed .nav-sep { margin: 8px 6px; }
@@ -460,14 +466,9 @@
         <span class="eyebrow">Command Center</span>
         <button class="collapse" id="collapse" type="button" aria-label="Skjul menu" title="Skjul menu" aria-expanded="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M9 4.5v15M15.5 10l-2 2 2 2"/></svg></button>
       </div>
-      <div class="clock" aria-live="off">
-        <span class="clock-t" id="clock-t">--:--</span>
+      <div class="clock">
+        <div class="flip" id="flip" role="timer" aria-label="Klokken"></div>
         <span class="clock-d" id="clock-d"></span>
-      </div>
-      <div class="dayline" id="dayline" aria-hidden="true">
-        <div class="dl-track" id="dl-track"><div class="dl-fill" id="dl-fill"></div><span class="dl-now" id="dl-now"></span></div>
-        <div class="dl-axis"><span>06</span><span>12</span><span>18</span><span>24</span></div>
-        <div class="dl-next" id="dl-next"></div>
       </div>
     </div>
     <nav class="nav">
@@ -1402,54 +1403,34 @@
   $("collapse").addEventListener("click", function () { setCollapsed(!document.querySelector(".app").classList.contains("collapsed")); });
   try { if (localStorage.getItem("cc-side") === "1") setCollapsed(true); } catch (e) {}
 
-  // ----- live clock and the day line (06:00–24:00) -----
-  var DAY0 = 6 * 60, DAY1 = 24 * 60;
-  function minOf(hhmm) { var a = hhmm.split(":"); return (+a[0]) * 60 + (+a[1]); }
-  function pct(m) { return Math.max(0, Math.min(100, (m - DAY0) / (DAY1 - DAY0) * 100)); }
-  function todaysBlocks() {
-    var t = todayISO(), out = [];
-    (S.cal || []).forEach(function (e) {
-      if (e.allDay || e.start !== t) return;
-      out.push({ k: "cal", s: minOf(e.sT), e: e.end === t ? minOf(e.eT) : DAY1, title: e.title, sT: e.sT });
-    });
-    if (S.events) eventsArr().forEach(function (e) {
-      if (e.start_date_local.slice(0, 10) !== t) return;
-      var s0 = minOf(e.start_date_local.slice(11, 16));
-      out.push({ k: "wo", s: s0, e: s0 + (e.duration_minutes || 30), title: e.name, sT: e.start_date_local.slice(11, 16) });
-    });
-    return out.sort(function (a, b) { return a.s - b.s; });
+  // ----- live flip clock -----
+  var flipDigits = [];
+  (function buildFlip() {
+    var host = $("flip");
+    for (var i = 0; i < 4; i++) {
+      if (i === 2) { var c = document.createElement("span"); c.className = "colon"; c.setAttribute("aria-hidden", "true"); c.innerHTML = "<i></i><i></i>"; host.appendChild(c); }
+      var d = document.createElement("span"); d.className = "fd"; d.setAttribute("aria-hidden", "true");
+      d.innerHTML = '<span class="h t"><span></span></span><span class="h b"><span></span></span><span class="h t flap-t"><span></span></span><span class="h b flap-b"><span></span></span>';
+      host.appendChild(d);
+      flipDigits.push({ el: d, v: null, q: d.querySelectorAll(".h > span") });
+    }
+  })();
+  function setDigit(fd, v) {
+    if (fd.v === v) return;
+    var old = fd.v === null ? v : fd.v; fd.v = v;
+    // q: [static top, static bottom, flap top, flap bottom]
+    fd.q[0].textContent = v; fd.q[1].textContent = old; fd.q[2].textContent = old; fd.q[3].textContent = v;
+    fd.el.classList.remove("go"); void fd.el.offsetWidth; fd.el.classList.add("go");
+    clearTimeout(fd.t);
+    fd.t = setTimeout(function () { fd.q[1].textContent = v; fd.el.classList.remove("go"); }, 560);
   }
-  var lastBlocksKey = "";
   function tickClock() {
-    var p = partsInTZ(new Date()), sec = pad(new Date().getSeconds());
-    $("clock-t").innerHTML = p.hour + ":" + p.minute + '<span class="sec">' + sec + "</span>";
+    var p = partsInTZ(new Date()), hm = p.hour + p.minute;
+    for (var i = 0; i < 4; i++) setDigit(flipDigits[i], hm.charAt(i));
+    $("flip").setAttribute("aria-label", "Klokken er " + p.hour + ":" + p.minute);
     $("mclock").textContent = p.hour + ":" + p.minute;
     var t = todayISO(), d = isoToUTC(t);
     $("clock-d").textContent = dayName(t) + " " + d.getUTCDate() + ". " + MONTHS_S[d.getUTCMonth()] + " · uge " + isoWeek(t);
-    var now = (+p.hour) * 60 + (+p.minute);
-    $("dl-fill").style.width = pct(now) + "%";
-    $("dl-now").style.left = pct(now) + "%";
-    var blocks = todaysBlocks();
-    var key = JSON.stringify(blocks) + "|" + Math.floor(now / 5);
-    if (key !== lastBlocksKey) {
-      lastBlocksKey = key;
-      var track = $("dl-track");
-      track.querySelectorAll(".dl-ev").forEach(function (x) { x.remove(); });
-      blocks.forEach(function (b) {
-        if (b.e <= DAY0) return;
-        var el = document.createElement("span");
-        el.className = "dl-ev " + b.k + (b.e <= now ? " past" : "");
-        el.style.left = pct(b.s) + "%"; el.style.width = Math.max(0.8, pct(b.e) - pct(b.s)) + "%";
-        track.insertBefore(el, $("dl-now"));
-      });
-      var nx = blocks.filter(function (b) { return b.s > now; })[0], cur = blocks.filter(function (b) { return b.s <= now && b.e > now; })[0];
-      var txt = "";
-      if (cur) txt = "Nu: <b>" + esc(cur.title) + "</b>";
-      else if (nx) { var m = nx.s - now; txt = "Næste: <b>" + esc(nx.title) + "</b> om " + (m >= 60 ? Math.floor(m / 60) + " t " + (m % 60 ? m % 60 + " min" : "") : m + " min"); }
-      else if (blocks.length) txt = "Dagens program er overstået";
-      else if (S.cal || S.events) txt = "Intet i kalenderen i dag";
-      $("dl-next").innerHTML = txt;
-    }
   }
   tickClock();
   setInterval(tickClock, 1000);
@@ -1483,7 +1464,6 @@
       var p = partsInTZ(new Date());
       document.querySelectorAll("[data-updated]").forEach(function (el) { el.textContent = "Opdateret kl. " + p.hour + ":" + p.minute; });
       renderTodayDb();
-      lastBlocksKey = ""; tickClock();
     });
   }
   $("refresh").addEventListener("click", function () { refresh(true); });
