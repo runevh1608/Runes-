@@ -1,0 +1,1326 @@
+<title>Command Center</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: a fixed "I DAG" board on top (six cards, 3 columns → 1 on phone),
+     then a sticky tab bar with one colour per life area. */
+  :root {
+    --bg: #EDF0F2;
+    --surface: #FFFFFF;
+    --surface-2: #F4F6F7;
+    --ink: #13181D;
+    --ink-2: #4E5962;
+    --ink-3: #848E97;
+    --line: rgba(19,24,29,0.09);
+    --line-2: rgba(19,24,29,0.17);
+    --grid: #E3E7EA;
+    --shadow: 0 1px 2px rgba(19,24,29,0.05), 0 6px 18px rgba(19,24,29,0.05);
+
+    /* One identity colour per area (validated categorical slots). */
+    --a-health: #eb6834;
+    --a-study: #2a78d6;
+    --a-money: #1baf7a;
+    --a-tasks: #4a3aa7;
+    --a-cal: #eda100;
+
+    /* Chart series inside Sundhed */
+    --s-ctl: #2a78d6;
+    --s-atl: #eb6834;
+
+    --good: #0ca30c;
+    --warning: #fab219;
+    --serious: #ec835a;
+    --critical: #d03b3b;
+
+    --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+    --f-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0E1216;
+      --surface: #171C21;
+      --surface-2: #1D2329;
+      --ink: #EEF1F3;
+      --ink-2: #B3BCC4;
+      --ink-3: #7E8892;
+      --line: rgba(255,255,255,0.08);
+      --line-2: rgba(255,255,255,0.16);
+      --grid: #262D33;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.25);
+      --a-health: #d95926;
+      --a-study: #3987e5;
+      --a-money: #199e70;
+      --a-tasks: #9085e9;
+      --a-cal: #c98500;
+      --s-ctl: #3987e5;
+      --s-atl: #d95926;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0E1216;
+    --surface: #171C21;
+    --surface-2: #1D2329;
+    --ink: #EEF1F3;
+    --ink-2: #B3BCC4;
+    --ink-3: #7E8892;
+    --line: rgba(255,255,255,0.08);
+    --line-2: rgba(255,255,255,0.16);
+    --grid: #262D33;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.25);
+    --a-health: #d95926;
+    --a-study: #3987e5;
+    --a-money: #199e70;
+    --a-tasks: #9085e9;
+    --a-cal: #c98500;
+    --s-ctl: #3987e5;
+    --s-atl: #d95926;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+  a { color: inherit; }
+  h1, h2, h3 { margin: 0; text-wrap: balance; }
+  button, input, select { font: inherit; color: inherit; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .shell { max-width: 1200px; margin: 0 auto; padding: 22px 20px 64px; display: flex; flex-direction: column; gap: 18px; }
+  @media (max-width: 520px) { .shell { padding: 14px 16px 56px; } }
+
+  /* ---------- Header ---------- */
+  .top { display: flex; justify-content: space-between; align-items: flex-end; gap: 14px 20px; flex-wrap: wrap; }
+  .eyebrow { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+  .top h1 {
+    font-family: var(--f-display); font-stretch: 72%; font-weight: 800;
+    font-size: clamp(2.2rem, 7vw, 3.3rem); line-height: 0.9; letter-spacing: -0.01em; text-transform: uppercase;
+    margin-top: 6px;
+  }
+  .top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  @media (max-width: 640px) { .top-right { align-items: flex-start; } }
+  .sources { display: flex; gap: 6px; flex-wrap: wrap; }
+  .src {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 0.74rem; color: var(--ink-2);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 100px; padding: 3px 10px 3px 8px;
+  }
+  .src .d { width: 7px; height: 7px; border-radius: 50%; background: var(--warning); flex: none; }
+  .src.ok .d { background: var(--good); }
+  .src.err .d { background: var(--critical); }
+  .src.err { color: var(--ink); border-color: color-mix(in srgb, var(--critical) 40%, var(--line)); }
+  .actions { display: flex; align-items: center; gap: 10px; }
+  #updated { font-size: 0.76rem; color: var(--ink-3); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    border: none; border-radius: 9px; padding: 8px 14px; font-weight: 600; font-size: 0.86rem; cursor: pointer;
+    background: var(--ink); color: var(--bg); transition: opacity .12s ease, transform .12s ease;
+  }
+  .btn:hover { opacity: .88; }
+  .btn:active { transform: scale(0.97); }
+  .btn[disabled] { opacity: .55; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--ink-2); border: 1px solid var(--line-2); }
+  .btn.ghost:hover { color: var(--ink); background: var(--surface-2); opacity: 1; }
+  .btn.small { padding: 6px 10px; font-size: 0.8rem; }
+  :focus-visible { outline: 2px solid var(--a-study); outline-offset: 2px; }
+  .spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid color-mix(in srgb, currentColor 30%, transparent); border-top-color: currentColor; animation: spin .7s linear infinite; display: none; }
+  .btn.loading .spin { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .banner {
+    border-radius: 12px; padding: 12px 14px; font-size: 0.87rem; background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--critical) 35%, var(--line)); color: var(--ink-2);
+  }
+  .banner strong { color: var(--ink); }
+
+  /* ---------- Section label ---------- */
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .sec-head h2 {
+    font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: 1.05rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .sec-head .meta { font-size: 0.8rem; color: var(--ink-3); }
+
+  /* ---------- I DAG board ---------- */
+  .board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 980px) { .board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 640px) { .board { grid-template-columns: minmax(0, 1fr); } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+    padding: 16px 18px 18px; min-width: 0; display: flex; flex-direction: column; gap: 12px;
+  }
+  .card-k {
+    display: flex; align-items: center; gap: 7px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-2);
+  }
+  .card-k .ad { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+  .card-k .src-note { margin-left: auto; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--ink-3); font-size: 0.72rem; }
+  .ad.health { background: var(--a-health); } .ad.study { background: var(--a-study); }
+  .ad.money { background: var(--a-money); } .ad.tasks { background: var(--a-tasks); } .ad.cal { background: var(--a-cal); }
+
+  .headline { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; min-width: 0; }
+  .big {
+    font-family: var(--f-display); font-stretch: 75%; font-weight: 800; font-size: 2.6rem; line-height: 0.9;
+    font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+  }
+  .big.word { font-size: 2.1rem; }
+  .big-u { font-size: 0.86rem; color: var(--ink-2); font-weight: 500; }
+  .sub { font-size: 0.84rem; color: var(--ink-2); line-height: 1.4; }
+  .muted { color: var(--ink-3); }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; border-radius: 100px; padding: 3px 9px 3px 7px; white-space: nowrap;
+  }
+  .chip .d { width: 7px; height: 7px; border-radius: 50%; }
+  .chip.good { color: var(--good); background: color-mix(in srgb, var(--good) 13%, transparent); } .chip.good .d { background: var(--good); }
+  .chip.warning { color: color-mix(in srgb, var(--warning) 65%, var(--ink)); background: color-mix(in srgb, var(--warning) 20%, transparent); } .chip.warning .d { background: var(--warning); }
+  .chip.critical { color: var(--critical); background: color-mix(in srgb, var(--critical) 13%, transparent); } .chip.critical .d { background: var(--critical); }
+  .chip.neutral { color: var(--ink-2); background: var(--surface-2); } .chip.neutral .d { background: var(--ink-3); }
+
+  /* Recovery mini-metrics */
+  .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .m { background: var(--surface-2); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+  .m .l { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); font-weight: 600; }
+  .m .v { font-family: var(--f-display); font-stretch: 80%; font-weight: 700; font-size: 1.35rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .m .v small { font-family: var(--f-body); font-size: 0.7rem; color: var(--ink-3); font-weight: 500; margin-left: 2px; }
+  .m .dl { font-size: 0.72rem; font-weight: 600; }
+  .dl.up { color: var(--good); } .dl.down { color: var(--critical); } .dl.flat { color: var(--ink-3); }
+  .note {
+    font-size: 0.8rem; color: var(--ink-2); background: var(--surface-2); border-radius: 10px; padding: 8px 10px;
+    white-space: pre-line; max-height: 4.6em; overflow: hidden; position: relative; cursor: pointer;
+  }
+  .note.open { max-height: none; }
+  .note b { color: var(--ink); font-weight: 600; }
+
+  /* Lists */
+  .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .list li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); min-width: 0; }
+  .list li:first-child { border-top: none; padding-top: 2px; }
+  .time { font-family: var(--f-mono); font-size: 0.78rem; color: var(--ink-2); width: 3.4rem; flex: none; padding-top: 1px; }
+  .li-main { min-width: 0; flex: 1; }
+  .li-title { font-weight: 600; font-size: 0.9rem; overflow-wrap: anywhere; }
+  .li-sub { font-size: 0.76rem; color: var(--ink-3); overflow-wrap: anywhere; }
+  .li-right { flex: none; font-size: 0.76rem; color: var(--ink-2); text-align: right; }
+  .now-line { border-top: 2px solid var(--a-cal) !important; }
+  .past { opacity: 0.5; }
+
+  /* Workout today */
+  .wo { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; background: var(--surface-2); }
+  .wo-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .wo-name { font-weight: 700; font-size: 0.95rem; }
+  .wo-meta { font-size: 0.78rem; color: var(--ink-2); font-family: var(--f-mono); }
+  .wo details summary { font-size: 0.78rem; color: var(--ink-2); cursor: pointer; }
+  .wo details p { font-size: 0.8rem; color: var(--ink-2); white-space: pre-line; margin: 6px 0 0; }
+
+  /* Checkboxes */
+  .chk {
+    appearance: none; -webkit-appearance: none; width: 22px; height: 22px; flex: none; margin: 0;
+    border: 2px solid var(--line-2); border-radius: 7px; cursor: pointer; display: grid; place-items: center;
+    background: var(--surface); transition: background .12s ease, border-color .12s ease;
+  }
+  .chk::after { content: ""; width: 10px; height: 6px; border-left: 2.5px solid var(--surface); border-bottom: 2.5px solid var(--surface); transform: rotate(-45deg) translate(1px, -1px); opacity: 0; }
+  .chk:checked { background: var(--a-tasks); border-color: var(--a-tasks); }
+  .chk:checked::after { opacity: 1; }
+  .chk.round { border-radius: 50%; }
+  .done-t { text-decoration: line-through; color: var(--ink-3); }
+  .prio { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); }
+  .prio.p1 { color: var(--critical); }
+  .area-tag { display: inline-flex; align-items: center; gap: 5px; }
+  .area-tag::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--ink-3); }
+  .area-tag.studie::before { background: var(--a-study); } .area-tag.sundhed::before { background: var(--a-health); }
+  .area-tag.okonomi::before { background: var(--a-money); } .area-tag.privat::before { background: var(--a-tasks); }
+
+  /* Habit row */
+  .habits { display: flex; flex-direction: column; gap: 6px; }
+  .habit { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 10px; background: var(--surface-2); cursor: pointer; }
+  .habit .hn { flex: 1; font-weight: 600; font-size: 0.9rem; min-width: 0; overflow-wrap: anywhere; }
+  .habit .st { font-family: var(--f-mono); font-size: 0.74rem; color: var(--ink-2); white-space: nowrap; }
+  .dots7 { display: flex; gap: 3px; }
+  .dots7 i { width: 6px; height: 6px; border-radius: 50%; background: var(--line-2); display: block; }
+  .dots7 i.on { background: var(--a-tasks); }
+
+  /* Inline add form */
+  .add { display: flex; gap: 6px; flex-wrap: wrap; }
+  .add input[type="text"] { flex: 1 1 160px; min-width: 0; }
+  .field {
+    border: 1px solid var(--line-2); background: var(--surface); border-radius: 9px; padding: 7px 10px; font-size: 0.86rem; min-height: 36px;
+  }
+  .field:focus { outline: 2px solid var(--a-study); outline-offset: 0; border-color: transparent; }
+  .add .btn { min-height: 36px; }
+
+  /* Deadline row */
+  .dd { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: 1.15rem; line-height: 1; text-align: right; font-variant-numeric: tabular-nums; }
+  .dd small { display: block; font-family: var(--f-body); font-weight: 500; font-size: 0.66rem; color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 2px; }
+  .dd.soon { color: var(--critical); }
+
+  /* States */
+  .empty { font-size: 0.84rem; color: var(--ink-3); padding: 4px 0; }
+  .err {
+    font-size: 0.82rem; color: var(--ink); border-radius: 10px; padding: 9px 11px;
+    background: color-mix(in srgb, var(--critical) 9%, transparent); border: 1px solid color-mix(in srgb, var(--critical) 25%, transparent);
+  }
+  .err b { color: var(--critical); }
+  .skel {
+    height: 74px; border-radius: 10px;
+    background: linear-gradient(90deg, var(--surface-2) 0%, color-mix(in srgb, var(--ink) 6%, var(--surface-2)) 50%, var(--surface-2) 100%);
+    background-size: 200% 100%; animation: shimmer 1.4s linear infinite;
+  }
+  .skel.short { height: 40px; }
+  .skel.tall { height: 200px; }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+  /* ---------- Tabs ---------- */
+  .tabbar {
+    position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 20;
+    display: flex; gap: 2px; padding: 4px; overflow-x: auto; scrollbar-width: none;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1px solid var(--line); border-radius: 13px; box-shadow: var(--shadow);
+  }
+  .tabbar::-webkit-scrollbar { display: none; }
+  .tab {
+    appearance: none; border: none; background: none; cursor: pointer; border-radius: 9px;
+    padding: 9px 14px; font-weight: 600; font-size: 0.9rem; color: var(--ink-2); white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 7px; flex: 1 0 auto; justify-content: center;
+  }
+  .tab .ad { width: 8px; height: 8px; border-radius: 2px; }
+  .tab:hover { background: var(--surface-2); color: var(--ink); }
+  .tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+  .panel { display: flex; flex-direction: column; gap: 14px; }
+  .panel[hidden] { display: none; }
+
+  /* ---------- Sundhed ---------- */
+  .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 900px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 13px 15px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .tile .l { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+  .tile .big { font-size: 2.2rem; }
+  .tile .big.word { font-size: 1.5rem; line-height: 1.05; white-space: normal; }
+  .row2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; }
+  @media (max-width: 900px) { .row2 { grid-template-columns: minmax(0, 1fr); } }
+  .card h3 { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: 1.15rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; }
+  .card-head .meta { font-size: 0.76rem; color: var(--ink-3); font-family: var(--f-mono); }
+  .chart { width: 100%; position: relative; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.76rem; color: var(--ink-2); }
+  .legend .it { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .sw { width: 14px; height: 3px; border-radius: 2px; }
+  .legend .sw.sq { width: 10px; height: 10px; border-radius: 3px; }
+  .legend .sw.dash { background: repeating-linear-gradient(90deg, var(--ink-3) 0 4px, transparent 4px 7px) !important; }
+  .well3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 700px) { .well3 { grid-template-columns: minmax(0, 1fr); } }
+  .wm { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .wm-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .wm-top .l { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+  .wm-top .v { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+  .wm-top .v small { font-family: var(--f-body); font-size: 0.72rem; font-weight: 500; color: var(--ink-3); margin-left: 3px; }
+  .str-list .li-right { font-family: var(--f-mono); }
+  .links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 640px) { .links { grid-template-columns: minmax(0, 1fr); } }
+  .link-card {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; text-decoration: none;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px;
+    transition: border-color .12s ease, transform .12s ease;
+  }
+  .link-card:hover { border-color: var(--line-2); transform: translateY(-1px); }
+  .link-card .t { font-weight: 700; }
+  .link-card .s { font-size: 0.8rem; color: var(--ink-3); }
+  .link-card .arr { font-size: 1.2rem; color: var(--ink-2); }
+
+  .coming { background: var(--surface); border: 1px dashed var(--line-2); border-radius: 16px; padding: 28px 22px; color: var(--ink-2); font-size: 0.9rem; }
+  .coming h3 { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; text-transform: uppercase; font-size: 1.2rem; color: var(--ink); margin-bottom: 6px; }
+
+  #tip {
+    position: fixed; pointer-events: none; z-index: 60; background: var(--ink); color: var(--bg);
+    font-size: 0.76rem; padding: 7px 10px; border-radius: 8px; line-height: 1.45; opacity: 0;
+    transform: translate(-50%, calc(-100% - 12px)); transition: opacity .08s ease; max-width: min(260px, calc(100vw - 24px));
+  }
+  #tip.on { opacity: 1; }
+  #tip .tt { font-weight: 700; margin-bottom: 2px; }
+  #tip .r { display: flex; justify-content: space-between; gap: 12px; }
+  #tip .r span:first-child { opacity: .75; }
+
+  footer { font-size: 0.74rem; color: var(--ink-3); line-height: 1.6; }
+</style>
+
+<div class="shell">
+  <header class="top">
+    <div>
+      <div class="eyebrow" id="dateline">&nbsp;</div>
+      <h1>Command Center</h1>
+    </div>
+    <div class="top-right">
+      <div class="sources" aria-label="Datakilder">
+        <span class="src" id="src-icu"><span class="d"></span>IcuSync</span>
+        <span class="src" id="src-cal"><span class="d"></span>Google Kalender</span>
+        <span class="src" id="src-db"><span class="d"></span>Database</span>
+      </div>
+      <div class="actions">
+        <span id="updated"></span>
+        <button class="btn" id="refresh" type="button"><span class="spin"></span><span id="refresh-l">Opdater</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="banner" id="no-runtime" hidden>
+    <strong>Siden kan ikke hente data her.</strong> Åbn Command Center på claude.ai (i appen eller browseren), så forbinder den til IcuSync, Google Kalender og databasen.
+  </div>
+
+  <!-- ================= I DAG ================= -->
+  <section class="sec-head" aria-labelledby="today-h">
+    <h2 id="today-h">I dag</h2>
+    <span class="meta" id="today-meta"></span>
+  </section>
+
+  <div class="board">
+    <!-- Recovery -->
+    <article class="card" id="c-recovery">
+      <div class="card-k"><span class="ad health"></span>Restitution<span class="src-note" id="rec-src"></span></div>
+      <div id="rec-body"><div class="skel"></div></div>
+    </article>
+
+    <!-- Today's workout -->
+    <article class="card" id="c-workout">
+      <div class="card-k"><span class="ad health"></span>Dagens træning</div>
+      <div id="wo-body"><div class="skel"></div></div>
+    </article>
+
+    <!-- Calendar today -->
+    <article class="card" id="c-agenda">
+      <div class="card-k"><span class="ad cal"></span>Aftaler i dag</div>
+      <div id="ag-body"><div class="skel"></div></div>
+    </article>
+
+    <!-- Tasks today -->
+    <article class="card" id="c-tasks">
+      <div class="card-k"><span class="ad tasks"></span>Opgaver i dag</div>
+      <div id="tk-body"><div class="skel"></div></div>
+      <form class="add" id="tk-add" autocomplete="off" hidden>
+        <input class="field" type="text" id="tk-title" placeholder="Ny opgave…" aria-label="Ny opgave" maxlength="140">
+        <select class="field" id="tk-area" aria-label="Område">
+          <option value="studie">Studie</option>
+          <option value="sundhed">Sundhed</option>
+          <option value="okonomi">Økonomi</option>
+          <option value="privat" selected>Privat</option>
+        </select>
+        <button class="btn" type="submit">Tilføj</button>
+      </form>
+    </article>
+
+    <!-- Habits -->
+    <article class="card" id="c-habits">
+      <div class="card-k"><span class="ad tasks"></span>Vaner</div>
+      <div id="hb-body"><div class="skel"></div></div>
+      <form class="add" id="hb-add" autocomplete="off" hidden>
+        <input class="field" type="text" id="hb-name" placeholder="Ny vane, fx Stræk 10 min" aria-label="Ny vane" maxlength="60">
+        <button class="btn ghost" type="submit">Tilføj vane</button>
+      </form>
+    </article>
+
+    <!-- Deadlines -->
+    <article class="card" id="c-deadlines">
+      <div class="card-k"><span class="ad study"></span>Nærmeste deadlines</div>
+      <div id="dl-body"><div class="skel"></div></div>
+    </article>
+  </div>
+
+  <!-- ================= TABS ================= -->
+  <nav class="tabbar" role="tablist" aria-label="Områder">
+    <button class="tab" role="tab" data-tab="sundhed" aria-selected="true"><span class="ad health"></span>Sundhed</button>
+    <button class="tab" role="tab" data-tab="studie" aria-selected="false"><span class="ad study"></span>Studie</button>
+    <button class="tab" role="tab" data-tab="okonomi" aria-selected="false"><span class="ad money"></span>Økonomi</button>
+    <button class="tab" role="tab" data-tab="opgaver" aria-selected="false"><span class="ad tasks"></span>Opgaver &amp; vaner</button>
+    <button class="tab" role="tab" data-tab="kalender" aria-selected="false"><span class="ad cal"></span>Kalender</button>
+  </nav>
+
+  <!-- Sundhed -->
+  <section class="panel" id="p-sundhed" role="tabpanel">
+    <div class="tiles" id="h-tiles">
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
+    </div>
+
+    <div class="row2">
+      <article class="card">
+        <div class="card-head"><h3>Form og træthed</h3><span class="meta">6 uger + 2 uger frem</span></div>
+        <div id="fit-body"><div class="skel tall"></div></div>
+      </article>
+      <article class="card">
+        <div class="card-head"><h3>Km pr. uge</h3><span class="meta">løb, 8 uger</span></div>
+        <div id="km-body"><div class="skel tall"></div></div>
+      </article>
+    </div>
+
+    <article class="card">
+      <div class="card-head"><h3>Søvn, HRV og hvilepuls</h3><span class="meta" id="well-meta">28 dage</span></div>
+      <div id="well-body"><div class="skel tall"></div></div>
+    </article>
+
+    <div class="row2">
+      <article class="card">
+        <div class="card-head"><h3>Styrketræning i ugen</h3><span class="meta" id="str-meta"></span></div>
+        <div id="str-body"><div class="skel"></div></div>
+      </article>
+      <article class="card">
+        <div class="card-head"><h3>Kommende pas</h3><span class="meta">7 dage</span></div>
+        <div id="next-body"><div class="skel"></div></div>
+      </article>
+    </div>
+
+    <div class="links">
+      <a class="link-card" href="https://claude.ai/code/artifact/f8db45dc-f60f-4e82-a4dc-0837b74eb9b4" target="_blank" rel="noopener">
+        <span><span class="t">Splits &amp; Sets</span><br><span class="s">Fuldt træningsdashboard: løb, styrke, sko og rekorder</span></span><span class="arr">↗</span>
+      </a>
+      <a class="link-card" href="https://claude.ai/code/artifact/cbf7995d-8206-4c1e-b5e9-c03ea78c1416" target="_blank" rel="noopener">
+        <span><span class="t">Træningsstatus</span><br><span class="s">Ugentlig status og den rullende plan</span></span><span class="arr">↗</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="panel" id="p-studie" role="tabpanel" hidden>
+    <div class="coming"><h3>Studie</h3>Fag, eksamensdatoer, links til dine noter og resumé af skolemappen. Bygges i næste trin.</div>
+  </section>
+  <section class="panel" id="p-okonomi" role="tabpanel" hidden>
+    <div class="coming"><h3>Økonomi</h3>Investeringer med live kurser, budget med hurtig indtastning og opsparingsmål. Bygges i næste trin.</div>
+  </section>
+  <section class="panel" id="p-opgaver" role="tabpanel" hidden>
+    <div class="coming"><h3>Opgaver &amp; vaner</h3>Fuld opgaveliste med område og prioritet, vaner med streaks og gennemførsel pr. uge og måned. Bygges i næste trin.</div>
+  </section>
+  <section class="panel" id="p-kalender" role="tabpanel" hidden>
+    <div class="coming"><h3>Kalender</h3>Uge- og månedsvisning fra Google Kalender. Bygges i næste trin.</div>
+  </section>
+
+  <footer id="foot">
+    Træning og restitution hentes live fra intervals.icu via IcuSync. Aftaler fra Google Kalender (inkl. din iCloud-kalender). Opgaver, vaner og deadlines gemmes i dashboardets egen database.
+    <span id="garmin" hidden><br>Data provided by Garmin®</span>
+  </footer>
+</div>
+
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var TZ = "Europe/Budapest";
+  var ICU = "IcuSync";
+  var GCAL = "Google Calendar";
+  var S = {
+    mcp: null, db: null,
+    wellness: null, fitness: null, events: null, history: null,
+    icuErr: {}, cal: null, calErr: null,
+    tasks: null, habits: null, hlog: null, deadlines: null, dbErr: null
+  };
+
+  // ---------- utils ----------
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function partsInTZ(d) {
+    var p = {};
+    new Intl.DateTimeFormat("en-GB", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+      .formatToParts(d).forEach(function (x) { p[x.type] = x.value; });
+    return p;
+  }
+  function todayISO() { var p = partsInTZ(new Date()); return p.year + "-" + p.month + "-" + p.day; }
+  function nowLocal() { var p = partsInTZ(new Date()); return p.year + "-" + p.month + "-" + p.day + "T" + p.hour + ":" + p.minute; }
+  function isoToUTC(iso) { var a = iso.slice(0, 10).split("-"); return new Date(Date.UTC(+a[0], +a[1] - 1, +a[2])); }
+  function utcToISO(d) { return d.getUTCFullYear() + "-" + pad(d.getUTCMonth() + 1) + "-" + pad(d.getUTCDate()); }
+  function addDays(iso, n) { var d = isoToUTC(iso); d.setUTCDate(d.getUTCDate() + n); return utcToISO(d); }
+  function daysBetween(a, b) { return Math.round((isoToUTC(b) - isoToUTC(a)) / 86400000); }
+  function mondayOf(iso) { var d = isoToUTC(iso); var wd = (d.getUTCDay() + 6) % 7; return addDays(iso, -wd); }
+  function isoWeek(iso) {
+    var t = isoToUTC(iso); var dn = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - dn);
+    var y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return Math.ceil(((t - y0) / 86400000 + 1) / 7);
+  }
+  var DAYS = ["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"];
+  var DAYS_S = ["søn", "man", "tir", "ons", "tor", "fre", "lør"];
+  var MONTHS = ["januar", "februar", "marts", "april", "maj", "juni", "juli", "august", "september", "oktober", "november", "december"];
+  var MONTHS_S = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+  function dayName(iso) { return DAYS[isoToUTC(iso).getUTCDay()]; }
+  function shortDate(iso) { var d = isoToUTC(iso); return d.getUTCDate() + ". " + MONTHS_S[d.getUTCMonth()]; }
+  function relDay(iso) {
+    var n = daysBetween(todayISO(), iso);
+    if (n === 0) return "i dag"; if (n === 1) return "i morgen"; if (n === -1) return "i går";
+    if (n > 1 && n < 7) return dayName(iso);
+    return shortDate(iso);
+  }
+  function fmt1(n) { return (n == null || isNaN(n)) ? "–" : n.toFixed(1).replace(".", ","); }
+  function fmt0(n) { return (n == null || isNaN(n)) ? "–" : String(Math.round(n)); }
+  function fmtK(n) { return (n == null || isNaN(n)) ? "–" : Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+  function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function svgEl(tag, attrs) { var e = document.createElementNS("http://www.w3.org/2000/svg", tag); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  function arr(obj, key) {
+    // IcuSync answers sometimes as {data:[…]}, sometimes as {"0":{…},"1":{…}}.
+    var src = obj && Array.isArray(obj.data) ? obj.data : obj;
+    var out = [];
+    if (Array.isArray(src)) out = src.slice();
+    else if (src && typeof src === "object") for (var k in src) { if (k !== "_icusync_context" && src[k] && typeof src[k] === "object" && src[k][key]) out.push(src[k]); }
+    return out.filter(function (v) { return v && v[key]; });
+  }
+  function withTimeout(p, ms, fb) {
+    return new Promise(function (res) {
+      var done = false; var t = setTimeout(function () { if (!done) { done = true; res(fb); } }, ms);
+      p.then(function (v) { if (!done) { done = true; clearTimeout(t); res(v); } }, function () { if (!done) { done = true; clearTimeout(t); res(fb); } });
+    });
+  }
+  function timeoutSignal(ms) {
+    try { if (AbortSignal.timeout) return AbortSignal.timeout(ms); } catch (e) {}
+    try { var c = new AbortController(); setTimeout(function () { c.abort(); }, ms); return c.signal; } catch (e) {}
+    return undefined;
+  }
+
+  // ---------- error copy (per source, plain Danish) ----------
+  var SRC_NAME = { IcuSync: "IcuSync", "Google Calendar": "Google Kalender" };
+  function errCopy(server, err) {
+    var n = SRC_NAME[server] || server;
+    var code = (err && err.code) || "unknown";
+    switch (code) {
+      case "server_not_connected": return "<b>" + n + " ikke forbundet.</b> Tilføj den under Indstillinger → Connectors på claude.ai, og tryk Opdater.";
+      case "needs_reauth": return "<b>" + n + " skal forbindes igen.</b> Gå til Indstillinger → Connectors på claude.ai.";
+      case "selection_required": return "<b>Vælg hvilken " + n + "-forbindelse</b> siden skal bruge, og tryk Opdater.";
+      case "server_unavailable": return "<b>" + n + " svarer ikke lige nu.</b> Prøv igen om lidt.";
+      case "cancelled": return "<b>" + n + " var for længe om at svare.</b> Tryk Opdater.";
+      case "blocked_by_policy": case "approval_required": return "<b>" + n + " er blokeret</b> af en indstilling i din organisation.";
+      case "not_granted": case "capability_disabled": case "capability_removed": case "not_in_manifest":
+        return "<b>Siden har ikke adgang til " + n + ".</b> Giv adgang, når claude.ai spørger, eller åbn siden igen.";
+      case "tool_error": return "<b>" + n + " gav en fejl:</b> " + esc((err && err.message) || "ukendt fejl");
+      default: return "<b>Kunne ikke hente fra " + n + ".</b> Tryk Opdater for at prøve igen.";
+    }
+  }
+  function dbErrCopy(err) {
+    var code = (err && err.code) || "unknown";
+    if (code === "quota_exceeded") return "<b>Databasen er fuld.</b> Slet nogle gamle poster.";
+    if (code === "resource_exhausted") return "<b>For mange ændringer på kort tid.</b> Vent et øjeblik.";
+    if (code === "not_granted" || code === "revoked" || code === "capability_disabled") return "<b>Databasen er ikke tilgængelig her.</b> Åbn siden på claude.ai.";
+    return "<b>Kunne ikke gemme eller hente fra databasen.</b> Prøv igen.";
+  }
+  function setSrc(id, state, title) {
+    var el = $(id); el.className = "src " + (state || ""); el.title = title || "";
+  }
+
+  // ---------- connectors ----------
+  function call(server, tool, input, force) {
+    if (!S.mcp) return Promise.reject({ code: "not_granted" });
+    var opts = { cache: force ? { refresh: true, gcTime: 86400000 } : { staleTime: 120000, gcTime: 86400000 } };
+    var sig = timeoutSignal(25000); if (sig) opts.signal = sig;
+    var p;
+    try { p = S.mcp.callTool(server, tool, input || {}, opts); } catch (e) { return Promise.reject({ code: "upstream_error" }); }
+    return p.then(function (r) { return r.payload; });
+  }
+  function settle(p) { return p.then(function (d) { return { ok: true, data: d }; }, function (e) { return { ok: false, error: e || {} }; }); }
+
+  function loadIcu(force) {
+    var t = todayISO();
+    setSrc("src-icu", "", "Henter…");
+    return Promise.all([
+      settle(call(ICU, "get_wellness", { oldest: addDays(t, -35), newest: t }, force)),
+      settle(call(ICU, "get_fitness", { oldest: addDays(t, -42), newest: addDays(t, 14) }, force)),
+      settle(call(ICU, "get_events", { oldest: addDays(t, -1), newest: addDays(t, 8) }, force)),
+      settle(call(ICU, "get_training_history", { days: 63 }, force))
+    ]).then(function (r) {
+      S.icuErr = {};
+      if (r[0].ok) S.wellness = r[0].data; else S.icuErr.wellness = r[0].error;
+      if (r[1].ok) S.fitness = r[1].data; else S.icuErr.fitness = r[1].error;
+      if (r[2].ok) S.events = r[2].data; else S.icuErr.events = r[2].error;
+      if (r[3].ok) S.history = r[3].data; else S.icuErr.history = r[3].error;
+      var okN = r.filter(function (x) { return x.ok; }).length;
+      setSrc("src-icu", okN === 4 ? "ok" : (okN ? "" : "err"), okN === 4 ? "Forbundet" : (okN ? "Delvist hentet" : "Ikke forbundet"));
+      renderHealthAll();
+    });
+  }
+
+  function loadCal(force) {
+    var t = todayISO();
+    setSrc("src-cal", "", "Henter…");
+    return settle(call(GCAL, "list_calendars", {}, force)).then(function (r) {
+      if (!r.ok) { S.calErr = r.error; S.cal = null; return; }
+      var cals = (r.data && r.data.calendars) || [];
+      return Promise.all(cals.map(function (c) {
+        return settle(call(GCAL, "list_events", {
+          calendarId: c.id, startTime: t + "T00:00:00", endTime: addDays(t, 8) + "T00:00:00",
+          timeZone: TZ, orderBy: "startTime", pageSize: 250
+        }, force)).then(function (er) { return { cal: c, r: er }; });
+      })).then(function (list) {
+        var events = [], fails = 0;
+        list.forEach(function (x) {
+          if (!x.r.ok) { fails++; return; }
+          ((x.r.data && x.r.data.events) || []).forEach(function (e) {
+            if (e.status === "cancelled") return;
+            events.push(normEvent(e, x.cal));
+          });
+        });
+        if (fails && fails === list.length) { S.calErr = list[0].r.error; S.cal = null; return; }
+        S.calErr = null; S.cal = events;
+      });
+    }).then(function () {
+      setSrc("src-cal", S.calErr ? "err" : "ok", S.calErr ? "Ikke forbundet" : "Forbundet");
+      renderAgenda();
+    });
+  }
+  function normEvent(e, cal) {
+    var allDay = !!(e.start && e.start.date);
+    var sISO, eISO, sT = "", eT = "";
+    if (allDay) { sISO = e.start.date; eISO = addDays(e.end && e.end.date ? e.end.date : e.start.date, -1); }
+    else {
+      var sp = partsInTZ(new Date(e.start.dateTime)), ep = partsInTZ(new Date(e.end.dateTime));
+      sISO = sp.year + "-" + sp.month + "-" + sp.day; eISO = ep.year + "-" + ep.month + "-" + ep.day;
+      sT = sp.hour + ":" + sp.minute; eT = ep.hour + ":" + ep.minute;
+    }
+    var holiday = /holiday/.test(cal.id);
+    return { title: e.summary || "(uden titel)", allDay: allDay, start: sISO, end: eISO, sT: sT, eT: eT, where: e.location || "", cal: cal.summary || "", holiday: holiday };
+  }
+
+  // ---------- database ----------
+  function startDb() {
+    var db = S.db;
+    var t = todayISO();
+    var pending = 4;
+    function arrived() { if (--pending === 0) setSrc("src-db", S.dbErr ? "err" : "ok", S.dbErr ? "Fejl" : "Forbundet"); }
+    function onErr(e) { S.dbErr = e; setSrc("src-db", "err", "Fejl"); renderTodayDb(); }
+    function sub(q, key) {
+      var first = true;
+      q.onSnapshot(function (snap) {
+        S[key] = snap.docs.map(function (d) { var o = Object.assign({}, d.data()); o.id = d.id; return o; });
+        if (first) { first = false; arrived(); }
+        renderTodayDb();
+      }, onErr);
+    }
+    sub(db.collection("tasks").limit(500), "tasks");
+    sub(db.collection("habits").limit(50), "habits");
+    sub(db.collection("habitLog").where("date", ">=", addDays(t, -120)).limit(1000), "hlog");
+    sub(db.collection("deadlines").where("date", ">=", addDays(t, -1)).limit(300), "deadlines");
+  }
+  function dbWrite(p) {
+    return p.catch(function (e) { S.dbErr = e; renderTodayDb(); setTimeout(function () { S.dbErr = null; renderTodayDb(); }, 5000); });
+  }
+
+  // =================================================================
+  // I DAG
+  // =================================================================
+  function renderDateline() {
+    var t = todayISO(), d = isoToUTC(t);
+    var label = dayName(t) + " " + d.getUTCDate() + ". " + MONTHS[d.getUTCMonth()];
+    $("dateline").textContent = label + " · uge " + isoWeek(t) + " · Budapest";
+    var h = +partsInTZ(new Date()).hour;
+    var hi = h < 5 ? "God nat" : h < 10 ? "Godmorgen" : h < 12 ? "God formiddag" : h < 18 ? "God eftermiddag" : "God aften";
+    $("today-meta").textContent = hi + ", Rune";
+  }
+
+  // ----- recovery -----
+  function wellRecords() { return ((S.wellness && S.wellness.records) || []).slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }); }
+  function computeRecovery() {
+    var rec = wellRecords(); var n = rec.length;
+    if (n < 10) return null;
+    var recentN = Math.min(7, Math.floor(n / 2)), bEnd = n - recentN, bStart = Math.max(0, bEnd - 21);
+    function avg(f, s, e) { var v = rec.slice(s, e).map(function (r) { return r[f]; }).filter(function (x) { return x != null; }); return v.length ? v.reduce(function (a, b) { return a + b; }, 0) / v.length : null; }
+    var last = rec[n - 1];
+    var out = { last: last, base: {}, flags: 0, signals: [] };
+    [["hrv", true], ["resting_hr", false], ["sleep_hours", true]].forEach(function (x) {
+      var f = x[0]; var b = avg(f, bStart, bEnd); var r7 = avg(f, bEnd, n);
+      out.base[f] = b;
+      if (b == null || r7 == null) return;
+      var concerning = f === "hrv" ? (r7 - b) / b <= -0.05 : f === "resting_hr" ? r7 - b >= 2 : (r7 - b <= -0.5 || r7 < 6.5);
+      if (concerning) out.flags++;
+      out.signals.push(f);
+    });
+    out.status = out.flags === 0 ? { l: "Frisk", c: "good" } : out.flags === 1 ? { l: "Neutral", c: "neutral" } : { l: "Træt", c: "critical" };
+    // Today's single reading can tell a different story than the 7-day average.
+    var dayFlags = 0;
+    if (last.hrv != null && out.base.hrv && (last.hrv - out.base.hrv) / out.base.hrv <= -0.15) dayFlags++;
+    if (last.resting_hr != null && out.base.resting_hr && last.resting_hr - out.base.resting_hr >= 3) dayFlags++;
+    if (last.sleep_hours != null && last.sleep_hours < 6) dayFlags++;
+    out.dayFlags = dayFlags;
+    if (dayFlags >= 2) out.status = { l: "Træt i dag", c: "critical" };
+    else if (dayFlags === 1 && out.status.c === "good") out.status = { l: "Neutral", c: "warning" };
+    return out;
+  }
+  function deltaSpan(v, b, upGood, unit, dec) {
+    if (v == null || b == null) return '<span class="dl flat">–</span>';
+    var d = v - b; var flat = Math.abs(d) < (dec ? 0.15 : 1);
+    var cls = flat ? "flat" : ((d > 0) === upGood ? "up" : "down");
+    var s = (d > 0 ? "+" : d < 0 ? "−" : "±") + (dec ? fmt1(Math.abs(d)) : fmt0(Math.abs(d))) + unit;
+    return '<span class="dl ' + cls + '" title="Forskel fra din normal">' + s + '</span>';
+  }
+  function renderRecovery() {
+    var host = $("rec-body");
+    if (!S.wellness) { host.innerHTML = S.icuErr.wellness ? '<div class="err">' + errCopy(ICU, S.icuErr.wellness) + "</div>" : '<div class="skel"></div>'; return; }
+    var rec = computeRecovery();
+    var all = wellRecords();
+    if (!all.length) { host.innerHTML = '<div class="empty">Ingen søvn- eller HRV-data i intervals.icu endnu. Synkroniser dit ur.</div>'; return; }
+    var last = all[all.length - 1];
+    var t = todayISO();
+    $("rec-src").textContent = last.date === t ? "målt i morges" : "senest " + relDay(last.date);
+    var b = rec ? rec.base : {};
+    var status = rec ? rec.status : { l: "–", c: "neutral" };
+    var html =
+      '<div class="headline"><span class="big word">' + esc(status.l) + '</span>' +
+      '<span class="chip ' + status.c + '"><span class="d"></span>' + (rec ? (rec.flags === 0 ? "ingen advarsler" : rec.flags + " advarsel" + (rec.flags > 1 ? "er" : "") + " i ugen") : "for lidt data") + "</span></div>" +
+      '<div class="trio">' +
+        '<div class="m"><div class="l">Søvn</div><div class="v">' + fmt1(last.sleep_hours) + '<small>t</small></div>' + deltaSpan(last.sleep_hours, b.sleep_hours, true, " t", true) + "</div>" +
+        '<div class="m"><div class="l">HRV</div><div class="v">' + fmt0(last.hrv) + '<small>ms</small></div>' + deltaSpan(last.hrv, b.hrv, true, "", false) + "</div>" +
+        '<div class="m"><div class="l">Hvilepuls</div><div class="v">' + fmt0(last.resting_hr) + '<small>bpm</small></div>' + deltaSpan(last.resting_hr, b.resting_hr, false, "", false) + "</div>" +
+      "</div>" + '<div class="sub muted" style="font-size:0.74rem">Tal i farve = forskel fra din normal (gennemsnit af de 3 uger før sidste uge).</div>';
+    if (last.notes) html += '<div class="note" id="rec-note" title="Tryk for at læse hele noten"><b>Din note:</b> ' + esc(last.notes) + "</div>";
+    host.innerHTML = html;
+    var nt = $("rec-note"); if (nt) nt.addEventListener("click", function () { nt.classList.toggle("open"); });
+  }
+
+  // ----- workouts -----
+  function eventsArr() { return arr(S.events, "start_date_local").filter(function (e) { return (e.category || "WORKOUT") === "WORKOUT"; }); }
+  function acts() { return ((S.history && S.history.activities) || []).slice(); }
+  function isRun(t) { return t === "Run" || t === "VirtualRun" || t === "TrailRun"; }
+  function sameKind(a, b) { return (isRun(a) && isRun(b)) || a === b; }
+  function matchActivity(ev, used) {
+    var d = ev.start_date_local.slice(0, 10);
+    var list = acts().filter(function (a) { return a.date && a.date.slice(0, 10) === d && sameKind(a.type, ev.type) && used.indexOf(a.id) === -1; });
+    return list[0] || null;
+  }
+  function typeLabel(t) { return isRun(t) ? "Løb" : t === "WeightTraining" ? "Styrke" : t === "Ride" ? "Cykling" : t || "Pas"; }
+  function shoeAndText(desc) {
+    if (!desc) return { shoe: "", text: "" };
+    var lines = String(desc).split("\n"); var shoe = "";
+    if (/^SKO:/i.test(lines[0] || "")) { shoe = lines.shift().replace(/^SKO:\s*/i, ""); }
+    var text = lines.join("\n").replace(/\n(Warmup|Main Set|Cooldown)[\s\S]*$/, "").trim();
+    return { shoe: shoe, text: text };
+  }
+  function renderWorkout() {
+    var host = $("wo-body");
+    if (!S.events && !S.history) {
+      var e = S.icuErr.events || S.icuErr.history;
+      host.innerHTML = e ? '<div class="err">' + errCopy(ICU, e) + "</div>" : '<div class="skel"></div>'; return;
+    }
+    var t = todayISO(), used = [];
+    var planned = eventsArr().filter(function (e) { return e.start_date_local.slice(0, 10) === t; });
+    var doneActs = acts().filter(function (a) { return a.date && a.date.slice(0, 10) === t; });
+    var rows = [];
+    var totalMin = 0;
+    planned.forEach(function (ev) {
+      var a = matchActivity(ev, used); if (a) used.push(a.id);
+      totalMin += ev.duration_minutes || 0;
+      var st = shoeAndText(ev.description);
+      var meta = ev.start_date_local.slice(11, 16) + " · " + (ev.duration_minutes || "?") + " min · " + typeLabel(ev.type);
+      var chip = a ? '<span class="chip good"><span class="d"></span>gennemført</span>' : (nowLocal() > ev.start_date_local.slice(0, 16) ? '<span class="chip neutral"><span class="d"></span>ikke logget</span>' : '<span class="chip neutral"><span class="d"></span>planlagt</span>');
+      var result = a ? '<div class="wo-meta">' + (a.distance_km ? fmt1(parseFloat(a.distance_km)) + " km · " : "") + (a.average_pace ? a.average_pace + " · " : "") + (a.average_hr ? "puls " + a.average_hr + " · " : "") + (a.duration_minutes || "") + " min</div>" : "";
+      rows.push('<div class="wo"><div class="wo-top"><span class="wo-name">' + esc(ev.name) + "</span>" + chip + "</div>" +
+        '<div class="wo-meta">' + esc(meta) + (st.shoe ? " · " + esc(st.shoe) : "") + "</div>" + result +
+        (st.text ? "<details><summary>Plan og noter</summary><p>" + esc(st.text) + "</p></details>" : "") + "</div>");
+    });
+    doneActs.forEach(function (a) {
+      if (used.indexOf(a.id) !== -1) return;
+      rows.push('<div class="wo"><div class="wo-top"><span class="wo-name">' + esc(a.name) + '</span><span class="chip good"><span class="d"></span>ekstra</span></div>' +
+        '<div class="wo-meta">' + (a.distance_km ? fmt1(parseFloat(a.distance_km)) + " km · " : "") + (a.duration_minutes || "") + " min</div></div>");
+    });
+    var head;
+    if (!planned.length && !doneActs.length) {
+      var next = nextWorkout();
+      head = '<div class="headline"><span class="big word">Hviledag</span></div><div class="sub">' +
+        (next ? "Næste pas: <b>" + esc(next.name) + "</b> " + relDay(next.start_date_local.slice(0, 10)) + " kl. " + next.start_date_local.slice(11, 16) : "Ingen planlagte pas den næste uge.") + "</div>";
+      host.innerHTML = head; return;
+    }
+    head = '<div class="headline"><span class="big">' + (totalMin || doneActs.reduce(function (s, a) { return s + (a.duration_minutes || 0); }, 0)) + '</span><span class="big-u">min i dag · ' + planned.length + " planlagt</span></div>";
+    host.innerHTML = head + '<div style="display:flex;flex-direction:column;gap:8px">' + rows.join("") + "</div>";
+  }
+  function nextWorkout() {
+    var now = nowLocal(); var used = [];
+    var list = eventsArr().filter(function (e) {
+      if (e.start_date_local.slice(0, 16) < now.slice(0, 10) + "T00:00") return false;
+      var a = matchActivity(e, used); if (a) { used.push(a.id); return false; }
+      return e.start_date_local.slice(0, 16) >= now || e.start_date_local.slice(0, 10) > now.slice(0, 10);
+    });
+    list.sort(function (a, b) { return a.start_date_local < b.start_date_local ? -1 : 1; });
+    return list[0] || null;
+  }
+
+  // ----- agenda -----
+  function renderAgenda() {
+    var host = $("ag-body");
+    if (S.calErr) { host.innerHTML = '<div class="err">' + errCopy(GCAL, S.calErr) + "</div>"; return; }
+    if (!S.cal) { host.innerHTML = '<div class="skel"></div>'; return; }
+    var t = todayISO(), now = nowLocal().slice(11, 16);
+    var today = S.cal.filter(function (e) { return e.start <= t && e.end >= t; });
+    today.sort(function (a, b) { return (a.allDay ? "00" : a.sT) < (b.allDay ? "00" : b.sT) ? -1 : 1; });
+    var timed = today.filter(function (e) { return !e.allDay; });
+    var upcoming = timed.filter(function (e) { return e.eT > now; });
+    var head;
+    if (!today.length) {
+      var nextE = S.cal.filter(function (e) { return e.start > t; }).sort(function (a, b) { return (a.start + a.sT) < (b.start + b.sT) ? -1 : 1; })[0];
+      host.innerHTML = '<div class="headline"><span class="big word">Fri</span></div><div class="sub">Ingen aftaler i dag.' +
+        (nextE ? " Næste: <b>" + esc(nextE.title) + "</b> " + relDay(nextE.start) + (nextE.sT ? " kl. " + nextE.sT : "") : "") + "</div>";
+      return;
+    }
+    head = '<div class="headline"><span class="big">' + today.length + '</span><span class="big-u">' + (today.length === 1 ? "aftale" : "aftaler") +
+      (upcoming.length ? " · næste kl. " + upcoming[0].sT : timed.length ? " · alle overstået" : "") + "</span></div>";
+    var lis = today.map(function (e) {
+      var past = !e.allDay && e.eT <= now;
+      return '<li class="' + (past ? "past" : "") + '"><span class="time">' + (e.allDay ? "hele dagen" : e.sT) + '</span><div class="li-main"><div class="li-title">' + esc(e.title) + "</div>" +
+        '<div class="li-sub">' + (e.allDay ? "" : e.sT + "–" + e.eT) + (e.where ? " · " + esc(e.where) : "") + (e.holiday ? " · helligdag" : "") + "</div></div></li>";
+    });
+    host.innerHTML = head + '<ul class="list">' + lis.join("") + "</ul>";
+  }
+
+  // ----- tasks / habits / deadlines (database) -----
+  var AREA_L = { studie: "Studie", sundhed: "Sundhed", okonomi: "Økonomi", privat: "Privat" };
+  function renderTodayDb() { renderTasks(); renderHabits(); renderDeadlines(); }
+
+  function renderTasks() {
+    var host = $("tk-body");
+    if (!S.db) { host.innerHTML = '<div class="err">' + dbErrCopy({ code: "not_granted" }) + "</div>"; return; }
+    if (S.dbErr && !S.tasks) { host.innerHTML = '<div class="err">' + dbErrCopy(S.dbErr) + "</div>"; return; }
+    if (!S.tasks) { host.innerHTML = '<div class="skel"></div>'; return; }
+    $("tk-add").hidden = false;
+    var t = todayISO();
+    var list = S.tasks.filter(function (k) {
+      if (k.done) return k.doneAt && k.doneDate === t; // ticked off today stays visible
+      return k.due && k.due <= t;
+    });
+    list.sort(function (a, b) { return (a.done - b.done) || ((a.priority || 2) - (b.priority || 2)) || ((a.due || "") < (b.due || "") ? -1 : 1); });
+    var open = list.filter(function (k) { return !k.done; });
+    var overdue = open.filter(function (k) { return k.due < t; }).length;
+    var html = '<div class="headline"><span class="big">' + open.length + '</span><span class="big-u">' + (open.length === 1 ? "åben" : "åbne") +
+      (overdue ? " · " + overdue + " forsinket" : "") + "</span></div>";
+    if (S.dbErr) html += '<div class="err">' + dbErrCopy(S.dbErr) + "</div>";
+    if (!list.length) {
+      var anyLater = S.tasks.filter(function (k) { return !k.done && (!k.due || k.due > t); }).length;
+      html += '<div class="empty">Intet på listen i dag.' + (anyLater ? " " + anyLater + " opgave" + (anyLater > 1 ? "r" : "") + " ligger senere." : " Skriv en opgave herunder, eller bed Claude i en chat om at tilføje den.") + "</div>";
+    } else {
+      html += '<ul class="list">' + list.map(function (k) {
+        var late = !k.done && k.due < t;
+        return '<li><input type="checkbox" class="chk round" data-task="' + esc(k.id) + '"' + (k.done ? " checked" : "") + ' aria-label="Marker ' + esc(k.title) + ' som færdig">' +
+          '<div class="li-main"><div class="li-title' + (k.done ? " done-t" : "") + '">' + esc(k.title) + "</div>" +
+          '<div class="li-sub"><span class="area-tag ' + esc(k.area || "privat") + '">' + esc(AREA_L[k.area] || "Privat") + "</span>" +
+          (late ? ' · <span style="color:var(--critical)">forfaldt ' + relDay(k.due) + "</span>" : "") + "</div></div>" +
+          ((k.priority || 2) === 1 ? '<span class="prio p1">Høj</span>' : "") + "</li>";
+      }).join("") + "</ul>";
+    }
+    host.innerHTML = html;
+    host.querySelectorAll("[data-task]").forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        var id = cb.getAttribute("data-task");
+        dbWrite(S.db.doc("tasks/" + id).update(cb.checked ? { done: true, doneAt: Date.now(), doneDate: todayISO() } : { done: false, doneAt: null, doneDate: null }));
+      });
+    });
+  }
+
+  function habitDone(hid, iso) { return (S.hlog || []).some(function (l) { return l.habitId === hid && l.date === iso; }); }
+  function streak(hid) {
+    var t = todayISO(); var d = habitDone(hid, t) ? t : addDays(t, -1); var n = 0;
+    while (habitDone(hid, d) && n < 400) { n++; d = addDays(d, -1); }
+    return n;
+  }
+  function renderHabits() {
+    var host = $("hb-body");
+    if (!S.db) { host.innerHTML = '<div class="err">' + dbErrCopy({ code: "not_granted" }) + "</div>"; return; }
+    if (S.dbErr && !S.habits) { host.innerHTML = '<div class="err">' + dbErrCopy(S.dbErr) + "</div>"; return; }
+    if (!S.habits || !S.hlog) { host.innerHTML = '<div class="skel"></div>'; return; }
+    $("hb-add").hidden = false;
+    var t = todayISO();
+    var hs = S.habits.filter(function (h) { return h.active !== false; }).sort(function (a, b) { return (a.order || 0) - (b.order || 0) || (a.createdAt || 0) - (b.createdAt || 0); });
+    if (!hs.length) { host.innerHTML = '<div class="empty">Ingen vaner endnu. Tilføj den første herunder, fx “Stræk 10 min” eller “Læs 20 sider”.</div>'; return; }
+    var done = hs.filter(function (h) { return habitDone(h.id, t); }).length;
+    var html = '<div class="headline"><span class="big">' + done + '<span class="muted">/' + hs.length + '</span></span><span class="big-u">klaret i dag</span></div><div class="habits">';
+    hs.forEach(function (h) {
+      var on = habitDone(h.id, t), st = streak(h.id);
+      var dots = ""; for (var i = 6; i >= 0; i--) dots += '<i class="' + (habitDone(h.id, addDays(t, -i)) ? "on" : "") + '"></i>';
+      html += '<label class="habit"><input type="checkbox" class="chk" data-habit="' + esc(h.id) + '"' + (on ? " checked" : "") + '>' +
+        '<span class="hn">' + esc(h.name) + '</span><span class="dots7" aria-hidden="true" title="Sidste 7 dage">' + dots + '</span><span class="st">' + (st ? st + " d" : "") + "</span></label>";
+    });
+    host.innerHTML = html + "</div>";
+    host.querySelectorAll("[data-habit]").forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        var hid = cb.getAttribute("data-habit"), day = todayISO(), ref = S.db.doc("habitLog/" + hid + "_" + day);
+        dbWrite(cb.checked ? ref.set({ habitId: hid, date: day, at: Date.now() }) : ref.delete());
+      });
+    });
+  }
+
+  function renderDeadlines() {
+    var host = $("dl-body");
+    if (!S.db) { host.innerHTML = '<div class="err">' + dbErrCopy({ code: "not_granted" }) + "</div>"; return; }
+    if (S.dbErr && !S.deadlines) { host.innerHTML = '<div class="err">' + dbErrCopy(S.dbErr) + "</div>"; return; }
+    if (!S.deadlines || !S.tasks) { host.innerHTML = '<div class="skel"></div>'; return; }
+    var t = todayISO();
+    var items = S.deadlines.filter(function (d) { return d.date >= t && !d.done; }).map(function (d) {
+      return { title: d.title, date: d.date, sub: [d.course, d.kind === "exam" ? "eksamen" : d.kind === "hand-in" ? "aflevering" : d.kind].filter(Boolean).join(" · "), exam: d.kind === "exam" };
+    });
+    S.tasks.forEach(function (k) {
+      if (!k.done && k.due && k.due > t && (k.priority || 2) === 1) items.push({ title: k.title, date: k.due, sub: (AREA_L[k.area] || "Opgave") + " · opgave", exam: false });
+    });
+    items.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    items = items.slice(0, 5);
+    if (!items.length) { host.innerHTML = '<div class="empty">Ingen kommende deadlines. Fag og eksamensdatoer kommer ind, når Studie-fanen og studieresuméet er sat op.</div>'; return; }
+    var first = daysBetween(t, items[0].date);
+    var html = '<div class="headline"><span class="big">' + first + '</span><span class="big-u">' + (first === 1 ? "dag" : "dage") + " til " + esc(items[0].title) + "</span></div>";
+    var sub0 = '<div class="sub">' + esc(items[0].sub) + " · " + dayName(items[0].date) + " " + shortDate(items[0].date) + "</div>";
+    html += sub0;
+    if (items.length > 1) html += '<ul class="list">' + items.slice(1).map(function (it) {
+      var n = daysBetween(t, it.date);
+      return '<li><div class="li-main"><div class="li-title">' + esc(it.title) + '</div><div class="li-sub">' + esc(it.sub) + " · " + dayName(it.date) + " " + shortDate(it.date) + "</div></div>" +
+        '<div class="dd' + (n <= 3 ? " soon" : "") + '">' + n + "<small>" + (n === 1 ? "dag" : "dage") + "</small></div></li>";
+    }).join("") + "</ul>";
+    host.innerHTML = html;
+  }
+
+  // =================================================================
+  // SUNDHED
+  // =================================================================
+  function renderHealthAll() {
+    function safe(fn) { try { fn(); } catch (e) { console.error(e); } }
+    safe(renderRecovery); safe(renderWorkout);
+    safe(renderTiles); safe(renderFitness); safe(renderKm); safe(renderWellness); safe(renderStrength); safe(renderNext);
+    var hasGarmin = acts().some(function (a) { return a.garmin_attribution || (a.device_name && /Garmin/.test(a.device_name)); });
+    $("garmin").hidden = !hasGarmin;
+  }
+  function weekKm(monday) {
+    var end = addDays(monday, 7);
+    return acts().filter(function (a) { return isRun(a.type) && a.date && a.date.slice(0, 10) >= monday && a.date.slice(0, 10) < end; })
+      .reduce(function (s, a) { return s + (parseFloat(a.distance_km) || 0); }, 0);
+  }
+  function fitArr() { return arr(S.fitness, "date").sort(function (a, b) { return a.date < b.date ? -1 : 1; }); }
+  function formZone(tsb) {
+    if (tsb > 25) return { l: "Meget frisk", c: "warning" };
+    if (tsb > 5) return { l: "Frisk", c: "good" };
+    if (tsb > -10) return { l: "Neutral", c: "neutral" };
+    if (tsb > -30) return { l: "Optimal træning", c: "good" };
+    return { l: "Høj risiko", c: "critical" };
+  }
+  function tile(label, big, unit, sub, word) {
+    return '<div class="tile"><div class="l">' + label + '</div><div class="headline"><span class="big' + (word ? " word" : "") + '">' + big + "</span>" +
+      (unit ? '<span class="big-u">' + unit + "</span>" : "") + '</div><div class="sub">' + sub + "</div></div>";
+  }
+  function strengthThisWeek() {
+    var mon = mondayOf(todayISO());
+    return acts().filter(function (a) { return a.type === "WeightTraining" && a.date && a.date.slice(0, 10) >= mon; })
+      .sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+  }
+  function parseStrength(desc) {
+    var out = []; if (!desc) return out;
+    var lines = String(desc).split("\n"), sep = /^-{3,}$/, i = 0;
+    while (i < lines.length) {
+      if (sep.test(lines[i].trim()) && lines[i + 1] && sep.test((lines[i + 2] || "").trim())) {
+        var name = lines[i + 1].trim(), j = i + 3, sets = [];
+        while (j < lines.length && !sep.test(lines[j].trim())) {
+          var ln = lines[j].trim(), m = ln.match(/^-?\s*(\d+)\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*kg\.?$/i), m2 = ln.match(/^-?\s*(\d+)\s*reps?\.?$/i);
+          if (m) sets.push({ r: +m[1], w: parseFloat(m[2].replace(",", ".")) }); else if (m2) sets.push({ r: +m2[1], w: 0 });
+          j++;
+        }
+        out.push({ name: name, sets: sets }); i = j; continue;
+      }
+      i++;
+    }
+    return out;
+  }
+  function renderTiles() {
+    var host = $("h-tiles");
+    if (!S.history && !S.fitness && !S.events) {
+      var e = S.icuErr.history || S.icuErr.fitness;
+      if (e) host.innerHTML = '<div class="err" style="grid-column:1/-1">' + errCopy(ICU, e) + "</div>";
+      return;
+    }
+    var t = todayISO(), mon = mondayOf(t);
+    var out = [];
+    if (S.history) {
+      var km = weekKm(mon), prev = weekKm(addDays(mon, -7));
+      var runs = acts().filter(function (a) { return isRun(a.type) && a.date.slice(0, 10) >= mon; }).length;
+      out.push(tile("Ugens km", fmt1(km), "km", runs + " løbeture · sidste uge " + fmt1(prev) + " km"));
+    }
+    var nx = S.events ? nextWorkout() : null;
+    if (S.events) out.push(tile("Næste pas", nx ? esc(nx.name) : "Intet planlagt", "", nx ? relDay(nx.start_date_local.slice(0, 10)) + " kl. " + nx.start_date_local.slice(11, 16) + " · " + (nx.duration_minutes || "?") + " min" : "Ingen pas de næste 7 dage", true));
+    var fa = fitArr().filter(function (f) { return f.date <= t; });
+    if (fa.length) {
+      var l = fa[fa.length - 1], z = formZone(l.tsb);
+      out.push(tile("Form (TSB)", (l.tsb > 0 ? "+" : "") + fmt0(l.tsb), "", '<span class="chip ' + z.c + '"><span class="d"></span>' + z.l + "</span> fitness " + fmt0(l.ctl) + " · træthed " + fmt0(l.atl)));
+    }
+    if (S.history) {
+      var ss = strengthThisWeek(), ton = 0;
+      ss.forEach(function (a) { parseStrength(a.description).forEach(function (x) { x.sets.forEach(function (s) { ton += s.r * s.w; }); }); });
+      out.push(tile("Styrke i ugen", String(ss.length), ss.length === 1 ? "pas" : "pas", ton ? fmtK(ton) + " kg løftet i alt" : "Intet styrkepas endnu i ugen"));
+    }
+    host.innerHTML = out.join("");
+  }
+
+  // ----- tooltip -----
+  var tip = $("tip");
+  function showTip(x, y, html) { tip.innerHTML = html; tip.style.left = Math.max(130, Math.min(window.innerWidth - 130, x)) + "px"; tip.style.top = y + "px"; tip.classList.add("on"); }
+  function hideTip() { tip.classList.remove("on"); }
+
+  // ----- fitness chart -----
+  function renderFitness() {
+    var host = $("fit-body");
+    var fa = fitArr();
+    if (!fa.length) { host.innerHTML = S.icuErr.fitness ? '<div class="err">' + errCopy(ICU, S.icuErr.fitness) + "</div>" : (S.fitness ? '<div class="empty">Ingen fitness-data endnu.</div>' : '<div class="skel tall"></div>'); return; }
+    var t = todayISO();
+    var W = Math.max(300, host.clientWidth || 600), H = 220, P = { l: 30, r: 74, t: 12, b: 24 }, H2 = 70;
+    var n = fa.length;
+    var maxY = 0; fa.forEach(function (f) { maxY = Math.max(maxY, f.ctl, f.atl); });
+    var step = maxY > 60 ? 20 : maxY > 30 ? 10 : 5; maxY = Math.ceil(maxY / step) * step || 10;
+    function X(i) { return P.l + (W - P.l - P.r) * (n === 1 ? 0.5 : i / (n - 1)); }
+    function Y(v) { return P.t + (H - P.t - P.b) * (1 - v / maxY); }
+    var ink3 = cssVar("--ink-3"), grid = cssVar("--grid"), cCtl = cssVar("--s-ctl"), cAtl = cssVar("--s-atl"), ink2 = cssVar("--ink-2"), surf = cssVar("--surface");
+    var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + (H + H2 + 10), role: "img", "aria-label": "Fitness og træthed over tid" });
+    for (var g = 0; g <= maxY; g += step) {
+      svg.appendChild(svgEl("line", { x1: P.l, x2: W - P.r, y1: Y(g), y2: Y(g), stroke: grid, "stroke-width": 1 }));
+      var tx = svgEl("text", { x: P.l - 6, y: Y(g) + 4, "text-anchor": "end", "font-size": 10, fill: ink3 }); tx.textContent = g; svg.appendChild(tx);
+    }
+    var ti = fa.findIndex(function (f) { return f.date > t; }); var lastPast = ti === -1 ? n - 1 : Math.max(0, ti - 1);
+    // today marker
+    svg.appendChild(svgEl("line", { x1: X(lastPast), x2: X(lastPast), y1: P.t, y2: H + H2, stroke: ink3, "stroke-width": 1, "stroke-dasharray": "2 3" }));
+    var tl = svgEl("text", { x: X(lastPast) + 4, y: P.t + 9, "font-size": 10, fill: ink2 }); tl.textContent = "I dag"; svg.appendChild(tl);
+    function path(key, from, to) { var d = ""; for (var i = from; i <= to; i++) d += (i === from ? "M" : "L") + X(i).toFixed(1) + "," + Y(fa[i][key]).toFixed(1); return d; }
+    [["atl", cAtl], ["ctl", cCtl]].forEach(function (s) {
+      svg.appendChild(svgEl("path", { d: path(s[0], 0, lastPast), fill: "none", stroke: s[1], "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+      if (lastPast < n - 1) svg.appendChild(svgEl("path", { d: path(s[0], lastPast, n - 1), fill: "none", stroke: s[1], "stroke-width": 2, "stroke-dasharray": "4 4", opacity: 0.7 }));
+      svg.appendChild(svgEl("circle", { cx: X(lastPast), cy: Y(fa[lastPast][s[0]]), r: 4.5, fill: s[1], stroke: surf, "stroke-width": 2 }));
+    });
+    // direct labels at the right end
+    var lc = fa[n - 1].ctl, la = fa[n - 1].atl, yc = Y(lc), ya = Y(la);
+    if (Math.abs(yc - ya) < 14) { if (yc < ya) { yc -= 7; ya += 7; } else { yc += 7; ya -= 7; } }
+    [["Fitness " + fmt0(fa[lastPast].ctl), yc], ["Træthed " + fmt0(fa[lastPast].atl), ya]].forEach(function (l) {
+      var e = svgEl("text", { x: W - P.r + 6, y: l[1] + 4, "font-size": 11, fill: ink2, "font-weight": 600 }); e.textContent = l[0]; svg.appendChild(e);
+    });
+    // TSB strip
+    var top2 = H + 8, mid = top2 + H2 / 2;
+    var tsbMax = 30; fa.forEach(function (f) { tsbMax = Math.max(tsbMax, Math.abs(f.tsb)); });
+    function Y2(v) { return mid - (H2 / 2 - 4) * v / tsbMax; }
+    svg.appendChild(svgEl("line", { x1: P.l, x2: W - P.r, y1: mid, y2: mid, stroke: grid, "stroke-width": 1 }));
+    var lt = svgEl("text", { x: P.l - 6, y: mid + 4, "text-anchor": "end", "font-size": 10, fill: ink3 }); lt.textContent = "0"; svg.appendChild(lt);
+    var bw = Math.max(1.5, (W - P.l - P.r) / n - 2);
+    var zc = { good: cssVar("--good"), neutral: ink3, warning: cssVar("--warning"), critical: cssVar("--critical") };
+    fa.forEach(function (f, i) {
+      var z = formZone(f.tsb), y = Y2(f.tsb);
+      svg.appendChild(svgEl("rect", { x: X(i) - bw / 2, y: Math.min(y, mid), width: bw, height: Math.max(1, Math.abs(y - mid)), rx: Math.min(2, bw / 2), fill: zc[z.c], opacity: i > lastPast ? 0.4 : 0.9 }));
+    });
+    var fl = svgEl("text", { x: W - P.r + 6, y: mid + 4, "font-size": 11, fill: ink2, "font-weight": 600 }); fl.textContent = "Form " + (fa[lastPast].tsb > 0 ? "+" : "") + fmt0(fa[lastPast].tsb); svg.appendChild(fl);
+    // hover
+    var cross = svgEl("line", { x1: 0, x2: 0, y1: P.t, y2: H + H2, stroke: ink2, "stroke-width": 1, opacity: 0 }); svg.appendChild(cross);
+    var hit = svgEl("rect", { x: P.l, y: 0, width: W - P.l - P.r, height: H + H2, fill: "transparent" }); svg.appendChild(hit);
+    function onMove(evt) {
+      var r = svg.getBoundingClientRect(), px = (evt.clientX - r.left) * W / r.width;
+      var i = Math.round((px - P.l) / ((W - P.l - P.r) / Math.max(1, n - 1))); i = Math.max(0, Math.min(n - 1, i));
+      cross.setAttribute("x1", X(i)); cross.setAttribute("x2", X(i)); cross.setAttribute("opacity", 0.5);
+      var f = fa[i];
+      showTip(r.left + X(i) * r.width / W, r.top + Y(Math.max(f.ctl, f.atl)) * r.height / (H + H2 + 10),
+        '<div class="tt">' + dayName(f.date) + " " + shortDate(f.date) + (f.date > t ? " (prognose)" : "") + "</div>" +
+        '<div class="r"><span>Fitness</span><span>' + fmt0(f.ctl) + '</span></div><div class="r"><span>Træthed</span><span>' + fmt0(f.atl) + "</span></div>" +
+        '<div class="r"><span>Form</span><span>' + (f.tsb > 0 ? "+" : "") + fmt0(f.tsb) + " · " + formZone(f.tsb).l + "</span></div>");
+    }
+    hit.addEventListener("pointermove", onMove); hit.addEventListener("pointerdown", onMove);
+    hit.addEventListener("pointerleave", function () { cross.setAttribute("opacity", 0); hideTip(); });
+    host.innerHTML = "";
+    var wrap = document.createElement("div"); wrap.className = "chart"; wrap.appendChild(svg); host.appendChild(wrap);
+    var lg = document.createElement("div"); lg.className = "legend";
+    lg.innerHTML = '<span class="it"><span class="sw" style="background:var(--s-ctl)"></span>Fitness (CTL)</span><span class="it"><span class="sw" style="background:var(--s-atl)"></span>Træthed (ATL)</span>' +
+      '<span class="it"><span class="sw dash"></span>Prognose ud fra planen</span><span class="it"><span class="sw sq" style="background:var(--good)"></span>Form: optimal / frisk</span><span class="it"><span class="sw sq" style="background:var(--ink-3)"></span>neutral</span><span class="it"><span class="sw sq" style="background:var(--critical)"></span>høj risiko</span>';
+    host.appendChild(lg);
+  }
+
+  // ----- weekly km bars -----
+  function renderKm() {
+    var host = $("km-body");
+    if (!S.history) { host.innerHTML = S.icuErr.history ? '<div class="err">' + errCopy(ICU, S.icuErr.history) + "</div>" : '<div class="skel tall"></div>'; return; }
+    var mon = mondayOf(todayISO()), weeks = [];
+    for (var i = 7; i >= 0; i--) { var m = addDays(mon, -7 * i); weeks.push({ m: m, km: weekKm(m), wk: isoWeek(m) }); }
+    var W = Math.max(260, host.clientWidth || 400), H = 230, P = { l: 30, r: 8, t: 18, b: 24 };
+    var maxY = Math.max(10, Math.max.apply(null, weeks.map(function (w) { return w.km; })));
+    var step = maxY > 60 ? 20 : maxY > 25 ? 10 : 5; maxY = Math.ceil(maxY / step) * step;
+    var ink3 = cssVar("--ink-3"), grid = cssVar("--grid"), ink2 = cssVar("--ink-2"), acc = cssVar("--a-health"), ink = cssVar("--ink");
+    var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "Løbe-km pr. uge, 8 uger" });
+    function Y(v) { return P.t + (H - P.t - P.b) * (1 - v / maxY); }
+    for (var g = 0; g <= maxY; g += step) {
+      svg.appendChild(svgEl("line", { x1: P.l, x2: W - P.r, y1: Y(g), y2: Y(g), stroke: grid, "stroke-width": 1 }));
+      var tx = svgEl("text", { x: P.l - 6, y: Y(g) + 4, "text-anchor": "end", "font-size": 10, fill: ink3 }); tx.textContent = g; svg.appendChild(tx);
+    }
+    var slot = (W - P.l - P.r) / weeks.length, bw = Math.min(34, slot - 6);
+    var maxKm = Math.max.apply(null, weeks.map(function (w) { return w.km; }));
+    weeks.forEach(function (w, i) {
+      var x = P.l + slot * i + (slot - bw) / 2, y = Y(w.km), cur = i === weeks.length - 1;
+      var h = Math.max(0, Y(0) - y);
+      if (h > 0) svg.appendChild(svgEl("path", { d: "M" + x + "," + Y(0) + "V" + (y + Math.min(4, h)) + "q0,-" + Math.min(4, h) + " " + Math.min(4, h) + ",-" + Math.min(4, h) + "H" + (x + bw - Math.min(4, h)) + "q" + Math.min(4, h) + ",0 " + Math.min(4, h) + "," + Math.min(4, h) + "V" + Y(0) + "Z", fill: acc, opacity: cur ? 1 : 0.45 }));
+      var lb = svgEl("text", { x: x + bw / 2, y: H - 6, "text-anchor": "middle", "font-size": 10, fill: cur ? ink : ink3, "font-weight": cur ? 700 : 400 }); lb.textContent = "u" + w.wk; svg.appendChild(lb);
+      if (cur || (w.km === maxKm && w.km > 0)) { var vl = svgEl("text", { x: x + bw / 2, y: y - 5, "text-anchor": "middle", "font-size": 11, fill: ink2, "font-weight": 700 }); vl.textContent = fmt1(w.km); svg.appendChild(vl); }
+      var hit = svgEl("rect", { x: P.l + slot * i, y: P.t, width: slot, height: H - P.t - P.b, fill: "transparent" });
+      hit.addEventListener("pointerenter", function (evt) { var r = svg.getBoundingClientRect(); showTip(r.left + (x + bw / 2) * r.width / W, r.top + y * r.height / H, '<div class="tt">Uge ' + w.wk + " · fra " + shortDate(w.m) + '</div><div class="r"><span>Løb</span><span>' + fmt1(w.km) + " km</span></div>"); });
+      hit.addEventListener("pointerleave", hideTip);
+      svg.appendChild(hit);
+    });
+    host.innerHTML = ""; var wrap = document.createElement("div"); wrap.className = "chart"; wrap.appendChild(svg); host.appendChild(wrap);
+  }
+
+  // ----- wellness trends -----
+  function renderWellness() {
+    var host = $("well-body");
+    if (!S.wellness) { host.innerHTML = S.icuErr.wellness ? '<div class="err">' + errCopy(ICU, S.icuErr.wellness) + "</div>" : '<div class="skel tall"></div>'; return; }
+    var rec = wellRecords().slice(-28);
+    if (!rec.length) { host.innerHTML = '<div class="empty">Ingen wellness-data endnu.</div>'; return; }
+    var r = computeRecovery(); var base = r ? r.base : {};
+    var defs = [
+      { k: "sleep_hours", l: "Søvn", u: "t", dec: true, up: true },
+      { k: "hrv", l: "HRV", u: "ms", dec: false, up: true },
+      { k: "resting_hr", l: "Hvilepuls", u: "bpm", dec: false, up: false }
+    ];
+    host.innerHTML = '<div class="well3">' + defs.map(function (d) { return '<div class="wm" id="wm-' + d.k + '"></div>'; }).join("") + "</div>" +
+      '<div class="legend" style="margin-top:8px"><span class="it"><span class="sw" style="background:var(--a-health)"></span>Daglig måling</span><span class="it"><span class="sw dash"></span>Din normal (3 uger før sidste uge)</span></div>';
+    var ink3 = cssVar("--ink-3"), grid = cssVar("--grid"), acc = cssVar("--a-health"), surf = cssVar("--surface");
+    defs.forEach(function (d) {
+      var el = $("wm-" + d.k);
+      var vals = rec.map(function (x) { return x[d.k]; });
+      var last = null; for (var i = vals.length - 1; i >= 0; i--) if (vals[i] != null) { last = vals[i]; break; }
+      el.innerHTML = '<div class="wm-top"><span class="l">' + d.l + '</span><span class="v">' + (d.dec ? fmt1(last) : fmt0(last)) + "<small>" + d.u + "</small></span></div>";
+      var nums = vals.filter(function (v) { return v != null; });
+      if (nums.length < 2) { el.insertAdjacentHTML("beforeend", '<div class="empty">For få målinger.</div>'); return; }
+      var lo = Math.min.apply(null, nums.concat(base[d.k] != null ? [base[d.k]] : [])), hi = Math.max.apply(null, nums.concat(base[d.k] != null ? [base[d.k]] : []));
+      var pad = (hi - lo) * 0.15 || 1; lo -= pad; hi += pad;
+      var W = Math.max(220, el.clientWidth || 300), H = 96, P = { l: 4, r: 4, t: 8, b: 16 }, n = rec.length;
+      function X(i) { return P.l + (W - P.l - P.r) * i / Math.max(1, n - 1); }
+      function Y(v) { return P.t + (H - P.t - P.b) * (1 - (v - lo) / (hi - lo)); }
+      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": d.l + " de sidste 28 dage" });
+      svg.appendChild(svgEl("line", { x1: P.l, x2: W - P.r, y1: H - P.b, y2: H - P.b, stroke: grid, "stroke-width": 1 }));
+      if (base[d.k] != null) svg.appendChild(svgEl("line", { x1: P.l, x2: W - P.r, y1: Y(base[d.k]), y2: Y(base[d.k]), stroke: ink3, "stroke-width": 1, "stroke-dasharray": "4 3" }));
+      var dd = "", pen = false;
+      vals.forEach(function (v, i) { if (v == null) { pen = false; return; } dd += (pen ? "L" : "M") + X(i).toFixed(1) + "," + Y(v).toFixed(1); pen = true; });
+      var area = "";
+      svg.appendChild(svgEl("path", { d: dd, fill: "none", stroke: acc, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+      var li = vals.length - 1; while (li >= 0 && vals[li] == null) li--;
+      if (li >= 0) svg.appendChild(svgEl("circle", { cx: X(li), cy: Y(vals[li]), r: 4.5, fill: acc, stroke: surf, "stroke-width": 2 }));
+      [[0, "start"], [n - 1, "end"]].forEach(function (q) { var tx = svgEl("text", { x: X(q[0]), y: H - 3, "text-anchor": q[1], "font-size": 10, fill: ink3 }); tx.textContent = shortDate(rec[q[0]].date); svg.appendChild(tx); });
+      var dot = svgEl("circle", { r: 4, fill: acc, stroke: surf, "stroke-width": 2, opacity: 0 }); svg.appendChild(dot);
+      var hit = svgEl("rect", { x: 0, y: 0, width: W, height: H, fill: "transparent" }); svg.appendChild(hit);
+      function mv(evt) {
+        var r2 = svg.getBoundingClientRect(), px = (evt.clientX - r2.left) * W / r2.width;
+        var i = Math.max(0, Math.min(n - 1, Math.round((px - P.l) / ((W - P.l - P.r) / Math.max(1, n - 1)))));
+        var v = vals[i];
+        if (v == null) { dot.setAttribute("opacity", 0); showTip(evt.clientX, r2.top, '<div class="tt">' + shortDate(rec[i].date) + "</div>Ingen måling"); return; }
+        dot.setAttribute("cx", X(i)); dot.setAttribute("cy", Y(v)); dot.setAttribute("opacity", 1);
+        showTip(r2.left + X(i) * r2.width / W, r2.top + Y(v) * r2.height / H, '<div class="tt">' + dayName(rec[i].date) + " " + shortDate(rec[i].date) + '</div><div class="r"><span>' + d.l + "</span><span>" + (d.dec ? fmt1(v) : fmt0(v)) + " " + d.u + "</span></div>" +
+          (base[d.k] != null ? '<div class="r"><span>Normal</span><span>' + (d.dec ? fmt1(base[d.k]) : fmt0(base[d.k])) + " " + d.u + "</span></div>" : ""));
+      }
+      hit.addEventListener("pointermove", mv); hit.addEventListener("pointerdown", mv);
+      hit.addEventListener("pointerleave", function () { dot.setAttribute("opacity", 0); hideTip(); });
+      var wrap = document.createElement("div"); wrap.className = "chart"; wrap.appendChild(svg); el.appendChild(wrap);
+    });
+  }
+
+  // ----- strength list -----
+  function renderStrength() {
+    var host = $("str-body");
+    if (!S.history) { host.innerHTML = S.icuErr.history ? '<div class="err">' + errCopy(ICU, S.icuErr.history) + "</div>" : '<div class="skel"></div>'; return; }
+    var ss = strengthThisWeek();
+    $("str-meta").textContent = "uge " + isoWeek(todayISO());
+    if (!ss.length) { host.innerHTML = '<div class="empty">Ingen styrkepas logget i ugen endnu.</div>'; return; }
+    host.innerHTML = '<ul class="list str-list">' + ss.map(function (a) {
+      var ex = parseStrength(a.description), sets = 0, ton = 0;
+      ex.forEach(function (x) { sets += x.sets.length; x.sets.forEach(function (s) { ton += s.r * s.w; }); });
+      return '<li><span class="time">' + DAYS_S[isoToUTC(a.date.slice(0, 10)).getUTCDay()] + '</span><div class="li-main"><div class="li-title">' + esc(a.name) + '</div><div class="li-sub">' +
+        esc(ex.map(function (x) { return x.name; }).join(" · ")) + "</div></div><div class=\"li-right\">" + sets + " sæt<br>" + (ton ? fmtK(ton) + " kg" : (a.duration_minutes || "") + " min") + "</div></li>";
+    }).join("") + "</ul>";
+  }
+
+  // ----- upcoming sessions -----
+  function renderNext() {
+    var host = $("next-body");
+    if (!S.events) { host.innerHTML = S.icuErr.events ? '<div class="err">' + errCopy(ICU, S.icuErr.events) + "</div>" : '<div class="skel"></div>'; return; }
+    var t = todayISO(), end = addDays(t, 7), used = [];
+    var list = eventsArr().filter(function (e) { var d = e.start_date_local.slice(0, 10); return d >= t && d <= end; })
+      .sort(function (a, b) { return a.start_date_local < b.start_date_local ? -1 : 1; });
+    if (!list.length) { host.innerHTML = '<div class="empty">Ingen planlagte pas den næste uge.</div>'; return; }
+    host.innerHTML = '<ul class="list">' + list.map(function (e) {
+      var a = matchActivity(e, used); if (a) used.push(a.id);
+      var d = e.start_date_local.slice(0, 10);
+      return '<li class="' + (a ? "past" : "") + '"><span class="time">' + DAYS_S[isoToUTC(d).getUTCDay()] + " " + e.start_date_local.slice(11, 16) + '</span><div class="li-main"><div class="li-title">' + esc(e.name) +
+        '</div><div class="li-sub">' + typeLabel(e.type) + " · " + (e.duration_minutes || "?") + " min" + (shoeAndText(e.description).shoe ? " · " + esc(shoeAndText(e.description).shoe) : "") + "</div></div>" +
+        (a ? '<span class="chip good"><span class="d"></span>klaret</span>' : "") + "</li>";
+    }).join("") + "</ul>";
+  }
+
+  // =================================================================
+  // Tabs, forms, boot
+  // =================================================================
+  var TABS = ["sundhed", "studie", "okonomi", "opgaver", "kalender"];
+  function setTab(name) {
+    if (TABS.indexOf(name) === -1) name = "sundhed";
+    document.querySelectorAll(".tab").forEach(function (b) { b.setAttribute("aria-selected", b.getAttribute("data-tab") === name ? "true" : "false"); });
+    TABS.forEach(function (n) { $("p-" + n).hidden = n !== name; });
+    try { localStorage.setItem("cc-tab", name); } catch (e) {}
+    if (name === "sundhed") { try { renderFitness(); renderKm(); renderWellness(); } catch (e) {} }
+  }
+  document.querySelectorAll(".tab").forEach(function (b) { b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); }); });
+
+  $("tk-add").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var title = $("tk-title").value.trim(); if (!title || !S.db) return;
+    dbWrite(S.db.collection("tasks").add({ title: title, area: $("tk-area").value, due: todayISO(), priority: 2, done: false, createdAt: Date.now(), source: "dashboard" }));
+    $("tk-title").value = "";
+  });
+  $("hb-add").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = $("hb-name").value.trim(); if (!name || !S.db) return;
+    dbWrite(S.db.collection("habits").add({ name: name, active: true, order: (S.habits || []).length + 1, createdAt: Date.now() }));
+    $("hb-name").value = "";
+  });
+
+  var lastLoad = 0;
+  function refresh(force) {
+    var btn = $("refresh"); btn.disabled = true; btn.classList.add("loading"); $("refresh-l").textContent = "Henter…";
+    renderDateline();
+    return withTimeout(Promise.all([loadIcu(force), loadCal(force)]), 45000, null).then(function () {
+      btn.disabled = false; btn.classList.remove("loading"); $("refresh-l").textContent = "Opdater";
+      lastLoad = Date.now();
+      var p = partsInTZ(new Date());
+      $("updated").textContent = "Opdateret " + p.hour + ":" + p.minute;
+      renderTodayDb();
+    });
+  }
+  $("refresh").addEventListener("click", function () { refresh(true); });
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible" && S.mcp && lastLoad && Date.now() - lastLoad > 20 * 60 * 1000) refresh(true);
+  });
+
+  var redrawQ = false;
+  function queueRedraw() {
+    if (redrawQ) return; redrawQ = true;
+    requestAnimationFrame(function () { redrawQ = false; try { renderFitness(); renderKm(); renderWellness(); } catch (e) {} });
+  }
+  try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", queueRedraw); } catch (e) {}
+  try { new MutationObserver(queueRedraw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] }); } catch (e) {}
+  var lastW = window.innerWidth;
+  window.addEventListener("resize", function () { if (Math.abs(window.innerWidth - lastW) > 40) { lastW = window.innerWidth; queueRedraw(); } });
+
+  function useCap(name) {
+    try {
+      if (window.claude && typeof window.claude.use === "function") return withTimeout(window.claude.use(name), 12000, null);
+    } catch (e) {}
+    return Promise.resolve(null);
+  }
+
+  function boot() {
+    renderDateline();
+    var saved = null; try { saved = localStorage.getItem("cc-tab"); } catch (e) {}
+    var h = location.hash.slice(1);
+    setTab(TABS.indexOf(h) !== -1 ? h : saved || "sundhed");
+    Promise.all([useCap("mcp"), useCap("db")]).then(function (caps) {
+      S.mcp = caps[0]; S.db = caps[1];
+      if (!S.mcp && !S.db) { $("no-runtime").hidden = false; }
+      if (S.db) { setSrc("src-db", "", "Henter…"); startDb(); }
+      else { setSrc("src-db", "err", "Ikke tilgængelig"); renderTodayDb(); }
+      if (S.mcp) refresh(false);
+      else {
+        S.icuErr = { wellness: { code: "not_granted" }, fitness: { code: "not_granted" }, events: { code: "not_granted" }, history: { code: "not_granted" } };
+        S.calErr = { code: "not_granted" };
+        setSrc("src-icu", "err", "Ikke tilgængelig"); setSrc("src-cal", "err", "Ikke tilgængelig");
+        renderHealthAll(); renderAgenda();
+      }
+    });
+  }
+  boot();
+})();
+</script>
