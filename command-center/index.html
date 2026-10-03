@@ -95,34 +95,101 @@
   button, input, select { font: inherit; color: inherit; }
   .num { font-variant-numeric: tabular-nums; }
 
-  .shell { max-width: 1200px; margin: 0 auto; padding: 22px 20px 64px; display: flex; flex-direction: column; gap: 18px; }
-  @media (max-width: 520px) { .shell { padding: 14px 16px 56px; } }
-
-  /* ---------- Header ---------- */
-  .top { display: flex; justify-content: space-between; align-items: flex-end; gap: 14px 20px; flex-wrap: wrap; }
-  .eyebrow { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
-  .top h1 {
-    font-family: var(--f-display); font-stretch: 72%; font-weight: 800;
-    font-size: clamp(2.2rem, 7vw, 3.3rem); line-height: 0.9; letter-spacing: -0.01em; text-transform: uppercase;
-    margin-top: 6px;
+  /* ---------- App shell: sidebar (desktop) / bottom bar (phone) ---------- */
+  .app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+  .side {
+    position: sticky; top: 0; height: 100vh; align-self: start;
+    display: flex; flex-direction: column; gap: 22px;
+    padding: calc(env(safe-area-inset-top, 0px) + 24px) 14px 20px;
+    background: var(--surface); border-right: 1px solid var(--line);
   }
-  .top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-  @media (max-width: 640px) { .top-right { align-items: flex-start; } }
-  .sources { display: flex; gap: 6px; flex-wrap: wrap; }
-  .src {
-    display: inline-flex; align-items: center; gap: 6px; font-size: 0.74rem; color: var(--ink-2);
-    background: var(--surface); border: 1px solid var(--line); border-radius: 100px; padding: 3px 10px 3px 8px;
+  .brand { padding: 0 10px; }
+  .brand .eyebrow { display: block; margin-bottom: 4px; }
+  .brand-name {
+    font-family: var(--f-display); font-stretch: 72%; font-weight: 800; font-size: 1.55rem;
+    line-height: 0.92; text-transform: uppercase; letter-spacing: -0.005em;
   }
+  .nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav-sep { height: 1px; background: var(--line); margin: 8px 10px; }
+  .nav a {
+    display: flex; align-items: center; gap: 11px; padding: 9px 10px; border-radius: 10px;
+    text-decoration: none; color: var(--ink-2); font-weight: 600; font-size: 0.93rem;
+    transition: background .12s ease, color .12s ease;
+  }
+  .nav a .lbl { white-space: nowrap; }
+  .nav a svg { width: 19px; height: 19px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .nav a .ad { width: 7px; height: 7px; border-radius: 50%; margin-left: auto; }
+  .nav a:hover { background: var(--surface-2); color: var(--ink); }
+  .nav a[aria-current="page"] { background: var(--surface-2); color: var(--ink); box-shadow: inset 3px 0 0 var(--nav-c, var(--ink)); }
+  .nav a[data-page="idag"] { --nav-c: var(--ink); }
+  .nav a[data-page="sundhed"] { --nav-c: var(--a-health); }
+  .nav a[data-page="studie"] { --nav-c: var(--a-study); }
+  .nav a[data-page="okonomi"] { --nav-c: var(--a-money); }
+  .nav a[data-page="opgaver"] { --nav-c: var(--a-tasks); }
+  .nav a[data-page="kalender"] { --nav-c: var(--a-cal); }
+  .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 10px; }
+  .side-foot .k { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+  .sources { display: flex; flex-direction: column; gap: 5px; }
+  .src { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--ink-2); white-space: nowrap; }
   .src .d { width: 7px; height: 7px; border-radius: 50%; background: var(--warning); flex: none; }
+  .src .s { margin-left: auto; font-size: 0.72rem; color: var(--ink-3); }
   .src.ok .d { background: var(--good); }
   .src.err .d { background: var(--critical); }
-  .src.err { color: var(--ink); border-color: color-mix(in srgb, var(--critical) 40%, var(--line)); }
-  .actions { display: flex; align-items: center; gap: 10px; }
-  #updated { font-size: 0.76rem; color: var(--ink-3); }
+  .src.err .s { color: var(--critical); }
+  .side-foot .btn { width: 100%; }
+  .updated { font-size: 0.72rem; color: var(--ink-3); }
+
+  .main { min-width: 0; padding: calc(env(safe-area-inset-top, 0px) + 28px) 32px 64px; }
+  .page { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+  .page[hidden] { display: none; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; margin-bottom: 6px; }
+  .page-head h1 {
+    font-family: var(--f-display); font-stretch: 72%; font-weight: 800; text-transform: uppercase;
+    font-size: clamp(2rem, 6vw, 2.9rem); line-height: 0.9; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .page-head h1 .ad { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+  .page-head .eyebrow { margin-bottom: 6px; display: block; }
+  .page-head .sub { max-width: 46ch; }
+
+  /* Phone top bar (status + refresh) and bottom navigation */
+  .mtop { display: none; }
+  @media (max-width: 899px) {
+    .app { grid-template-columns: minmax(0, 1fr); }
+    .side {
+      position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: auto; z-index: 40;
+      flex-direction: row; gap: 0; padding: 6px 6px calc(env(safe-area-inset-bottom, 0px) + 6px);
+      border-right: none; border-top: 1px solid var(--line);
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    }
+    .brand, .side-foot, .nav-sep { display: none; }
+    .nav { flex-direction: row; width: 100%; gap: 0; }
+    .nav a { flex: 1 1 0; flex-direction: column; gap: 3px; padding: 6px 2px; font-size: 0.66rem; font-weight: 600; min-width: 0; border-radius: 10px; }
+    .nav a .ad { display: none; }
+    .nav a .lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .nav a .lbl-long { display: none; }
+    .nav a[aria-current="page"] { box-shadow: inset 0 3px 0 var(--nav-c, var(--ink)); }
+    .main { padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px calc(env(safe-area-inset-bottom, 0px) + 96px); }
+    .mtop { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+    .mtop .brand-name { font-size: 1.1rem; }
+    .mtop-r { display: flex; align-items: center; gap: 10px; }
+    .mdots { display: flex; gap: 5px; align-items: center; }
+    .mdots .src { gap: 4px; font-size: 0.68rem; }
+    .mdots .src .s { display: none; }
+  }
+  @media (min-width: 900px) { .nav a .lbl-short { display: none; } }
+
+  .banner {
+    border-radius: 12px; padding: 12px 14px; font-size: 0.87rem; background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--critical) 35%, var(--line)); color: var(--ink-2);
+  }
+  .banner strong { color: var(--ink); }
+  .eyebrow { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 7px;
     border: none; border-radius: 9px; padding: 8px 14px; font-weight: 600; font-size: 0.86rem; cursor: pointer;
-    background: var(--ink); color: var(--bg); transition: opacity .12s ease, transform .12s ease;
+    background: var(--ink); color: var(--bg); transition: opacity .12s ease, transform .12s ease; text-decoration: none;
   }
   .btn:hover { opacity: .88; }
   .btn:active { transform: scale(0.97); }
@@ -130,16 +197,13 @@
   .btn.ghost { background: transparent; color: var(--ink-2); border: 1px solid var(--line-2); }
   .btn.ghost:hover { color: var(--ink); background: var(--surface-2); opacity: 1; }
   .btn.small { padding: 6px 10px; font-size: 0.8rem; }
+  .btn.icon { padding: 7px; border-radius: 50%; width: 34px; height: 34px; }
+  .btn.icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+  .btn.icon.loading svg { animation: spin .8s linear infinite; }
   :focus-visible { outline: 2px solid var(--a-study); outline-offset: 2px; }
   .spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid color-mix(in srgb, currentColor 30%, transparent); border-top-color: currentColor; animation: spin .7s linear infinite; display: none; }
   .btn.loading .spin { display: inline-block; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  .banner {
-    border-radius: 12px; padding: 12px 14px; font-size: 0.87rem; background: var(--surface);
-    border: 1px solid color-mix(in srgb, var(--critical) 35%, var(--line)); color: var(--ink-2);
-  }
-  .banner strong { color: var(--ink); }
 
   /* ---------- Section label ---------- */
   .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
@@ -149,10 +213,15 @@
   }
   .sec-head .meta { font-size: 0.8rem; color: var(--ink-3); }
 
-  /* ---------- I DAG board ---------- */
-  .board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-  @media (max-width: 980px) { .board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-width: 640px) { .board { grid-template-columns: minmax(0, 1fr); } }
+  /* ---------- I dag: two columns (plan | status), one ordered column on phone ---------- */
+  .today { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+  .col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  @media (max-width: 1099px) {
+    .today { grid-template-columns: minmax(0, 1fr); }
+    .col { display: contents; }
+    #c-recovery { order: 1; } #c-workout { order: 2; } #c-agenda { order: 3; }
+    #c-tasks { order: 4; } #c-habits { order: 5; } #c-deadlines { order: 6; }
+  }
 
   .card {
     background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
@@ -279,26 +348,6 @@
   .skel.tall { height: 200px; }
   @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
-  /* ---------- Tabs ---------- */
-  .tabbar {
-    position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 20;
-    display: flex; gap: 2px; padding: 4px; overflow-x: auto; scrollbar-width: none;
-    background: color-mix(in srgb, var(--surface) 88%, transparent);
-    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-    border: 1px solid var(--line); border-radius: 13px; box-shadow: var(--shadow);
-  }
-  .tabbar::-webkit-scrollbar { display: none; }
-  .tab {
-    appearance: none; border: none; background: none; cursor: pointer; border-radius: 9px;
-    padding: 9px 14px; font-weight: 600; font-size: 0.9rem; color: var(--ink-2); white-space: nowrap;
-    display: inline-flex; align-items: center; gap: 7px; flex: 1 0 auto; justify-content: center;
-  }
-  .tab .ad { width: 8px; height: 8px; border-radius: 2px; }
-  .tab:hover { background: var(--surface-2); color: var(--ink); }
-  .tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
-  .panel { display: flex; flex-direction: column; gap: 14px; }
-  .panel[hidden] { display: none; }
-
   /* ---------- Sundhed ---------- */
   .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
   @media (max-width: 900px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -354,42 +403,55 @@
   footer { font-size: 0.74rem; color: var(--ink-3); line-height: 1.6; }
 </style>
 
-<div class="shell">
-  <header class="top">
-    <div>
-      <div class="eyebrow" id="dateline">&nbsp;</div>
-      <h1>Command Center</h1>
-    </div>
-    <div class="top-right">
-      <div class="sources" aria-label="Datakilder">
-        <span class="src" id="src-icu"><span class="d"></span>IcuSync</span>
-        <span class="src" id="src-cal"><span class="d"></span>Google Kalender</span>
-        <span class="src" id="src-db"><span class="d"></span>Database</span>
+<div class="app">
+  <aside class="side" aria-label="Navigation">
+    <div class="brand"><span class="eyebrow">Rune · Budapest</span><div class="brand-name">Command<br>Center</div></div>
+    <nav class="nav">
+      <a href="#idag" data-page="idag"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span class="lbl"><span class="lbl-long">I dag</span><span class="lbl-short">I dag</span></span></a>
+      <div class="nav-sep" aria-hidden="true"></div>
+      <a href="#sundhed" data-page="sundhed"><svg viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg><span class="lbl"><span class="lbl-long">Sundhed</span><span class="lbl-short">Sundhed</span></span><span class="ad health"></span></a>
+      <a href="#studie" data-page="studie"><svg viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg><span class="lbl"><span class="lbl-long">Studie</span><span class="lbl-short">Studie</span></span><span class="ad study"></span></a>
+      <a href="#okonomi" data-page="okonomi"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg><span class="lbl"><span class="lbl-long">Økonomi</span><span class="lbl-short">Økonomi</span></span><span class="ad money"></span></a>
+      <a href="#opgaver" data-page="opgaver"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg><span class="lbl"><span class="lbl-long">Opgaver &amp; vaner</span><span class="lbl-short">Opgaver</span></span><span class="ad tasks"></span></a>
+      <a href="#kalender" data-page="kalender"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl"><span class="lbl-long">Kalender</span><span class="lbl-short">Kalender</span></span><span class="ad cal"></span></a>
+    </nav>
+    <div class="side-foot">
+      <span class="k">Datakilder</span>
+      <div class="sources">
+        <span class="src" data-src="icu"><span class="d"></span>IcuSync<span class="s"></span></span>
+        <span class="src" data-src="cal"><span class="d"></span>Google Kalender<span class="s"></span></span>
+        <span class="src" data-src="db"><span class="d"></span>Database<span class="s"></span></span>
       </div>
-      <div class="actions">
-        <span id="updated"></span>
-        <button class="btn" id="refresh" type="button"><span class="spin"></span><span id="refresh-l">Opdater</span></button>
+      <button class="btn" id="refresh" type="button"><span class="spin"></span><span id="refresh-l">Opdater</span></button>
+      <span class="updated" data-updated></span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="mtop">
+      <div class="brand-name">Command Center</div>
+      <div class="mtop-r">
+        <div class="mdots" aria-label="Datakilder">
+          <span class="src" data-src="icu" title="IcuSync"><span class="d"></span>Icu<span class="s"></span></span>
+          <span class="src" data-src="cal" title="Google Kalender"><span class="d"></span>Kal<span class="s"></span></span>
+          <span class="src" data-src="db" title="Database"><span class="d"></span>DB<span class="s"></span></span>
+        </div>
+        <button class="btn ghost icon" id="refresh-m" type="button" aria-label="Opdater"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg></button>
       </div>
     </div>
-  </header>
 
-  <div class="banner" id="no-runtime" hidden>
-    <strong>Siden kan ikke hente data her.</strong> Åbn Command Center på claude.ai (i appen eller browseren), så forbinder den til IcuSync, Google Kalender og databasen.
-  </div>
+    <div class="banner" id="no-runtime" hidden>
+      <strong>Siden kan ikke hente data her.</strong> Åbn Command Center på claude.ai (i appen eller browseren), så forbinder den til IcuSync, Google Kalender og databasen.
+    </div>
 
-  <!-- ================= I DAG ================= -->
-  <section class="sec-head" aria-labelledby="today-h">
-    <h2 id="today-h">I dag</h2>
-    <span class="meta" id="today-meta"></span>
-  </section>
-
-  <div class="board">
-    <!-- Recovery -->
-    <article class="card" id="c-recovery">
-      <div class="card-k"><span class="ad health"></span>Restitution<span class="src-note" id="rec-src"></span></div>
-      <div id="rec-body"><div class="skel"></div></div>
-    </article>
-
+    <!-- ================= I DAG ================= -->
+    <section class="page" id="page-idag">
+      <header class="page-head">
+        <div><span class="eyebrow" id="dateline">&nbsp;</span><h1>I dag</h1></div>
+        <span class="sub muted" id="today-meta"></span>
+      </header>
+      <div class="today">
+        <div class="col">
     <!-- Today's workout -->
     <article class="card" id="c-workout">
       <div class="card-k"><span class="ad health"></span>Dagens træning</div>
@@ -418,6 +480,14 @@
       </form>
     </article>
 
+        </div>
+        <div class="col">
+    <!-- Recovery -->
+    <article class="card" id="c-recovery">
+      <div class="card-k"><span class="ad health"></span>Restitution<span class="src-note" id="rec-src"></span></div>
+      <div id="rec-body"><div class="skel"></div></div>
+    </article>
+
     <!-- Habits -->
     <article class="card" id="c-habits">
       <div class="card-k"><span class="ad tasks"></span>Vaner</div>
@@ -433,19 +503,19 @@
       <div class="card-k"><span class="ad study"></span>Nærmeste deadlines</div>
       <div id="dl-body"><div class="skel"></div></div>
     </article>
-  </div>
+        </div>
+      </div>
+    </section>
 
-  <!-- ================= TABS ================= -->
-  <nav class="tabbar" role="tablist" aria-label="Områder">
-    <button class="tab" role="tab" data-tab="sundhed" aria-selected="true"><span class="ad health"></span>Sundhed</button>
-    <button class="tab" role="tab" data-tab="studie" aria-selected="false"><span class="ad study"></span>Studie</button>
-    <button class="tab" role="tab" data-tab="okonomi" aria-selected="false"><span class="ad money"></span>Økonomi</button>
-    <button class="tab" role="tab" data-tab="opgaver" aria-selected="false"><span class="ad tasks"></span>Opgaver &amp; vaner</button>
-    <button class="tab" role="tab" data-tab="kalender" aria-selected="false"><span class="ad cal"></span>Kalender</button>
-  </nav>
-
-  <!-- Sundhed -->
-  <section class="panel" id="p-sundhed" role="tabpanel">
+    <!-- ================= SUNDHED ================= -->
+    <section class="page" id="page-sundhed" hidden>
+      <header class="page-head">
+        <div><span class="eyebrow">Træning og restitution</span><h1><span class="ad health"></span>Sundhed</h1></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="btn ghost small" href="https://claude.ai/code/artifact/f8db45dc-f60f-4e82-a4dc-0837b74eb9b4" target="_blank" rel="noopener">Splits &amp; Sets ↗</a>
+          <a class="btn ghost small" href="https://claude.ai/code/artifact/cbf7995d-8206-4c1e-b5e9-c03ea78c1416" target="_blank" rel="noopener">Træningsstatus ↗</a>
+        </div>
+      </header>
     <div class="tiles" id="h-tiles">
       <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
     </div>
@@ -477,33 +547,29 @@
       </article>
     </div>
 
-    <div class="links">
-      <a class="link-card" href="https://claude.ai/code/artifact/f8db45dc-f60f-4e82-a4dc-0837b74eb9b4" target="_blank" rel="noopener">
-        <span><span class="t">Splits &amp; Sets</span><br><span class="s">Fuldt træningsdashboard: løb, styrke, sko og rekorder</span></span><span class="arr">↗</span>
-      </a>
-      <a class="link-card" href="https://claude.ai/code/artifact/cbf7995d-8206-4c1e-b5e9-c03ea78c1416" target="_blank" rel="noopener">
-        <span><span class="t">Træningsstatus</span><br><span class="s">Ugentlig status og den rullende plan</span></span><span class="arr">↗</span>
-      </a>
-    </div>
-  </section>
+    </section>
 
-  <section class="panel" id="p-studie" role="tabpanel" hidden>
-    <div class="coming"><h3>Studie</h3>Fag, eksamensdatoer, links til dine noter og resumé af skolemappen. Bygges i næste trin.</div>
-  </section>
-  <section class="panel" id="p-okonomi" role="tabpanel" hidden>
-    <div class="coming"><h3>Økonomi</h3>Investeringer med live kurser, budget med hurtig indtastning og opsparingsmål. Bygges i næste trin.</div>
-  </section>
-  <section class="panel" id="p-opgaver" role="tabpanel" hidden>
-    <div class="coming"><h3>Opgaver &amp; vaner</h3>Fuld opgaveliste med område og prioritet, vaner med streaks og gennemførsel pr. uge og måned. Bygges i næste trin.</div>
-  </section>
-  <section class="panel" id="p-kalender" role="tabpanel" hidden>
-    <div class="coming"><h3>Kalender</h3>Uge- og månedsvisning fra Google Kalender. Bygges i næste trin.</div>
-  </section>
+    <section class="page" id="page-studie" hidden>
+      <header class="page-head"><div><span class="eyebrow">Område</span><h1><span class="ad study"></span>Studie</h1></div></header>
+      <div class="coming">Fag, eksamensdatoer, links til dine noter og resumé af skolemappen. Bygges i næste trin.</div>
+    </section>
+    <section class="page" id="page-okonomi" hidden>
+      <header class="page-head"><div><span class="eyebrow">Område</span><h1><span class="ad money"></span>Økonomi</h1></div></header>
+      <div class="coming">Investeringer med live kurser, budget med hurtig indtastning og opsparingsmål. Bygges i næste trin.</div>
+    </section>
+    <section class="page" id="page-opgaver" hidden>
+      <header class="page-head"><div><span class="eyebrow">Område</span><h1><span class="ad tasks"></span>Opgaver &amp; vaner</h1></div></header>
+      <div class="coming">Fuld opgaveliste med område og prioritet, vaner med streaks og gennemførsel pr. uge og måned. Bygges i næste trin.</div>
+    </section>
+    <section class="page" id="page-kalender" hidden>
+      <header class="page-head"><div><span class="eyebrow">Område</span><h1><span class="ad cal"></span>Kalender</h1></div></header>
+      <div class="coming">Uge- og månedsvisning fra Google Kalender. Bygges i næste trin.</div>
+    </section>
 
-  <footer id="foot">
-    Træning og restitution hentes live fra intervals.icu via IcuSync. Aftaler fra Google Kalender (inkl. din iCloud-kalender). Opgaver, vaner og deadlines gemmes i dashboardets egen database.
-    <span id="garmin" hidden><br>Data provided by Garmin®</span>
-  </footer>
+    <footer id="foot" class="page" style="margin-top:28px">
+      <span>Træning og restitution hentes live fra intervals.icu via IcuSync. Aftaler fra Google Kalender (inkl. din iCloud-kalender). Opgaver, vaner og deadlines gemmes i dashboardets egen database.<span id="garmin" hidden><br>Data provided by Garmin®</span></span>
+    </footer>
+  </main>
 </div>
 
 <div id="tip" role="status" aria-live="polite"></div>
@@ -606,7 +672,11 @@
     return "<b>Kunne ikke gemme eller hente fra databasen.</b> Prøv igen.";
   }
   function setSrc(id, state, title) {
-    var el = $(id); el.className = "src " + (state || ""); el.title = title || "";
+    var key = id.replace("src-", "");
+    document.querySelectorAll('[data-src="' + key + '"]').forEach(function (el) {
+      el.className = "src " + (state || "");
+      var s = el.querySelector(".s"); if (s) s.textContent = title || "";
+    });
   }
 
   // ---------- connectors ----------
@@ -635,7 +705,7 @@
       if (r[2].ok) S.events = r[2].data; else S.icuErr.events = r[2].error;
       if (r[3].ok) S.history = r[3].data; else S.icuErr.history = r[3].error;
       var okN = r.filter(function (x) { return x.ok; }).length;
-      setSrc("src-icu", okN === 4 ? "ok" : (okN ? "" : "err"), okN === 4 ? "Forbundet" : (okN ? "Delvist hentet" : "Ikke forbundet"));
+      setSrc("src-icu", okN === 4 ? "ok" : (okN ? "" : "err"), okN === 4 ? "OK" : (okN ? "Delvist" : "Fejl"));
       renderHealthAll();
     });
   }
@@ -664,7 +734,7 @@
         S.calErr = null; S.cal = events;
       });
     }).then(function () {
-      setSrc("src-cal", S.calErr ? "err" : "ok", S.calErr ? "Ikke forbundet" : "Forbundet");
+      setSrc("src-cal", S.calErr ? "err" : "ok", S.calErr ? "Fejl" : "OK");
       renderAgenda();
     });
   }
@@ -686,7 +756,7 @@
     var db = S.db;
     var t = todayISO();
     var pending = 4;
-    function arrived() { if (--pending === 0) setSrc("src-db", S.dbErr ? "err" : "ok", S.dbErr ? "Fejl" : "Forbundet"); }
+    function arrived() { if (--pending === 0) setSrc("src-db", S.dbErr ? "err" : "ok", S.dbErr ? "Fejl" : "OK"); }
     function onErr(e) { S.dbErr = e; setSrc("src-db", "err", "Fejl"); renderTodayDb(); }
     function sub(q, key) {
       var first = true;
@@ -1245,15 +1315,17 @@
   // =================================================================
   // Tabs, forms, boot
   // =================================================================
-  var TABS = ["sundhed", "studie", "okonomi", "opgaver", "kalender"];
-  function setTab(name) {
-    if (TABS.indexOf(name) === -1) name = "sundhed";
-    document.querySelectorAll(".tab").forEach(function (b) { b.setAttribute("aria-selected", b.getAttribute("data-tab") === name ? "true" : "false"); });
-    TABS.forEach(function (n) { $("p-" + n).hidden = n !== name; });
-    try { localStorage.setItem("cc-tab", name); } catch (e) {}
+  var PAGES = ["idag", "sundhed", "studie", "okonomi", "opgaver", "kalender"];
+  function setPage(name) {
+    if (PAGES.indexOf(name) === -1) name = "idag";
+    document.querySelectorAll(".nav a").forEach(function (a) {
+      if (a.getAttribute("data-page") === name) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
+    PAGES.forEach(function (n) { $("page-" + n).hidden = n !== name; });
+    window.scrollTo(0, 0);
     if (name === "sundhed") { try { renderFitness(); renderKm(); renderWellness(); } catch (e) {} }
   }
-  document.querySelectorAll(".tab").forEach(function (b) { b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); }); });
+  window.addEventListener("hashchange", function () { setPage(location.hash.slice(1)); });
 
   $("tk-add").addEventListener("submit", function (e) {
     e.preventDefault();
@@ -1269,18 +1341,23 @@
   });
 
   var lastLoad = 0;
+  function busy(on) {
+    ["refresh", "refresh-m"].forEach(function (id) { var b = $(id); b.disabled = on; b.classList.toggle("loading", on); });
+    $("refresh-l").textContent = on ? "Henter…" : "Opdater";
+  }
   function refresh(force) {
-    var btn = $("refresh"); btn.disabled = true; btn.classList.add("loading"); $("refresh-l").textContent = "Henter…";
+    busy(true);
     renderDateline();
     return withTimeout(Promise.all([loadIcu(force), loadCal(force)]), 45000, null).then(function () {
-      btn.disabled = false; btn.classList.remove("loading"); $("refresh-l").textContent = "Opdater";
+      busy(false);
       lastLoad = Date.now();
       var p = partsInTZ(new Date());
-      $("updated").textContent = "Opdateret " + p.hour + ":" + p.minute;
+      document.querySelectorAll("[data-updated]").forEach(function (el) { el.textContent = "Opdateret kl. " + p.hour + ":" + p.minute; });
       renderTodayDb();
     });
   }
   $("refresh").addEventListener("click", function () { refresh(true); });
+  $("refresh-m").addEventListener("click", function () { refresh(true); });
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState === "visible" && S.mcp && lastLoad && Date.now() - lastLoad > 20 * 60 * 1000) refresh(true);
   });
@@ -1304,19 +1381,17 @@
 
   function boot() {
     renderDateline();
-    var saved = null; try { saved = localStorage.getItem("cc-tab"); } catch (e) {}
-    var h = location.hash.slice(1);
-    setTab(TABS.indexOf(h) !== -1 ? h : saved || "sundhed");
+    setPage(location.hash.slice(1) || "idag");
     Promise.all([useCap("mcp"), useCap("db")]).then(function (caps) {
       S.mcp = caps[0]; S.db = caps[1];
       if (!S.mcp && !S.db) { $("no-runtime").hidden = false; }
       if (S.db) { setSrc("src-db", "", "Henter…"); startDb(); }
-      else { setSrc("src-db", "err", "Ikke tilgængelig"); renderTodayDb(); }
+      else { setSrc("src-db", "err", "Ingen adgang"); renderTodayDb(); }
       if (S.mcp) refresh(false);
       else {
         S.icuErr = { wellness: { code: "not_granted" }, fitness: { code: "not_granted" }, events: { code: "not_granted" }, history: { code: "not_granted" } };
         S.calErr = { code: "not_granted" };
-        setSrc("src-icu", "err", "Ikke tilgængelig"); setSrc("src-cal", "err", "Ikke tilgængelig");
+        setSrc("src-icu", "err", "Ingen adgang"); setSrc("src-cal", "err", "Ingen adgang");
         renderHealthAll(); renderAgenda();
       }
     });
