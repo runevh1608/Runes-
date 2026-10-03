@@ -119,15 +119,21 @@
   /* Live clock */
   .clock { display: flex; flex-direction: column; gap: 2px; }
   .clock-t {
-    font-family: var(--f-display); font-stretch: 72%; font-weight: 800; font-size: 3rem; line-height: 0.88;
-    font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+    font-family: var(--f-display); font-stretch: 72%; font-weight: 800; font-size: 2.75rem; line-height: 0.88;
+    font-variant-numeric: tabular-nums; letter-spacing: -0.01em; white-space: nowrap;
   }
   .clock-t .sec { color: var(--ink-3); font-size: 0.42em; margin-left: 3px; letter-spacing: 0; }
   .clock-d { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-2); }
-  .side-wx { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.84rem; color: var(--ink-2); min-height: 26px; }
-  .side-wx .wi { width: 24px; height: 24px; flex: none; }
-  .side-wx b { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: 1.15rem; color: var(--ink); font-variant-numeric: tabular-nums; }
-  .side-wx .ph { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Clock on the left, weather (icon over temperature) on the right */
+  .clock-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .side-wx {
+    display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; cursor: default;
+    padding-left: 12px; border-left: 1px solid var(--line-2);
+  }
+  .side-wx:empty { display: none; }
+  .side-wx .wi { width: 28px; height: 28px; flex: none; }
+  .side-wx b { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: 1.1rem; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .side-wx .ph { display: none; }
 
   /* Weather icons: line glyphs in ink, the sun in the calendar yellow */
   .wi { stroke: var(--ink-2); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
@@ -146,8 +152,10 @@
     .app.collapsed .nav a .lbl, .app.collapsed .nav a .ad, .app.collapsed .side-foot .k,
     .app.collapsed .src .sn, .app.collapsed .src .s, .app.collapsed .side-wx .ph, .app.collapsed .updated, .app.collapsed #refresh-l { display: none; }
     .app.collapsed .clock { align-items: center; }
-    .app.collapsed .side-wx { flex-direction: column; gap: 2px; margin-top: 6px; }
-    .app.collapsed .side-wx b { font-size: 0.95rem; }
+    .app.collapsed .clock-row { flex-direction: column; align-items: center; gap: 8px; }
+    .app.collapsed .side-wx { padding-left: 0; border-left: none; }
+    .app.collapsed .side-wx .wi { width: 22px; height: 22px; }
+    .app.collapsed .side-wx b { font-size: 0.92rem; }
     .app.collapsed .clock { align-items: center; }
     .app.collapsed .clock-t { font-size: 1.45rem; }
     .app.collapsed .clock-t .sec { display: none; }
@@ -483,9 +491,11 @@
         <button class="collapse" id="collapse" type="button" aria-label="Skjul menu" title="Skjul menu" aria-expanded="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M9 4.5v15M15.5 10l-2 2 2 2"/></svg></button>
       </div>
       <div class="clock">
-        <span class="clock-t" id="clock-t">--:--</span>
+        <div class="clock-row">
+          <span class="clock-t" id="clock-t">--:--</span>
+          <div class="side-wx" id="side-wx" aria-live="off"></div>
+        </div>
         <span class="clock-d" id="clock-d"></span>
-        <div class="side-wx" id="side-wx" aria-live="off"></div>
       </div>
     </div>
     <nav class="nav">
