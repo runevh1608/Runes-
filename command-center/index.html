@@ -786,6 +786,48 @@
     try { p = S.mcp.callTool(server, tool, input || {}, opts); } catch (e) { return Promise.reject({ code: "upstream_error" }); }
     return p.then(function (r) { return r.payload; });
   }
+  function callRaw(server, tool, input, force) {
+    if (!S.mcp) return Promise.reject({ code: "not_granted" });
+    var opts = { cache: force ? { refresh: true, gcTime: 86400000 } : { staleTime: 120000, gcTime: 86400000 } };
+    var sig = timeoutSignal(25000); if (sig) opts.signal = sig;
+    try { return S.mcp.callTool(server, tool, input || {}, opts); } catch (e) { return Promise.reject({ code: "upstream_error", message: String(e && e.message || e) }); }
+  }
+  // Widget-style connectors can wrap their JSON in different places (payload,
+  // structuredContent, a text block, an embedded resource). Look in all of them
+  // and return the first value stored under `key`, however deep.
+  function pickFrom(result, key) {
+    var cands = [];
+    if (result) {
+      cands.push(result.payload, result.structuredContent);
+      (result.content || []).forEach(function (b) {
+        var txt = b && (b.text || (b.resource && b.resource.text));
+        if (typeof txt === "string") {
+          var t = txt.trim().replace(/^```(?:json)?\s*/, "").replace(/```$/, "");
+          try { cands.push(JSON.parse(t)); } catch (e) {}
+        }
+      });
+    }
+    function find(o, depth) {
+      if (!o || typeof o !== "object" || depth > 6) return undefined;
+      if (Object.prototype.hasOwnProperty.call(o, key)) return o[key];
+      for (var k in o) { var v = find(o[k], depth + 1); if (v !== undefined) return v; }
+      return undefined;
+    }
+    for (var i = 0; i < cands.length; i++) {
+      var c = cands[i];
+      if (typeof c === "string") { try { c = JSON.parse(c); } catch (e) { continue; } }
+      var v = find(c, 0); if (v !== undefined) return v;
+    }
+    return undefined;
+  }
+  function shapeOf(result) {
+    try {
+      var p = result && result.payload;
+      if (p && typeof p === "object") return "felter: " + Object.keys(p).slice(0, 6).join(", ");
+      if (typeof p === "string") return "tekst: " + p.slice(0, 80);
+      return "indhold: " + ((result && result.content) || []).map(function (b) { return b.type; }).join(", ");
+    } catch (e) { return ""; }
+  }
   function settle(p) { return p.then(function (d) { return { ok: true, data: d }; }, function (e) { return { ok: false, error: e || {} }; }); }
 
   function loadIcu(force) {
@@ -897,30 +939,42 @@
     setSrc("src-wx", "", "Henter…");
     var ck = S.wxKeys = S.wxKeys || {};
     var keyP = ck[city] ? Promise.resolve({ ok: true, key: ck[city] }) :
-      settle(call(WX, "widgets-search-claude", { queryParams: { query: city } }, force)).then(function (r) {
+      settle(callRaw(WX, "widgets-search-claude", { queryParams: { query: city } }, force)).then(function (r) {
         if (!r.ok) return { ok: false, error: r.error };
-        var hit = ((r.data && r.data.results) || [])[0];
-        if (!hit) return { ok: false, error: { code: "no_city" } };
+        var list = pickFrom(r.data, "results");
+        if (!Array.isArray(list)) return { ok: false, error: { code: "bad_shape", message: "Søgning: " + shapeOf(r.data) } };
+        var hit = list[0];
+        if (!hit || !hit.locationKey) return { ok: false, error: { code: "no_city" } };
         ck[city] = hit.locationKey; return { ok: true, key: hit.locationKey };
       });
     return keyP.then(function (k) {
       if (seq !== wxSeq) return;
       if (!k.ok) { S.wx = null; S.wxErr = k.error; return; }
-      var q = { locationKey: k.key, unit: "metric", lang: "da" };
+      var q = { locationKey: String(k.key), unit: "metric", lang: "da" };
       return Promise.all([
-        settle(call(WX, "widgets-current-claude", { queryParams: q }, force)),
-        settle(call(WX, "widgets-todayTonightForecast-claude", { queryParams: { locationKey: k.key, unit: "metric", lang: "da", days: 2 } }, force)),
-        settle(call(WX, "widgets-hourly-claude", { queryParams: q }, force))
+        settle(callRaw(WX, "widgets-current-claude", { queryParams: q }, force)),
+        settle(callRaw(WX, "widgets-todayTonightForecast-claude", { queryParams: { locationKey: String(k.key), unit: "metric", lang: "da", days: 2 } }, force)),
+        settle(callRaw(WX, "widgets-hourly-claude", { queryParams: q }, force))
       ]).then(function (r) {
         if (seq !== wxSeq) return;
         if (!r[0].ok) { S.wx = null; S.wxErr = r[0].error; return; }
+        var cc = pickFrom(r[0].data, "currentConditions");
+        if (!cc) { S.wx = null; S.wxErr = { code: "bad_shape", message: "Vejret nu: " + shapeOf(r[0].data) }; return; }
         S.wxErr = null;
-        S.wx = { cur: r[0].data, daily: r[1].ok ? r[1].data : null, hourly: r[2].ok ? r[2].data : null, city: city };
+        S.wx = {
+          cur: { currentConditions: cc, location: pickFrom(r[0].data, "location") || {}, currentAirQuality: pickFrom(r[0].data, "currentAirQuality") },
+          daily: r[1].ok ? { dailyForecast: pickFrom(r[1].data, "dailyForecast") || [] } : null,
+          hourly: r[2].ok ? { hourlyForecast: pickFrom(r[2].data, "hourlyForecast") || [] } : null,
+          city: city
+        };
       });
     }).then(function () {
       if (seq !== wxSeq) return;
       setSrc("src-wx", S.wxErr ? "err" : "ok", S.wxErr ? "Fejl" : "OK");
       renderWeather();
+    }, function (e) {
+      S.wx = null; S.wxErr = { code: "upstream_error", message: String(e && e.message || e) };
+      setSrc("src-wx", "err", "Fejl"); renderWeather();
     });
   }
 
@@ -952,8 +1006,10 @@
     return '<svg class="wi ' + (cls || "") + '" viewBox="0 0 24 24" aria-hidden="true">' + g + "</svg>";
   }
   function wxErrCopy(err) {
-    if (err && err.code === "no_city") return "<b>Kunne ikke finde “" + esc(wxCity()) + "”.</b> Vælg en anden by.";
-    return errCopy(WX, err);
+    var detail = '<div class="muted" style="font-size:0.72rem;margin-top:4px">Fejlkode: ' + esc((err && err.code) || "ukendt") + (err && err.message ? " · " + esc(String(err.message).slice(0, 160)) : "") + "</div>";
+    if (err && err.code === "no_city") return "<b>Kunne ikke finde “" + esc(wxCity()) + "”.</b> Vælg en anden by." + detail;
+    if (err && err.code === "bad_shape") return "<b>AccuWeather svarede i et format, siden ikke kender.</b>" + detail;
+    return errCopy(WX, err) + detail;
   }
   function renderWeather() {
     var host = $("wx-body"), side = $("side-wx");
