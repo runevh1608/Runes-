@@ -182,7 +182,7 @@
   .nav a[data-page="sundhed"] { --nav-c: var(--a-health); }
   .nav a[data-page="studie"] { --nav-c: var(--a-study); }
   .nav a[data-page="okonomi"] { --nav-c: var(--a-money); }
-  .nav a[data-page="opgaver"] { --nav-c: var(--a-tasks); }
+  .nav a[data-page="vaner"] { --nav-c: var(--a-tasks); }
   .nav a[data-page="kalender"] { --nav-c: var(--a-cal); }
   .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 0 10px; }
   .side-foot .k { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
@@ -2258,6 +2258,191 @@
   .sav-f { padding-top: 10px; border-top: 1px solid var(--line); }
   @media (max-width: 900px) { .ok-row { grid-template-columns: minmax(0, 1fr); } }
   @media (max-width: 520px) { .field.amt { flex: 1 1 6rem; } .bud-f select { flex: 1 1 8rem; } }
+
+  /* ================= v3: I dag as an overview, Studie lektier, Vaner ================= */
+  :root { --c-mne: #2a78d6; --c-fp: #1b9e6e; --c-cm: #8a5cf0; --c-ti: #0f9fb0; --c-im: #e0782f; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --c-mne: #4b95ec; --c-fp: #34b885; --c-cm: #a585ff; --c-ti: #2bbccc; --c-im: #f08e4a; } }
+  :root[data-theme="dark"] { --c-mne: #4b95ec; --c-fp: #34b885; --c-cm: #a585ff; --c-ti: #2bbccc; --c-im: #f08e4a; }
+  .crit { color: var(--critical); }
+  /* Card anatomy on I dag: header, one big figure, a small picture, a short list, a footer link */
+  .dash .card { gap: 14px; }
+  .dash .card-k, .cal-card .card-k { font-family: var(--f-display); font-stretch: 85%; font-size: 0.92rem; font-weight: 800; letter-spacing: 0.04em; color: var(--ink); }
+  .dash .card-k .ad, .cal-card .card-k .ad { width: 10px; height: 10px; border-radius: 3px; }
+  .dash .card-k .src-note, .cal-card .card-k .src-note { font-family: var(--f-body); font-stretch: 100%; font-weight: 500; font-size: 0.72rem; letter-spacing: 0; color: var(--ink-3); }
+  .w-body { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; }
+  .w-hero { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .w-hero .big { font-size: 2.6rem; line-height: 0.95; }
+  .w-hero .big .of { color: var(--ink-3); font-size: 0.55em; margin-left: 2px; }
+  .w-foot { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--line); font-size: 0.78rem; font-weight: 600; color: var(--ink-2); text-decoration: none; }
+  .w-foot:hover { color: var(--ink); }
+  .ring-bar { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+  .ring-bar i { display: block; height: 100%; background: var(--a-tasks); border-radius: 3px; }
+  .due { font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); white-space: nowrap; }
+  .due.today { background: color-mix(in srgb, var(--warning) 22%, transparent); color: color-mix(in srgb, var(--warning) 55%, var(--ink)); }
+  .due.soon { background: color-mix(in srgb, var(--a-study) 14%, transparent); color: var(--a-study); }
+  .due.late { background: color-mix(in srgb, var(--critical) 14%, transparent); color: var(--critical); }
+  .due.none { font-weight: 500; color: var(--ink-3); }
+  .due.dl { background: none; border: 1px solid var(--line-2); }
+  /* Lektier widget */
+  .lk-load { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; height: 54px; align-items: end; }
+  .lk-day { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; }
+  .lk-day i { display: block; width: 100%; max-width: 26px; border-radius: 4px 4px 2px 2px; background: color-mix(in srgb, var(--a-study) 55%, var(--surface-2)); }
+  .lk-day.today i { background: var(--a-study); }
+  .lk-day span { font-size: 0.62rem; font-weight: 700; color: var(--ink-3); }
+  .lk-list, .vt-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .lk-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+  .lk-list li:first-child { border-top: none; }
+  .lk-c { font-family: var(--f-mono); font-size: 0.66rem; font-weight: 600; color: var(--cc); background: color-mix(in srgb, var(--cc) 13%, transparent); padding: 2px 6px; border-radius: 5px; }
+  .lk-t { font-weight: 600; font-size: 0.88rem; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+  /* Vaner widget */
+  .vt-list li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto 3.2rem; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+  .vt-list li:first-child { border-top: none; }
+  .vt-chk { width: 18px; height: 18px; border-radius: 6px; border: 2px solid var(--line-2); display: grid; place-items: center; }
+  .vt-list li.on .vt-chk { background: var(--a-tasks); border-color: var(--a-tasks); }
+  .vt-list li.on .vt-chk::after { content: ""; width: 8px; height: 5px; border-left: 2px solid var(--surface); border-bottom: 2px solid var(--surface); transform: rotate(-45deg) translate(1px, -1px); }
+  .vt-n { font-weight: 600; font-size: 0.88rem; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+  .vt-list li.on .vt-n { color: var(--ink-2); }
+  .dots7 i.today { box-shadow: inset 0 0 0 1.5px var(--a-tasks); background: transparent; }
+  .vt-s { display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; font-family: var(--f-display); font-weight: 800; font-size: 1rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .vt-s svg, .hb-streak svg { width: 15px; height: 15px; fill: var(--ink-3); }
+  .vt-s.hot { color: var(--ink); } .vt-s.hot svg, .hb-streak.hot svg { fill: var(--a-health); }
+  #c-vaner .dots7 { display: flex; }
+
+  /* Kalender card: now line, today's strip, the coming days */
+  .cal-card { margin-bottom: 16px; padding: 20px 22px 18px; border-radius: 18px; gap: 16px; }
+  .pl-now { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: 1.05rem; }
+  .pl-now b { font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: 1.5rem; line-height: 1.05; }
+  .pl-now .muted { font-size: 0.88rem; }
+  .pl-tag { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--a-cal); background: color-mix(in srgb, var(--a-cal) 15%, transparent); padding: 3px 8px; border-radius: 999px; align-self: center; }
+  .pl-tag.live { color: var(--critical); background: color-mix(in srgb, var(--critical) 13%, transparent); }
+  .pl-tag.done { color: var(--good); background: color-mix(in srgb, var(--good) 13%, transparent); }
+  .pl-ad { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+  .strip { --lane-h: 46px; }
+  .strip-track { position: relative; height: calc(var(--lanes) * (var(--lane-h) + 4px)); background: repeating-linear-gradient(90deg, var(--surface-2) 0 1px, transparent 1px 100%); border-radius: 10px; }
+  .strip .sb { position: absolute; height: var(--lane-h); border-radius: 8px; padding: 5px 8px; overflow: hidden; background: color-mix(in srgb, var(--kc) 17%, var(--surface)); border-left: 3px solid var(--kc); display: flex; flex-direction: column; justify-content: center; min-width: 6px; }
+  .strip .sb b { font-size: 0.78rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .strip .sb span { font-family: var(--f-mono); font-size: 0.64rem; color: var(--ink-2); }
+  .strip .sb.past { opacity: 0.45; }
+  .strip .sb.done { opacity: 0.6; }
+  .strip-now { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--critical); border-radius: 1px; z-index: 2; }
+  .strip-now span { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-family: var(--f-mono); font-size: 0.64rem; font-weight: 700; color: var(--critical); background: var(--surface); padding: 0 3px; }
+  .strip-ticks { position: relative; height: 16px; margin-top: 6px; }
+  .strip-ticks span { position: absolute; transform: translateX(-50%); font-family: var(--f-mono); font-size: 0.64rem; color: var(--ink-3); }
+  .strip-ticks span:first-child { transform: none; }
+  .strip-ticks span:last-child { transform: translateX(-100%); }
+  .pl-list { display: none; list-style: none; margin: 0; padding: 0; }
+  .pl-list li { display: grid; grid-template-columns: 6.2rem minmax(0, 1fr); gap: 10px; padding: 7px 0 7px 10px; border-left: 3px solid var(--kc, var(--line-2)); margin: 3px 0; font-size: 0.9rem; }
+  .pl-list li.past { opacity: 0.45; }
+  .pl-list .kat { font-family: var(--f-mono); font-size: 0.76rem; color: var(--ink-2); }
+  .week-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .wd { display: flex; flex-direction: column; gap: 4px; min-width: 0; background: var(--surface-2); border-radius: 12px; padding: 9px 10px 10px; }
+  .wd.we { background: color-mix(in srgb, var(--surface-2) 55%, transparent); }
+  .wd-h { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; margin-bottom: 2px; }
+  .wd-h span { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-2); }
+  .wd-h b { font-size: 0.72rem; font-weight: 600; color: var(--ink-3); }
+  .wd-e { font-size: 0.74rem; line-height: 1.25; padding-left: 6px; border-left: 2.5px solid var(--kc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+  .wd-e span { font-family: var(--f-mono); font-size: 0.64rem; color: var(--ink-3); font-weight: 500; margin-right: 4px; }
+  .wd-ad { font-size: 0.68rem; font-weight: 600; color: var(--ink-2); background: var(--surface); border-radius: 5px; padding: 1px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wd-more, .wd-free { font-size: 0.7rem; color: var(--ink-3); }
+  .pl-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.72rem; color: var(--ink-3); }
+  .pl-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .pl-legend i { width: 8px; height: 8px; border-radius: 2px; background: var(--kc); }
+  @media (max-width: 899px) {
+    .strip { display: none; } .pl-list { display: block; }
+    .week-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  /* Mail: read-only list of the last day */
+  .mail-ro { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .mail-ro li { border-top: 1px solid var(--line); }
+  .mail-ro li:first-child { border-top: none; }
+  .mail-ro a, .mail-ro .m { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: 8px 0; text-decoration: none; color: inherit; }
+  .mail-ro .mf { font-weight: 700; font-size: 0.86rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+  .mail-ro .mf i { width: 7px; height: 7px; border-radius: 50%; background: var(--a-tasks); flex: none; }
+  .mail-ro .mt { font-family: var(--f-mono); font-size: 0.68rem; color: var(--ink-3); }
+  .mail-ro .ms { grid-column: 1 / -1; font-size: 0.84rem; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mail-ro a:hover .ms { color: var(--ink); }
+
+  /* Studie: lektier board, one column per course */
+  .lk-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; align-items: start; }
+  @media (min-width: 1180px) { .lk-board { grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr)); } }
+  .lk-col { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; box-shadow: inset 0 3px 0 var(--cc); }
+  .lk-col header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: baseline; }
+  .lk-col h3 { font-family: var(--f-display); font-stretch: 75%; font-weight: 800; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.08; grid-column: 1; min-width: 0; overflow-wrap: anywhere; }
+  .lk-tag { grid-column: 1 / -1; font-family: var(--f-mono); font-size: 0.66rem; font-weight: 600; color: var(--cc); }
+  .lk-n { grid-row: 2; grid-column: 2; font-family: var(--f-display); font-weight: 800; font-size: 1.3rem; color: var(--cc); }
+  .lk-next { font-size: 0.76rem; color: var(--ink-3); }
+  .lk-cards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .lk-cards li { background: var(--surface-2); border-radius: 10px; padding: 9px 10px; display: flex; flex-direction: column; gap: 5px; border-left: 3px solid transparent; }
+  .lk-cards li.late { border-left-color: var(--critical); }
+  .lk-cards li.today { border-left-color: var(--warning); }
+  .lk-cards b { font-size: 0.86rem; line-height: 1.3; overflow-wrap: anywhere; }
+  .lk-d { font-size: 0.74rem; color: var(--ink-3); overflow-wrap: anywhere; }
+  .lk-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+  .lk-empty { font-size: 0.8rem; color: var(--ink-3); padding: 10px 0; text-align: center; border: 1px dashed var(--line-2); border-radius: 10px; }
+  .st-top { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); margin-top: 22px; }
+  /* Skema */
+  .sk-h, .sk-grid { display: grid; grid-template-columns: 2.6rem repeat(5, minmax(0, 1fr)); }
+  .sk-h > div { padding: 0 6px 8px; display: flex; gap: 6px; align-items: baseline; }
+  .sk-h span { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); }
+  .sk-h b { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: 1.2rem; }
+  .sk-h .today b { color: #fff; background: var(--critical); border-radius: 7px; padding: 1px 6px; }
+  .sk-grid { position: relative; border-top: 1px solid var(--line); }
+  .sk-tl { position: relative; }
+  .sk-tl span { position: absolute; right: 6px; transform: translateY(-50%); font-family: var(--f-mono); font-size: 0.64rem; color: var(--ink-3); }
+  .sk-tl span:first-child { transform: none; }
+  .sk-col { position: relative; border-left: 1px solid var(--line); background-image: linear-gradient(var(--line) 1px, transparent 1px); background-size: 100% var(--px); }
+  .sk-col.today { background-color: color-mix(in srgb, var(--critical) 4%, transparent); }
+  .sk-ev { position: absolute; border-radius: 8px; padding: 5px 7px; overflow: hidden; background: color-mix(in srgb, var(--cc) 15%, var(--surface)); border-left: 3px solid var(--cc); display: flex; flex-direction: column; gap: 1px; }
+  .sk-ev b { font-size: 0.76rem; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .sk-ev span { font-size: 0.66rem; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sk-ev em { font-style: normal; font-size: 0.62rem; font-weight: 700; color: var(--critical); text-transform: uppercase; }
+  .sk-ev.past { opacity: 0.45; }
+  .sk-list { display: none; }
+  .st-lessons li { border-left: 3px solid var(--cc, transparent); padding-left: 8px; }
+  @media (max-width: 899px) { .sk { display: none; } .sk-list { display: block; } }
+  .ex-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .ex-list li { display: flex; gap: 12px; align-items: center; padding: 9px 0; border-top: 1px solid var(--line); }
+  .ex-list li:first-child { border-top: none; }
+  .ex-n { width: 3.2rem; flex: none; text-align: center; border-radius: 10px; padding: 5px 0; background: color-mix(in srgb, var(--cc) 12%, transparent); }
+  .ex-n b { display: block; font-family: var(--f-display); font-weight: 800; font-size: 1.25rem; line-height: 1; color: var(--cc); }
+  .ex-n span { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: var(--ink-3); }
+  .ex-n.soon b { color: var(--critical); }
+
+  /* Vaner page */
+  .hb-sum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 16px 0; }
+  .hs { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .hs-k { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+  .hs-v { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: 2.6rem; line-height: 1; font-variant-numeric: tabular-nums; }
+  .hs-v small { font-size: 0.5em; color: var(--ink-3); margin-left: 2px; }
+  .hs-s { font-size: 0.8rem; color: var(--ink-2); overflow-wrap: anywhere; }
+  .hb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+  .hb-card { gap: 14px; }
+  .hb-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .hb-h h3 { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: 1.25rem; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.05; }
+  .hb-today { flex: none; font-size: 0.7rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--surface-2); color: var(--ink-3); }
+  .hb-today.on { background: color-mix(in srgb, var(--a-tasks) 15%, transparent); color: var(--a-tasks); }
+  .hb-nums { display: flex; gap: 8px 18px; flex-wrap: wrap; align-items: flex-end; }
+  .hb-streak { display: flex; align-items: baseline; gap: 5px; margin-right: 6px; }
+  .hb-streak svg { width: 20px; height: 20px; align-self: center; }
+  .hb-streak b { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: 2.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+  .hb-streak span { font-size: 0.8rem; color: var(--ink-2); }
+  .hb-n { display: flex; flex-direction: column; }
+  .hb-n b { font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+  .hb-n span { font-size: 0.68rem; color: var(--ink-3); }
+  .hm { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px; }
+  .hm-days { display: grid; grid-template-rows: repeat(7, 1fr); gap: 3px; }
+  .hm-days span { font-size: 0.58rem; color: var(--ink-3); line-height: 1; display: flex; align-items: center; }
+  .hm-grid { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 3px; }
+  .hm-col { display: grid; grid-template-rows: repeat(7, 1fr); gap: 3px; }
+  .hm-col i, .hm-week i { display: block; aspect-ratio: 1; border-radius: 3px; background: var(--surface-2); max-width: 100%; }
+  .hm-col i.on, .hm-week i.on { background: var(--a-tasks); }
+  .hm-col i.nodata, .hm-week i.nodata { background: repeating-linear-gradient(45deg, var(--surface-2) 0 2px, transparent 2px 4px); }
+  .hm-col i.future { background: transparent; }
+  .hm-week { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 4px; }
+  .hm-ax { display: flex; justify-content: space-between; font-size: 0.62rem; color: var(--ink-3); padding-left: 1.6rem; }
+  .hm-week + .hm-ax { padding-left: 0; }
+  .hb-note { margin-top: 16px; max-width: 70ch; }
+  @media (max-width: 700px) { .hb-sum { grid-template-columns: minmax(0, 1fr); } .hs { flex-direction: row; align-items: baseline; gap: 10px; flex-wrap: wrap; } .hs-v { font-size: 1.9rem; } }
 </style>
 
 <div class="app">
@@ -2282,9 +2467,9 @@
       <div class="nav-sep" aria-hidden="true"></div>
       <a href="#sundhed" data-page="sundhed" title="Sundhed"><svg viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg><span class="lbl"><span class="lbl-long">Sundhed</span><span class="lbl-short">Sundhed</span></span><span class="ad health"></span></a>
       <a href="#studie" data-page="studie" title="Studie"><svg viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg><span class="lbl"><span class="lbl-long">Studie</span><span class="lbl-short">Studie</span></span><span class="ad study"></span></a>
+      <a href="#vaner" data-page="vaner" title="Vaner"><svg viewBox="0 0 24 24"><path d="M12 3c1 3.5 5 5.6 5 10a5 5 0 0 1-10 0c0-2.2 1.1-3.6 2.3-4.7.3 1.6 1.2 2.6 2.2 2.9C11.1 8.7 11 6 12 3z"/></svg><span class="lbl"><span class="lbl-long">Vaner</span><span class="lbl-short">Vaner</span></span><span class="ad tasks"></span></a>
       <a href="#okonomi" data-page="okonomi" title="Økonomi"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg><span class="lbl"><span class="lbl-long">Økonomi</span><span class="lbl-short">Økonomi</span></span><span class="ad money"></span></a>
-      <a href="#opgaver" data-page="opgaver" title="Opgaver"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg><span class="lbl"><span class="lbl-long">Opgaver</span><span class="lbl-short">Opgaver</span></span><span class="ad tasks"></span></a>
-      <a href="#kalender" data-page="kalender" title="Kalender"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl"><span class="lbl-long">Kalender</span><span class="lbl-short">Kalender</span></span><span class="ad cal"></span></a>
+
     </nav>
     <div class="side-foot">
       <button class="src-sum" id="src-sum" type="button" aria-expanded="false" aria-controls="sources" title="Datakilder">
@@ -2335,20 +2520,18 @@
         <div><span class="eyebrow" id="dateline">&nbsp;</span><h1 id="greet">I dag</h1></div>
         <span class="sub muted" id="today-meta"></span>
       </header>
-      <div class="dash">
-      <article class="card" id="c-plan">
-        <div class="card-k"><span class="ad cal"></span>I dag i kalenderen<span class="src-note" id="plan-src"></span></div>
+      <article class="card cal-card" id="c-plan">
+        <div class="card-k"><span class="ad cal"></span>Kalender<span class="src-note" id="plan-src"></span></div>
         <div id="plan-body"><div class="skel"></div></div>
       </article>
-      <article class="card" id="c-todo">
-        <div class="card-k"><span class="ad tasks"></span>Opgaver og rutiner<a class="src-note linkbtn" href="#opgaver">Alle opgaver</a></div>
-        <form class="add td-f" id="td-add" autocomplete="off" hidden>
-          <input class="field" type="text" id="td-title" placeholder="Ny opgave i dag…" aria-label="Ny opgave" maxlength="200">
-          <select class="field" id="td-proj" aria-label="Liste"><option value="">Indbakke</option></select>
-          <button class="btn" type="submit">Tilføj</button>
-        </form>
-        <div class="todo-sec"><div class="todo-h">Opgaver <span id="tk-count"></span><button class="add-btn" type="button" id="add-task-btn" aria-controls="td-add" aria-label="Ny opgave" title="Ny opgave">+</button></div><div id="tk-body"><div class="skel"></div></div></div>
-        <div class="todo-sec"><div class="todo-h">Rutiner <span id="hb-count"></span></div><div id="hb-body"><div class="skel"></div></div></div>
+      <div class="dash">
+      <article class="card w" id="c-lek">
+        <div class="card-k"><span class="ad study"></span>Lektier<span class="src-note">Todoist</span></div>
+        <div class="w-body" id="lk-body"><div class="skel"></div></div>
+      </article>
+      <article class="card w" id="c-vaner">
+        <div class="card-k"><span class="ad tasks"></span>Vaner i dag<span class="src-note">Todoist · Rutiner</span></div>
+        <div class="w-body" id="vt-body"><div class="skel"></div></div>
       </article>
       <article class="card" id="c-recovery">
       <div class="card-k"><span class="ad health"></span>Restitution<span class="src-note" id="rec-src"></span></div>
@@ -2356,7 +2539,7 @@
     </article>
       <article class="card" id="c-mail">
         <div class="card-k"><span class="ad tasks"></span>Mail<span class="src-note" id="mail-src"></span></div>
-        <div id="mail-body"><div class="skel"></div></div>
+        <div class="w-body" id="mail-body"><div class="skel"></div></div>
       </article>
       <article class="card" id="c-weather">
       <div class="card-k"><span class="ad cal"></span>Vejret<span class="src-note" id="wx-src"></span></div>
@@ -2373,7 +2556,7 @@
       </article>
       </div>
       <!-- Kept for the shared render code; not shown -->
-      <div hidden aria-hidden="true"><div id="wo-body"></div><div id="ag-body"></div><div id="dl-body"></div></div>
+      <div hidden aria-hidden="true"><div id="wo-body"></div><div id="ag-body"></div><div id="dl-body"></div><span id="tk-count"></span><span id="hb-count"></span></div>
     </section>
 
     <!-- ================= SUNDHED ================= -->
@@ -2623,27 +2806,30 @@
     <!-- ================= STUDIE ================= -->
     <section class="page" id="page-studie" hidden>
       <header class="page-head">
-        <div><span class="eyebrow">Corvinus · timer fra Neptun · opgaver fra Todoist</span><h1><span class="ad study"></span>Studie</h1></div>
+        <div><span class="eyebrow">Corvinus · lektier fra Todoist · skema fra Neptun</span><h1><span class="ad study"></span>Studie</h1></div>
       </header>
+      <div class="sec-row"><h2 class="sec-h">Lektier</h2><span class="sub muted" id="st-lk-meta"></span></div>
+      <div class="lk-board" id="st-board"><div class="skel tall"></div></div>
       <div class="st-top">
         <article class="card" id="st-week">
-          <div class="card-k"><span class="ad study"></span>De næste 7 dage</div>
-          <div id="st-week-body"><div class="skel"></div></div>
+          <div class="card-k"><span class="ad study"></span><span id="st-week-title">Skema</span><span class="src-note">Neptun</span></div>
+          <div id="st-week-body"><div class="skel tall"></div></div>
         </article>
         <article class="card" id="st-dl">
-          <div class="card-k todo-h"><span class="ad study"></span>Deadlines og eksamener<button class="add-btn" type="button" id="st-dl-btn" aria-controls="st-dl-add" aria-label="Ny deadline" title="Ny deadline">+</button></div>
-          <form class="add dl-f" id="st-dl-add" autocomplete="off" hidden>
-            <input class="field" type="text" id="st-dl-title" placeholder="Fx Gruppeopgave 1" aria-label="Titel" maxlength="120">
-            <select class="field" id="st-dl-course" aria-label="Fag"></select>
-            <select class="field" id="st-dl-kind" aria-label="Type"><option value="hand-in">Aflevering</option><option value="exam">Eksamen</option><option value="other">Andet</option></select>
-            <input class="field" type="date" id="st-dl-date" aria-label="Dato">
-            <button class="btn" type="submit">Tilføj</button>
-          </form>
+          <div class="card-k"><span class="ad study"></span>Eksamener og frister</div>
           <div id="st-dl-body"><div class="skel"></div></div>
         </article>
       </div>
-      <h2 class="sec-h">Fag</h2>
-      <div class="st-courses" id="st-courses"></div>
+    </section>
+
+    <!-- ================= VANER ================= -->
+    <section class="page" id="page-vaner" hidden>
+      <header class="page-head">
+        <div><span class="eyebrow">Fra listen Rutiner i Todoist</span><h1><span class="ad tasks"></span>Vaner</h1></div>
+      </header>
+      <div class="hb-sum" id="hb-sum"></div>
+      <div class="hb-grid" id="hb-grid"><div class="skel tall"></div></div>
+      <p class="sub muted hb-note" id="hb-note"></p>
     </section>
 
     <!-- ================= ØKONOMI ================= -->
@@ -2691,52 +2877,8 @@
       </div>
     </section>
 
-    <!-- ================= OPGAVER ================= -->
-    <section class="page" id="page-opgaver" hidden>
-      <header class="page-head">
-        <div><span class="eyebrow">Live fra Todoist</span><h1><span class="ad tasks"></span>Opgaver</h1></div>
-        <a class="btn ghost small" href="https://app.todoist.com/app/today" target="_blank" rel="noopener">Åbn Todoist ↗</a>
-      </header>
-      <form class="add op-add card" id="op-add" autocomplete="off">
-        <input class="field" type="text" id="op-title" placeholder="Ny opgave…" aria-label="Ny opgave" maxlength="200">
-        <select class="field" id="op-proj" aria-label="Liste"><option value="">Indbakke</option></select>
-        <input class="field" type="date" id="op-date" aria-label="Dato (tom = Planlæg)" title="Uden dato havner den i Planlæg">
-        <button class="btn" type="submit">Tilføj</button>
-      </form>
-      <div class="op-grid">
-        <article class="card op-plan" id="op-plan">
-          <div class="card-k"><span class="ad crit"></span>Planlæg<span class="src-note" id="op-plan-n"></span></div>
-          <div class="sub muted op-hint">Opgaver uden dato. Giv dem en dato, så de kommer på dagen.</div>
-          <div id="op-plan-body"><div class="skel"></div></div>
-        </article>
-        <article class="card" id="op-today">
-          <div class="card-k"><span class="ad tasks"></span>I dag<span class="src-note" id="op-today-n"></span></div>
-          <div id="op-today-body"><div class="skel"></div></div>
-        </article>
-        <article class="card" id="op-next">
-          <div class="card-k"><span class="ad tasks"></span>Næste 7 dage<span class="src-note" id="op-next-n"></span></div>
-          <div id="op-next-body"><div class="skel"></div></div>
-        </article>
-      </div>
-      <h2 class="sec-h">Lister</h2>
-      <div class="op-lists" id="op-lists"></div>
-    </section>
-
-    <!-- ================= KALENDER ================= -->
-    <section class="page" id="page-kalender" hidden>
-      <header class="page-head">
-        <div><span class="eyebrow">Google Kalender · alle dine kalendere</span><h1><span class="ad cal"></span>Kalender</h1></div>
-        <div class="kal-ctl">
-          <div class="seg" role="group" aria-label="Visning"><button type="button" data-kalview="week" aria-pressed="true">Uge</button><button type="button" data-kalview="month" aria-pressed="false">Måned</button></div>
-          <div class="seg"><button type="button" id="kal-prev" aria-label="Forrige">‹</button><button type="button" id="kal-today">I dag</button><button type="button" id="kal-next" aria-label="Næste">›</button></div>
-        </div>
-      </header>
-      <div class="kal-bar"><h2 class="kal-title" id="kal-title"></h2><div class="kal-legend" id="kal-legend"></div></div>
-      <div id="kal-body"><div class="skel tall"></div></div>
-    </section>
-
     <footer id="foot" class="page" style="margin-top:28px">
-      <span>Træning og restitution hentes live fra intervals.icu via IcuSync. Aftaler fra Google Kalender (inkl. din iCloud-kalender). Opgaver og rutiner fra Todoist, aktiekurser fra Alpha Vantage. Deadlines, budget og opsparing gemmes i dashboardets egen database.<span id="garmin" hidden><br>Data provided by Garmin®</span></span>
+      <span>Træning og restitution hentes live fra intervals.icu via IcuSync. Aftaler fra Google Kalender (inkl. din iCloud-kalender). Lektier og rutiner fra Todoist, skema fra Neptun, aktiekurser fra Alpha Vantage. Vanehistorik, budget og opsparing gemmes i dashboardets egen database.<span id="garmin" hidden><br>Data provided by Garmin®</span></span>
     </footer>
   </main>
 </div>
@@ -3333,7 +3475,7 @@
   function loadMail(force) {
     if (!S.mcp) return Promise.resolve();
     setSrc("src-mail", "", "Henter…");
-    return settle(callRaw(GMAIL, "search_threads", { query: "in:inbox is:unread newer_than:7d -category:promotions -category:social", pageSize: 25 }, force)).then(function (r) {
+    return settle(callRaw(GMAIL, "search_threads", { query: "in:inbox newer_than:1d -category:promotions -category:social", pageSize: 25 }, force)).then(function (r) {
       if (!r.ok) { S.mail = null; S.mailErr = r.error; }
       else {
         var threads = pickFrom(r.data, "threads");
@@ -3357,25 +3499,6 @@
     });
   }
 
-  // Marks a whole thread as read in Gmail (removes the UNREAD label). The only
-  // change this page makes in the inbox, and only on a click.
-  function markRead(id, btn) {
-    if (!S.mcp || !id) return;
-    btn.disabled = true;
-    var p;
-    try { p = S.mcp.callTool(GMAIL, "unlabel_thread", { threadId: id, labelIds: ["UNREAD"] }, { cache: false }); } catch (e) { p = Promise.reject({ code: "upstream_error" }); }
-    p.then(function () {
-      S.mail = (S.mail || []).filter(function (m) { return m.id !== id; });
-      renderMail(); try { renderBriefing(); } catch (e) {}
-      try { S.mcp.invalidate(GMAIL, "search_threads"); } catch (e) {}
-    }, function (err) {
-      btn.disabled = false;
-      var li = btn.closest("li"), msg = document.createElement("div");
-      msg.className = "mail-msg"; msg.style.gridColumn = "1 / -1";
-      msg.textContent = (err && (err.code === "not_granted" || err.code === "not_in_manifest")) ? "Siden mangler lov til at ændre mails — giv adgang, når claude.ai spørger." : "Kunne ikke markere som læst. Prøv igen.";
-      if (li && !li.querySelector(".mail-msg")) li.appendChild(msg);
-    });
-  }
   function senderName(s) {
     s = String(s || "");
     var m = s.match(/^\s*"?([^"<]+?)"?\s*<[^>]+>\s*$/); if (m) return m[1];
@@ -3396,20 +3519,16 @@
     var host = $("mail-body"); if (!host) return;
     if (S.mailErr) { host.innerHTML = '<div class="err">' + errCopy(GMAIL, S.mailErr) + "</div>"; return; }
     if (!S.mail) { host.innerHTML = S.mcp ? '<div class="skel"></div>' : '<div class="err">' + errCopy(GMAIL, { code: "not_granted" }) + "</div>"; return; }
-    var imp = S.mail.filter(function (m) { return m.important; }).length;
-    var html = '<div class="headline"><span class="big">' + S.mail.length + '</span><span class="big-u">ulæste' + (imp ? " · " + imp + " vigtige" : "") + "</span></div>";
-    if (!S.mail.length) html += '<div class="empty">Indbakken er tom for ulæste mails fra den sidste uge.</div>';
-    else html += '<ul class="mail-list">' + S.mail.slice(0, 5).map(function (m) {
-      var inner = '<span class="mf">' + (m.important ? '<span class="imp" title="Vigtig"></span>' : "") + esc(m.from) + (m.count > 1 ? " (" + m.count + ")" : "") + '</span><span class="mt">' + mailAgo(m.at) + '</span><span class="ms">' + esc(m.subject) + '</span><span class="sn2">' + esc(m.snippet) + "</span>";
-      return "<li>" + (m.url ? '<a href="' + esc(m.url) + '" target="_blank" rel="noopener noreferrer">' + inner + "</a>" : '<a>' + inner + "</a>") +
-        '<button class="mail-read" type="button" data-read="' + esc(m.id) + '" title="Markér som læst" aria-label="Markér som læst: ' + esc(m.subject) + '"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button></li>';
+    var list = S.mail.slice().sort(function (a, b) { return b.at - a.at; });
+    var html = '<div class="w-hero"><span class="big">' + list.length + '</span><span class="big-u">' + (list.length === 1 ? "mail" : "mails") + " det seneste døgn</span></div>";
+    if (!list.length) html += '<div class="empty">Ingen nye mails det seneste døgn.</div>';
+    else html += '<ul class="mail-ro">' + list.slice(0, 5).map(function (m) {
+      var inner = '<span class="mf">' + (m.important ? '<i title="Vigtig"></i>' : "") + esc(m.from) + '</span><span class="mt">' + mailAgo(m.at) + '</span><span class="ms">' + esc(m.subject) + "</span>";
+      return "<li>" + (m.url ? '<a href="' + esc(m.url) + '" target="_blank" rel="noopener noreferrer">' + inner + "</a>" : '<div class="m">' + inner + "</div>") + "</li>";
     }).join("") + "</ul>";
-    if (S.mail.length > 5) html += '<div class="sub muted">+ ' + (S.mail.length - 5) + " flere ulæste i Gmail</div>";
+    html += '<a class="w-foot" href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noopener noreferrer">Åbn Gmail ↗</a>';
     host.innerHTML = html;
-    var p = partsInTZ(new Date()); $("mail-src").textContent = "Gmail · kl. " + p.hour + ":" + p.minute;
-    host.querySelectorAll("[data-read]").forEach(function (btn) {
-      btn.addEventListener("click", function () { markRead(btn.getAttribute("data-read"), btn); });
-    });
+    $("mail-src").textContent = "Gmail";
   }
 
   // =================================================================
@@ -3430,14 +3549,12 @@
   function attentionItems() {
     var t = todayISO(), now = nowLocal(), hour = +partsInTZ(new Date()).hour, out = [];
     function add(sev, area, icon, text, meta, jump, key, id) { out.push({ sev: sev, area: area, icon: icon, text: text, meta: meta || "", jump: jump, key: key || "", id: id || (area + ":" + text.replace(/<[^>]*>/g, "")) }); }
-    // Tasks (Todoist)
+    // Lektier due today or overdue (Todoist)
     if (S.td) {
-      S.td.filter(function (k) { var d = tdDate(k); return d && d < t; }).sort(tdSort).slice(0, 4)
-        .forEach(function (k) { add("high", "tasks", "task", "Forsinket: <b>" + esc(k.content) + "</b>", "forfaldt " + relDay(tdDate(k)), "c-todo", tdDate(k), "td:" + k.id + ":" + tdDate(k)); });
-      S.td.filter(function (k) { return tdDate(k) === t && tdPrio(k) === 1; }).slice(0, 3)
-        .forEach(function (k) { add("med", "tasks", "task", "Vigtigt i dag: <b>" + esc(k.content) + "</b>", "høj prioritet", "c-todo", t, "tdp:" + k.id + ":" + t); });
-      var noDate = S.td.filter(function (k) { return !tdDate(k) && !tdIsShopping(k); });
-      if (noDate.length) add("low", "tasks", "task", "<b>" + noDate.length + (noDate.length === 1 ? " opgave" : " opgaver") + "</b> mangler en dato", "Planlæg", "#opgaver", "", "plan:" + noDate.map(function (k) { return k.id; }).sort().join(","));
+      lektier().filter(function (k) { var d = tdDate(k); return d && d <= t; }).slice(0, 5).forEach(function (k) {
+        var d = tdDate(k), c = courseOfTask(k);
+        add(d < t ? "high" : "med", "study", "flag", (d < t ? "Over tid: " : "Lektie i dag: ") + "<b>" + esc(k.content) + "</b>" + (c ? " · " + esc(c.short) : ""), d < t ? "skulle være klaret " + relDay(d) : "i dag", "#studie", d, "lk:" + k.id + ":" + d);
+      });
     }
     // Budget categories over their limit this month
     if (S.cats && S.exp) {
@@ -3491,7 +3608,7 @@
     // Mail: important unread from the last three days
     if (S.mail) {
       var DL_RE = /\b(frist|deadline|aflevering|afleveres|senest|i morgen|due|reminder|påmindelse|svar)\b/i;
-      S.mail.filter(function (m) { return Date.now() - m.at < 2 * 864e5; }).slice(0, 6).forEach(function (m) {
+      S.mail.filter(function (m) { return m.important; }).slice(0, 4).forEach(function (m) {
         add((m.important || DL_RE.test(m.subject + " " + m.snippet)) ? "med" : "low", "tasks", "mail", "Ny mail fra <b>" + esc(m.from) + "</b>: " + esc(m.subject), mailAgo(m.at) + " siden", "c-mail", "", "mail:" + m.id);
       });
     }
@@ -3562,35 +3679,6 @@
     var now = nowLocal().slice(11, 16);
     return planItems().filter(function (x) { return !x.done && x.s > now; })[0] || null;
   }
-  function renderPlan() {
-    var host = $("plan-body"); if (!host) return;
-    if (!S.cal && !S.calErr && !S.events) { host.innerHTML = '<div class="skel"></div>'; return; }
-    var t = todayISO(), now = nowLocal().slice(11, 16), items = planItems();
-    var allday = (S.cal || []).filter(function (e) { return e.start <= t && e.end >= t && e.allDay; });
-    var html = "";
-    if (S.calErr) html += '<div class="err" style="margin-bottom:8px">' + errCopy(GCAL, S.calErr) + "</div>";
-    if (allday.length) html += '<div class="plan-allday">' + allday.map(function (e) { return '<span class="chip neutral">' + esc(e.title) + "</span>"; }).join("") + "</div>";
-    if (!items.length) html += '<div class="empty">Intet planlagt i dag.</div>';
-    else {
-      var lines = [], placed = false;
-      items.forEach(function (x) {
-        var past = (x.e ? x.e : x.s) <= now;
-        if (!placed && x.s > now) { lines.push('<li class="nowline" aria-hidden="true"><span>' + now + "</span></li>"); placed = true; }
-        lines.push('<li class="' + (x.kind === "wo" ? "pw" : "pc-cal") + (x.done ? " done" : "") + (past && !x.done ? " past" : "") + (x.done ? " past" : "") + '"' + (x.cal ? ' style="--pc:' + calColor(x.cal) + '"' : "") + '><span class="pt">' + x.s + '</span><span class="pd"><i></i></span><span class="pc"><b>' + esc(x.title) + "</b><span>" + esc(x.sub) + "</span></span></li>");
-      });
-      if (!placed) lines.push('<li class="nowline" aria-hidden="true"><span>' + now + "</span></li>");
-      html += '<ul class="plan">' + lines.join("") + "</ul>";
-    }
-    if (+partsInTZ(new Date()).hour >= 17) {
-      var tm = addDays(t, 1), nx = nextWorkout();
-      var first = (S.cal || []).filter(function (e) { return e.start === tm && !e.allDay && !e.holiday; }).sort(function (a, b) { return a.sT < b.sT ? -1 : 1; })[0];
-      var bits = [];
-      if (first) bits.push(first.sT + " " + esc(first.title));
-      if (nx && nx.start_date_local.slice(0, 10) === tm) bits.push(nx.start_date_local.slice(11, 16) + " " + esc(nx.name));
-      if (bits.length) html += '<div class="sub muted" style="margin-top:8px">I morgen: ' + bits.join(" · ") + "</div>";
-    }
-    host.innerHTML = html;
-  }
   function setNow(id, v, sub, word) {
     var ve = $("now-" + id + "-v"), se = $("now-" + id + "-s"); if (!ve) return;
     ve.className = "nt-v" + (word ? " word" : ""); ve.innerHTML = v; se.innerHTML = sub || "&nbsp;";
@@ -3643,7 +3731,6 @@
   function toggleForm(id, focusId) {
     var f = $(id); f.hidden = !f.hidden; if (!f.hidden) { $(focusId).focus(); }
   }
-  $("add-task-btn").addEventListener("click", function () { toggleForm("td-add", "td-title"); });
 
 
   // =================================================================
@@ -3898,7 +3985,7 @@
 
   // ----- tasks / habits / deadlines (database) -----
   var AREA_L = { studie: "Studie", sundhed: "Sundhed", okonomi: "Økonomi", privat: "Privat" };
-  function renderTodayDb() { renderTasks(); renderHabits(); renderDeadlines(); try { renderStudie(); } catch (e) {} try { renderBriefing(); } catch (e) {} }
+  function renderTodayDb() { renderDeadlines(); try { renderStudie(); } catch (e) {} try { renderBriefing(); } catch (e) {} }
 
   function habitDone(hid, iso) { return (S.hlog || []).some(function (l) { return l.habitId === hid && l.date === iso; }); }
   function streak(hid) {
@@ -4206,7 +4293,7 @@
   // =================================================================
   // Tabs, forms, boot
   // =================================================================
-  var PAGES = ["idag", "sundhed", "studie", "okonomi", "opgaver", "kalender"];
+  var PAGES = ["idag", "sundhed", "studie", "vaner", "okonomi"];
   // The highlight behind the active menu item glides to its new place.
   function moveNavInd() {
     var ind = $("nav-ind"), a = document.querySelector('.nav a[aria-current="page"]');
@@ -4225,7 +4312,6 @@
     window.scrollTo(0, 0);
     moveNavInd();
     if (name === "sundhed" && window.__ssRedraw) window.__ssRedraw();
-    if (name === "kalender" && S.mcp) loadKal(false);
     if (name === "okonomi") refreshStocks(false);
   }
   // Collapsible sidebar on desktop; the choice is remembered on this device only.
@@ -4279,7 +4365,6 @@
     if (force && window.__ssRefresh) window.__ssRefresh();
     renderDateline();
     var extra = [loadTodoist(force), loadNeptun(force)];
-    if (!$("page-kalender").hidden || S.kal) extra.push(loadKal(force));
     refreshStocks(false);
     return withTimeout(Promise.all([loadIcu(force), loadCal(force), loadWeather(force), loadMail(force)].concat(extra)), 45000, null).then(function () {
       busy(false);
@@ -4387,13 +4472,14 @@
   // =================================================================
   var TD = "Todoist";
   SRC_NAME[TD] = "Todoist";
-  S.td = null; S.tdErr = null; S.tdProj = {}; S.tdDone = null; S.tdBusy = {};
+  S.td = null; S.tdErr = null; S.tdProj = {};
   var TD_COL = { berry_red: "#b8255f", red: "#db4035", orange: "#ff9933", yellow: "#e8b500", olive_green: "#afb83b", lime_green: "#7ecc49", green: "#299438", mint_green: "#6accbc", teal: "#158fad", sky_blue: "#14aaf5", light_blue: "#96c3eb", blue: "#4073ff", grape: "#884dff", violet: "#af38eb", lavender: "#eb96eb", magenta: "#e05194", salmon: "#ff8d85", charcoal: "#808080", grey: "#b8b8b8", taupe: "#ccac93" };
   function tdDate(k) { return k && k.dueDate ? String(k.dueDate).slice(0, 10) : ""; }
   function tdTime(k) {
     var d = String(k.dueDate || ""); if (d.length > 10) return d.slice(11, 16);
     var m = /\bat (\d{1,2})[:.](\d{2})/i.exec(k.recurring || ""); return m ? pad(+m[1]) + ":" + m[2] : "";
   }
+  function tdDeadline(k) { var d = k.deadlineDate || (k.deadline && (k.deadline.date || k.deadline)); return d ? String(d).slice(0, 10) : ""; }
   function tdProj(k) { return S.tdProj[k.projectId] || null; }
   function tdProjName(k) { var p = tdProj(k); return p ? (p.inboxProject ? "Indbakke" : p.name) : ""; }
   function tdIsRoutine(k) { return /^rutiner$/i.test(tdProjName(k)); }
@@ -4434,7 +4520,7 @@
     return Promise.all([settle(callObj(TD, "find-projects", { limit: 200 }, force)), settle(tdAll(force))]).then(function (r) {
       if (seq !== tdSeq) return;
       if (r[0].ok && r[0].data && Array.isArray(r[0].data.projects)) { var m = {}; r[0].data.projects.forEach(function (p) { m[p.id] = p; }); S.tdProj = m; }
-      if (r[1].ok) { S.td = r[1].data.filter(function (k) { return !k.checked; }); S.tdErr = null; }
+      if (r[1].ok) { S.td = r[1].data.filter(function (k) { return !k.checked; }); S.tdErr = null; if (S.rlog !== null) { S.rlogSynced = true; syncRoutineLog(force); } }
       else S.tdErr = r[1].error;
       setSrc("src-td", S.tdErr ? "err" : "ok", S.tdErr ? "Fejl" : "OK");
       renderTodoAll();
@@ -4442,209 +4528,216 @@
   }
   function renderTodoAll() {
     function safe(fn) { try { fn(); } catch (e) { console.error(e); } }
-    safe(renderTasks); safe(renderHabits); safe(renderOpgaver); safe(renderStudie);
+    safe(renderLektier); safe(renderVanerToday); safe(renderVaner); safe(renderStudie);
     safe(function () { renderBriefing(); });
   }
-  function tdDoneToday() {
-    var t = todayISO();
-    return (S.tdDone || []).filter(function (d) { return d.date === t; });
-  }
-  function tdComplete(k) {
-    if (S.tdBusy[k.id]) return;
-    S.tdBusy[k.id] = true;
-    var t = todayISO();
-    // Show it as done straight away; Todoist confirms in the background.
-    S.td = (S.td || []).filter(function (x) { return x.id !== k.id; });
-    S.tdLocalDone = (S.tdLocalDone || []).concat([{ id: t + "_" + k.id, taskId: k.id, title: k.content, projectId: k.projectId, recurring: !!k.recurring, date: t, at: Date.now() }]);
-    renderTodoAll();
-    act(TD, "complete-tasks", { ids: [k.id] }).then(function () {
-      if (S.db) dbWrite(S.db.doc("tdDone/" + t + "_" + k.id).set({ taskId: k.id, title: k.content, projectId: k.projectId || "", recurring: !!k.recurring, date: t, at: Date.now() }));
-      delete S.tdBusy[k.id];
-      setTimeout(function () { loadTodoist(true); }, 1200);
-    }, function (e) {
-      delete S.tdBusy[k.id];
-      S.tdLocalDone = (S.tdLocalDone || []).filter(function (d) { return d.taskId !== k.id; });
-      toast("Kunne ikke markere i Todoist" + (e && e.message ? ": " + e.message : "") + ".");
-      loadTodoist(true);
-    });
-  }
-  function tdReopen(d) {
-    if (d.recurring) { toast("Rutinen er rykket til næste gang i Todoist og kan ikke fortrydes her."); renderTodoAll(); return; }
-    S.tdLocalDone = (S.tdLocalDone || []).filter(function (x) { return x.taskId !== d.taskId; });
-    if (S.db) dbWrite(S.db.doc("tdDone/" + d.date + "_" + d.taskId).delete());
-    act(TD, "uncomplete-tasks", { ids: [d.taskId] }).then(function () { loadTodoist(true); }, function () { toast("Kunne ikke genåbne opgaven i Todoist."); loadTodoist(true); });
-  }
-  function doneList() {
-    var seen = {}, out = [];
-    tdDoneToday().concat((S.tdLocalDone || []).filter(function (d) { return d.date === todayISO(); })).forEach(function (d) {
-      if (seen[d.taskId]) return; seen[d.taskId] = 1; out.push(d);
-    });
-    return out;
-  }
-  function tdAdd(content, projectId, due) {
-    var task = { content: content };
-    if (projectId) task.projectId = projectId;
-    if (due) task.dueString = due;
-    return act(TD, "add-tasks", { tasks: [task] }).then(function (o) {
-      if (o && o.failures && o.failures.length) throw { message: (o.failures[0].error || "fejl") };
-      toast("Tilføjet i Todoist: " + content);
-      loadTodoist(true);
-    }, function (e) { toast("Kunne ikke tilføje i Todoist" + (e && e.message ? ": " + e.message : "") + "."); throw e; });
-  }
-  function projOptions(sel) {
-    var ps = Object.keys(S.tdProj).map(function (id) { return S.tdProj[id]; }).sort(function (a, b) { return (b.inboxProject ? 1 : 0) - (a.inboxProject ? 1 : 0) || (a.childOrder || 0) - (b.childOrder || 0); });
-    if (!ps.length) return '<option value="">Indbakke</option>';
-    return ps.map(function (p) { return '<option value="' + esc(p.id) + '"' + (p.id === sel ? " selected" : "") + ">" + esc(p.inboxProject ? "Indbakke" : p.name) + "</option>"; }).join("");
-  }
-  function tdTaskRow(k, opts) {
-    opts = opts || {};
-    var t = todayISO(), d = tdDate(k), tm = tdTime(k), p = tdProj(k), late = d && d < t;
-    var bits = [];
-    if (opts.showProject !== false && p) bits.push('<span class="pj" style="--pj:' + (TD_COL[p.color] || "var(--ink-3)") + '">' + esc(tdProjName(k)) + "</span>");
-    if (late) bits.push('<span class="late">forfaldt ' + esc(relDay(d)) + "</span>");
-    else if (k.recurring && opts.showRecur) { bits.push('<span class="rc">' + esc(tdRecur(k.recurring)) + "</span>"); if (d && d !== t) bits.push("næste " + esc(relDay(d))); }
-    else if (d && opts.showDate) bits.push(esc(relDay(d)) + (tm ? " kl. " + tm : ""));
-    else if (tm) bits.push("kl. " + tm);
-    (k.labels || []).forEach(function (l) { bits.push('<span class="lb">#' + esc(l) + "</span>"); });
-    var desc = k.description && opts.showDesc !== false ? '<div class="li-desc">' + esc(String(k.description).split("\n")[0].slice(0, 90)) + "</div>" : "";
-    var extra = opts.setDate ? '<label class="setdate"><span>Giv dato</span><input type="date" class="field mini" data-setdate="' + esc(k.id) + '" aria-label="Giv ' + esc(k.content) + ' en dato"></label>' : "";
-    return '<li class="tdk' + (late ? " is-late" : "") + '"><input type="checkbox" class="chk round" data-tdk="' + esc(k.id) + '" aria-label="Marker ' + esc(k.content) + ' som færdig">' +
-      '<div class="li-main"><div class="li-title">' + esc(k.content) + "</div>" + (bits.length ? '<div class="li-sub">' + bits.join('<span class="sep"> · </span>') + "</div>" : "") + desc + extra + "</div>" +
-      (tdPrio(k) === 1 ? '<span class="prio p1">Vigtig</span>' : tdPrio(k) === 2 ? '<span class="prio p2">Høj</span>' : "") + "</li>";
-  }
-  function tdDoneRow(d) {
-    return '<li class="tdk is-done"><input type="checkbox" class="chk round" checked data-tdd="' + esc(d.taskId) + '" aria-label="Fortryd ' + esc(d.title) + '"' + (d.recurring ? ' title="Klaret i dag"' : "") + '>' +
-      '<div class="li-main"><div class="li-title done-t">' + esc(d.title) + "</div></div></li>";
-  }
-  function wireTd(host) {
-    host.querySelectorAll("[data-tdk]").forEach(function (cb) {
-      cb.addEventListener("change", function () {
-        var id = cb.getAttribute("data-tdk"), k = (S.td || []).filter(function (x) { return x.id === id; })[0];
-        if (k && cb.checked) tdComplete(k);
-      });
-    });
-    host.querySelectorAll("[data-tdd]").forEach(function (cb) {
-      cb.addEventListener("change", function () {
-        var id = cb.getAttribute("data-tdd"), d = doneList().filter(function (x) { return x.taskId === id; })[0];
-        if (d && !cb.checked) tdReopen(d);
-      });
-    });
-    host.querySelectorAll("[data-setdate]").forEach(function (inp) {
-      inp.addEventListener("change", function () {
-        var id = inp.getAttribute("data-setdate"); if (!inp.value) return;
-        inp.disabled = true;
-        act(TD, "update-tasks", { tasks: [{ id: id, dueString: inp.value }] }).then(function () { toast("Dato sat til " + relDay(inp.value) + "."); loadTodoist(true); },
-          function () { inp.disabled = false; toast("Kunne ikke sætte datoen i Todoist."); });
-      });
-    });
-  }
   function tdErrHtml() { return '<div class="err">' + errCopy(TD, S.tdErr) + "</div>"; }
-
-  // ----- I dag: Opgaver og rutiner -----
-  function tdTodayOpen() {
-    var t = todayISO();
-    return (S.td || []).filter(function (k) { var d = tdDate(k); return d && d <= t; });
-  }
   function tdSort(a, b) {
-    var da = tdDate(a), db = tdDate(b);
+    var da = tdDate(a) || "9999", db = tdDate(b) || "9999";
     return (da < db ? -1 : da > db ? 1 : 0) || (tdPrio(a) - tdPrio(b)) || ((tdTime(a) || "99") < (tdTime(b) || "99") ? -1 : 1);
   }
-  function renderTasks() {
-    var host = $("tk-body"); if (!host) return;
-    if (!S.mcp) { host.innerHTML = '<div class="err">' + errCopy(TD, { code: "not_granted" }) + "</div>"; return; }
-    if (!S.td && S.tdErr) { host.innerHTML = tdErrHtml(); $("tk-count").textContent = ""; return; }
-    if (!S.td) { host.innerHTML = '<div class="skel"></div>'; return; }
-    var t = todayISO();
-    var open = tdTodayOpen().filter(function (k) { return !tdIsRoutine(k); }).sort(tdSort);
-    var done = doneList().filter(function (d) { var p = S.tdProj[d.projectId]; return !(p && /^rutiner$/i.test(p.name)); });
-    var late = open.filter(function (k) { return tdDate(k) < t; }).length;
-    $("tk-count").textContent = open.length ? open.length + (late ? " · " + late + " forsinket" : "") : "";
-    var html = S.tdErr ? tdErrHtml() : "";
-    if (!open.length && !done.length) {
-      var noDate = (S.td || []).filter(function (k) { return !tdDate(k) && !tdIsShopping(k); }).length;
-      html += '<div class="empty">Intet på listen i dag.' + (noDate ? ' <a href="#opgaver" class="linkbtn">' + noDate + " uden dato i Planlæg →</a>" : "") + "</div>";
-    } else {
-      html += '<ul class="list">' + open.slice(0, 8).map(function (k) { return tdTaskRow(k); }).join("") + done.map(tdDoneRow).join("") + "</ul>";
-      if (open.length > 8) html += '<a href="#opgaver" class="linkbtn more">+ ' + (open.length - 8) + " mere i Opgaver →</a>";
-    }
-    host.innerHTML = html;
-    wireTd(host);
-  }
-  function renderHabits() {
-    var host = $("hb-body"); if (!host) return;
-    if (!S.mcp) { host.innerHTML = '<div class="err">' + errCopy(TD, { code: "not_granted" }) + "</div>"; return; }
-    if (!S.td && S.tdErr) { host.innerHTML = '<div class="empty">Rutinerne hentes fra Todoist.</div>'; $("hb-count").textContent = ""; return; }
-    if (!S.td) { host.innerHTML = '<div class="skel"></div>'; return; }
-    var open = tdTodayOpen().filter(tdIsRoutine).sort(tdSort);
-    var done = doneList().filter(function (d) { var p = S.tdProj[d.projectId]; return p && /^rutiner$/i.test(p.name); });
-    var total = open.length + done.length;
-    $("hb-count").textContent = total ? done.length + "/" + total : "";
-    if (!total) { host.innerHTML = '<div class="empty">Ingen rutiner i dag. Læg dem i listen <b>Rutiner</b> i Todoist, så dukker de op her.</div>'; return; }
-    var html = '<div class="habits">';
-    open.forEach(function (k) {
-      var tm = tdTime(k);
-      html += '<label class="habit"><input type="checkbox" class="chk" data-tdk="' + esc(k.id) + '"><span class="hn">' + esc(k.content) + "</span>" + (tm ? '<span class="st">' + tm + "</span>" : "") + "</label>";
-    });
-    done.forEach(function (d) {
-      html += '<label class="habit is-done"><input type="checkbox" class="chk" checked data-tdd="' + esc(d.taskId) + '"><span class="hn">' + esc(d.title) + '</span><span class="st">klaret</span></label>';
-    });
-    host.innerHTML = html + "</div>";
-    wireTd(host);
+  function dueChip(d) {
+    if (!d) return '<span class="due none">ingen dato</span>';
+    var n = daysBetween(todayISO(), d);
+    var cls = n < 0 ? "late" : n === 0 ? "today" : n === 1 ? "soon" : "";
+    var txt = n < 0 ? (n === -1 ? "i går" : -n + " dage over") : relDay(d);
+    return '<span class="due ' + cls + '">' + esc(txt) + "</span>";
   }
 
-  // ----- Opgaver page -----
-  function renderOpgaver() {
-    var pl = $("op-plan-body"), td = $("op-today-body"), nx = $("op-next-body"), ls = $("op-lists");
-    if (!pl) return;
-    var sel = $("op-proj"); if (sel && Object.keys(S.tdProj).length && sel.getAttribute("data-filled") !== "1") { sel.innerHTML = projOptions(""); sel.setAttribute("data-filled", "1"); }
-    var sel2 = $("td-proj"); if (sel2 && Object.keys(S.tdProj).length && sel2.getAttribute("data-filled") !== "1") { sel2.innerHTML = projOptions(""); sel2.setAttribute("data-filled", "1"); }
-    if (!S.mcp || (!S.td && S.tdErr)) {
-      var e = S.mcp ? tdErrHtml() : '<div class="err">' + errCopy(TD, { code: "not_granted" }) + "</div>";
-      pl.innerHTML = e; td.innerHTML = ""; nx.innerHTML = ""; ls.innerHTML = ""; return;
-    }
-    if (!S.td) { [pl, td, nx].forEach(function (h) { h.innerHTML = '<div class="skel"></div>'; }); ls.innerHTML = ""; return; }
-    var t = todayISO();
-    // Planlæg: everything without a date, except shopping.
-    var nd = S.td.filter(function (k) { return !tdDate(k) && !tdIsShopping(k); });
-    $("op-plan-n").textContent = nd.length ? String(nd.length) : "";
-    pl.innerHTML = nd.length ? '<ul class="list">' + nd.map(function (k) { return tdTaskRow(k, { setDate: true }); }).join("") + "</ul>"
-      : '<div class="empty ok">Alt har en dato. Godt fanget.</div>';
-    // I dag + forsinket
-    var today = tdTodayOpen().sort(tdSort), done = doneList();
-    $("op-today-n").textContent = today.length ? String(today.length) : "";
-    td.innerHTML = (today.length || done.length) ? '<ul class="list">' + today.map(function (k) { return tdTaskRow(k); }).join("") + done.map(tdDoneRow).join("") + "</ul>"
-      : '<div class="empty">Intet i dag.</div>';
-    // Next 7 days, grouped by day
-    var up = S.td.filter(function (k) { var d = tdDate(k); return d > t && daysBetween(t, d) <= 7; }).sort(tdSort);
-    $("op-next-n").textContent = up.length ? String(up.length) : "";
-    if (!up.length) nx.innerHTML = '<div class="empty">Intet de næste 7 dage.</div>';
-    else {
-      var html = "", cur = "";
-      up.forEach(function (k) {
-        var d = tdDate(k);
-        if (d !== cur) { if (cur) html += "</ul>"; cur = d; html += '<div class="op-day">' + esc(/^i /.test(relDay(d)) ? relDay(d) : dayName(d)) + " <span>" + esc(shortDate(d)) + '</span></div><ul class="list">'; }
-        html += tdTaskRow(k);
+  // =================================================================
+  // VANER — rutiner fra Todoist-listen "Rutiner". Todoist's free plan only
+  // keeps about a week of history, so every visit copies new completions into
+  // the database (rlog). That copy is what the streaks are counted from.
+  // =================================================================
+  S.rlog = null;
+  function routineProjectIds() { return Object.keys(S.tdProj).filter(function (id) { return /^rutiner$/i.test(S.tdProj[id].name || ""); }); }
+  function routines() {
+    return (S.td || []).filter(function (k) { return tdIsRoutine(k) && k.recurring; })
+      .sort(function (a, b) { return (habitKind(a) === "day" ? 0 : 1) - (habitKind(b) === "day" ? 0 : 1) || (a.childOrder || 0) - (b.childOrder || 0) || (a.content < b.content ? -1 : 1); });
+  }
+  function habitKind(k) {
+    var r = String(k.recurring || "").toLowerCase();
+    if (/month/.test(r)) return "month";
+    if (/every (other )?(week|monday|tuesday|wednesday|thursday|friday|saturday|sunday)|weekly/.test(r)) return "week";
+    return "day";
+  }
+  function localDateOf(ts) { var p = partsInTZ(new Date(ts)); return p.year + "-" + p.month + "-" + p.day; }
+  var rlogSyncing = false;
+  function syncRoutineLog(force) {
+    if (!S.db || !S.mcp || rlogSyncing || S.rlog === null) return;
+    var rp = routineProjectIds(); if (!rp.length) return;
+    rlogSyncing = true;
+    var have = {}; (S.rlog || []).forEach(function (r) { have[r.id] = 1; });
+    var writes = 0;
+    function page(cursor, n) {
+      var inp = { objectType: "task", eventType: "completed", limit: 100 }; if (cursor) inp.cursor = cursor;
+      return callObj(TD, "find-activity", inp, force).then(function (o) {
+        ((o && o.events) || []).forEach(function (ev) {
+          if (rp.indexOf(ev.parentProjectId) === -1) return;
+          var x = ev.extraData || {}, at = Date.parse(ev.eventDate) || Date.now();
+          // Count it on the day it was due, unless it was ticked off late.
+          var d = (!x.wasOverdue && x.completedDueDateLocal) ? String(x.completedDueDateLocal).slice(0, 10) : localDateOf(at);
+          var id = ev.objectId + "_" + d;
+          if (have[id]) return; have[id] = 1; writes++;
+          S.db.doc("rlog/" + id).set({ taskId: ev.objectId, title: x.content || "", date: d, at: at }).catch(function () {});
+        });
+        if (o && o.hasMore && o.nextCursor && n < 3) return page(o.nextCursor, n + 1);
       });
-      nx.innerHTML = html + "</ul>";
     }
-    // One card per list
-    var byProj = {};
-    S.td.forEach(function (k) { (byProj[k.projectId] = byProj[k.projectId] || []).push(k); });
-    var ps = Object.keys(S.tdProj).map(function (id) { return S.tdProj[id]; })
-      .filter(function (p) { return !p.isArchived && (byProj[p.id] || !p.inboxProject); })
-      .sort(function (a, b) { return (a.inboxProject ? -1 : 0) - (b.inboxProject ? -1 : 0) || (a.childOrder || 0) - (b.childOrder || 0) || (a.name < b.name ? -1 : 1); });
-    ls.innerHTML = ps.map(function (p) {
-      var ks = (byProj[p.id] || []).slice().sort(function (a, b) { var da = tdDate(a) || "9999", db = tdDate(b) || "9999"; return da < db ? -1 : da > db ? 1 : tdPrio(a) - tdPrio(b); });
-      return '<article class="card op-list" style="--pj:' + (TD_COL[p.color] || "var(--ink-3)") + '"><div class="card-k"><span class="pj-dot"></span>' + esc(p.inboxProject ? "Indbakke" : p.name) + '<span class="src-note">' + (ks.length || "") + "</span></div>" +
-        (ks.length ? '<ul class="list">' + ks.map(function (k) { return tdTaskRow(k, { showProject: false, showDate: true, showRecur: true }); }).join("") + "</ul>" : '<div class="empty">Tom liste.</div>') + "</article>";
+    page(null, 0).then(function () { rlogSyncing = false; }, function (e) { rlogSyncing = false; S.rlogErr = e; renderVaner(); });
+  }
+  function rlogFor(taskId) {
+    var m = {}; (S.rlog || []).forEach(function (r) { if (r.taskId === taskId) m[r.date] = 1; }); return m;
+  }
+  function trackStart() {
+    var first = (S.rlog || []).reduce(function (a, r) { return !a || r.date < a ? r.date : a; }, "");
+    return first || todayISO();
+  }
+  function habitStats(k) {
+    var t = todayISO(), kind = habitKind(k), done = rlogFor(k.id), start = trackStart();
+    var keyOf = kind === "day" ? function (d) { return d; } : kind === "week" ? mondayOf : function (d) { return d.slice(0, 7); };
+    var step = kind === "day" ? function (d) { return addDays(d, -1); } : kind === "week" ? function (d) { return addDays(d, -7); } : function (d) { return addMonths(d, -1); };
+    var periods = {}; Object.keys(done).forEach(function (d) { periods[keyOf(d)] = 1; });
+    var cur = keyOf(t), doneNow = !!periods[cur];
+    var p = doneNow ? cur : step(cur), streak = 0;
+    while (periods[p] && streak < 1000) { streak++; p = step(p); }
+    // Best run over the whole history
+    var keys = Object.keys(periods).sort(), best = 0, run = 0, prev = null;
+    keys.forEach(function (key) { run = (prev !== null && step(key) === prev) ? run + 1 : 1; best = Math.max(best, run); prev = key; });
+    best = Math.max(best, streak);
+    // Rate over the last 30 days (or since tracking began)
+    var from = start > addDays(t, -29) ? start : addDays(t, -29), total = 0, hit = 0;
+    if (kind === "day") { for (var d = from; d <= t; d = addDays(d, 1)) { if (d === t && !done[d]) continue; total++; if (done[d]) hit++; } }
+    else if (kind === "week") { for (var w = mondayOf(from); w <= mondayOf(t); w = addDays(w, 7)) { if (w === mondayOf(t) && !periods[w]) continue; total++; if (periods[w]) hit++; } }
+    else { total = 1; hit = periods[cur] ? 1 : 0; }
+    // Full weeks in a row (all 7 days) for daily habits
+    var fullWeeks = 0;
+    if (kind === "day") {
+      var wk = mondayOf(t);
+      var full = function (m) { for (var i = 0; i < 7; i++) if (!done[addDays(m, i)]) return false; return true; };
+      if (!full(wk)) wk = addDays(wk, -7);
+      while (full(wk) && fullWeeks < 200) { fullWeeks++; wk = addDays(wk, -7); }
+    }
+    return { kind: kind, done: done, streak: streak, best: best, rate: total ? hit / total : null, total: total, doneNow: doneNow, dueToday: tdDate(k) && tdDate(k) <= t, fullWeeks: fullWeeks };
+  }
+  var UNIT = { day: ["dag", "dage"], week: ["uge", "uger"], month: ["måned", "måneder"] };
+  function unit(kind, n) { return UNIT[kind][n === 1 ? 0 : 1]; }
+  var FLAME = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c1 3.5 5 5.6 5 10a5 5 0 0 1-10 0c0-2.2 1.1-3.6 2.3-4.7.3 1.6 1.2 2.6 2.2 2.9C11.1 8.7 11 6 12 3z"/></svg>';
+  function last7(k, st) {
+    var t = todayISO(), out = "";
+    for (var i = 6; i >= 0; i--) { var d = addDays(t, -i); out += '<i class="' + (st.done[d] ? "on" : i === 0 ? "today" : "") + '" title="' + esc(dayName(d) + " " + shortDate(d)) + '"></i>'; }
+    return out;
+  }
+  function renderVanerToday() {
+    var host = $("vt-body"); if (!host) return;
+    if (!S.mcp) { host.innerHTML = '<div class="err">' + errCopy(TD, { code: "not_granted" }) + "</div>"; return; }
+    if (!S.td && S.tdErr) { host.innerHTML = tdErrHtml(); return; }
+    if (!S.td || S.rlog === null) { host.innerHTML = '<div class="skel"></div>'; return; }
+    var rs = routines();
+    if (!rs.length) { host.innerHTML = '<div class="empty">Ingen rutiner endnu. Læg gentagne opgaver i listen <b>Rutiner</b> i Todoist.</div>'; return; }
+    var today = rs.filter(function (k) { var s = habitStats(k); return s.kind === "day" || s.dueToday || s.doneNow; });
+    var stats = today.map(function (k) { return habitStats(k); });
+    var doneN = stats.filter(function (s) { return s.kind === "day" ? s.done[todayISO()] : s.doneNow; }).length;
+    var html = '<div class="w-hero"><span class="big">' + doneN + '<span class="of">/' + today.length + '</span></span><span class="big-u">klaret i dag</span></div>';
+    html += '<div class="ring-bar" aria-hidden="true"><i style="width:' + (today.length ? doneN / today.length * 100 : 0).toFixed(1) + '%"></i></div>';
+    html += '<ul class="vt-list">' + today.map(function (k, i) {
+      var s = stats[i], on = s.kind === "day" ? !!s.done[todayISO()] : s.doneNow;
+      return '<li class="' + (on ? "on" : "") + '"><span class="vt-chk" aria-hidden="true"></span><span class="vt-n">' + esc(k.content) + '</span><span class="dots7" aria-label="Sidste 7 dage">' + last7(k, s) + "</span>" +
+        '<span class="vt-s' + (s.streak ? " hot" : "") + '" title="' + s.streak + " " + unit(s.kind, s.streak) + ' i træk">' + (s.streak ? FLAME + s.streak : "–") + "</span></li>";
+    }).join("") + "</ul>";
+    html += '<a class="w-foot" href="#vaner">Alle vaner og stimer →</a>';
+    host.innerHTML = html;
+  }
+  function heatmap(k, st) {
+    var t = todayISO(), start = trackStart();
+    if (st.kind === "week") {
+      var cells = ""; for (var i = 15; i >= 0; i--) { var w = addDays(mondayOf(t), -7 * i), on = Object.keys(st.done).some(function (d) { return mondayOf(d) === w; });
+        cells += '<i class="' + (on ? "on" : addDays(w, 6) < start ? "nodata" : "") + '" title="Uge ' + isoWeek(w) + (on ? ": klaret" : "") + '"></i>'; }
+      return '<div class="hm-week">' + cells + '</div><div class="hm-ax"><span>16 uger siden</span><span>denne uge</span></div>';
+    }
+    var cols = "", first = addDays(mondayOf(t), -7 * 15);
+    for (var c = 0; c < 16; c++) {
+      var col = "";
+      for (var r = 0; r < 7; r++) {
+        var d = addDays(first, c * 7 + r);
+        var cls = d > t ? "future" : st.done[d] ? "on" : d < start ? "nodata" : "";
+        col += '<i class="' + cls + '" title="' + esc(dayName(d) + " " + shortDate(d)) + (st.done[d] ? " · klaret" : "") + '"></i>';
+      }
+      cols += '<div class="hm-col">' + col + "</div>";
+    }
+    var m0 = isoToUTC(first), m1 = isoToUTC(t);
+    return '<div class="hm"><div class="hm-days"><span>man</span><span></span><span>ons</span><span></span><span>fre</span><span></span><span>søn</span></div><div class="hm-grid">' + cols + "</div></div>" +
+      '<div class="hm-ax"><span>' + MONTHS_S[m0.getUTCMonth()] + "</span><span>" + MONTHS_S[m1.getUTCMonth()] + "</span></div>";
+  }
+  function renderVaner() {
+    var host = $("hb-grid"); if (!host) return;
+    var sum = $("hb-sum"), note = $("hb-note");
+    if (!S.mcp) { host.innerHTML = '<div class="err">' + errCopy(TD, { code: "not_granted" }) + "</div>"; sum.innerHTML = ""; return; }
+    if (!S.td && S.tdErr) { host.innerHTML = tdErrHtml(); sum.innerHTML = ""; return; }
+    if (!S.db) { host.innerHTML = '<div class="err">' + dbErrCopy({ code: "not_granted" }) + "</div>"; sum.innerHTML = ""; return; }
+    if (!S.td || S.rlog === null) { host.innerHTML = '<div class="skel tall"></div>'; sum.innerHTML = ""; return; }
+    var rs = routines();
+    if (!rs.length) { host.innerHTML = '<div class="empty">Ingen rutiner endnu. Læg gentagne opgaver i listen <b>Rutiner</b> i Todoist, så tæller siden dine stimer her.</div>'; sum.innerHTML = ""; return; }
+    var stats = rs.map(habitStats);
+    var daily = stats.filter(function (s) { return s.kind === "day"; });
+    var doneToday = daily.filter(function (s) { return s.done[todayISO()]; }).length;
+    var bestNow = 0, bestName = ""; stats.forEach(function (s, i) { if (s.streak > bestNow) { bestNow = s.streak; bestName = unit(s.kind, s.streak) + " · " + rs[i].content; } });
+    var rates = stats.filter(function (s) { return s.rate != null && s.total; }), avg = rates.length ? rates.reduce(function (a, s) { return a + s.rate; }, 0) / rates.length : null;
+    sum.innerHTML =
+      '<div class="hs"><span class="hs-k">I dag</span><span class="hs-v">' + doneToday + '<small>/' + daily.length + '</small></span><span class="hs-s">daglige rutiner klaret</span></div>' +
+      '<div class="hs"><span class="hs-k">Længste stime nu</span><span class="hs-v">' + bestNow + '</span><span class="hs-s">' + esc(bestName || "Ingen stime endnu") + "</span></div>" +
+      '<div class="hs"><span class="hs-k">Gennemført</span><span class="hs-v">' + (avg == null ? "–" : Math.round(avg * 100)) + '<small>%</small></span><span class="hs-s">sidste 30 dage, alle rutiner</span></div>';
+    host.innerHTML = rs.map(function (k, i) {
+      var s = stats[i], tm = tdTime(k);
+      return '<article class="card hb-card"><div class="hb-h"><div><h3>' + esc(k.content) + '</h3><span class="sub muted">' + esc(tdRecur(k.recurring)) + "</span></div>" +
+        '<span class="hb-today ' + (s.kind === "day" ? (s.done[todayISO()] ? "on" : "") : (s.doneNow ? "on" : "")) + '">' + (s.kind === "day" ? (s.done[todayISO()] ? "Klaret i dag" : "Ikke endnu i dag") : (s.doneNow ? "Klaret denne " + (s.kind === "week" ? "uge" : "måned") : "Mangler denne " + (s.kind === "week" ? "uge" : "måned"))) + "</span></div>" +
+        '<div class="hb-nums"><div class="hb-streak' + (s.streak ? " hot" : "") + '">' + FLAME + "<b>" + s.streak + "</b><span>" + unit(s.kind, s.streak) + ' i træk</span></div>' +
+        '<div class="hb-n"><b>' + s.best + "</b><span>bedste stime</span></div>" +
+        (s.kind === "day" ? '<div class="hb-n"><b>' + s.fullWeeks + "</b><span>hele uger i træk</span></div>" : "") +
+        '<div class="hb-n"><b>' + (s.rate == null ? "–" : Math.round(s.rate * 100) + "%") + "</b><span>sidste 30 dage</span></div></div>" +
+        heatmap(k, s) + "</article>";
     }).join("");
-    [pl, td, nx, ls].forEach(wireTd);
+    note.textContent = "Tæller fra " + dayName(trackStart()) + " " + shortDate(trackStart()) + ". Todoist gemmer kun en uges historik gratis, så siden gemmer selv dine afkrydsninger, hver gang den åbnes. Åbn den mindst en gang om ugen, så du ikke mister dage." + (S.rlogErr ? " (Seneste hentning fra Todoist fejlede.)" : "");
+  }
+
+  // ----- I dag: Lektier (Todoist tasks tagged with a course or in the Studie list) -----
+  function isLektie(k) {
+    if (tdIsRoutine(k)) return false;
+    if ((k.labels || []).some(function (l) { return !!courseByLabel(l) || /^lektier$/i.test(l); })) return true;
+    return /^studie/i.test(tdProjName(k));
+  }
+  function courseByLabel(l) { l = String(l).toLowerCase(); return COURSES.filter(function (c) { return c.label.toLowerCase() === l; })[0] || null; }
+  function courseOfTask(k) { var c = null; (k.labels || []).some(function (l) { c = courseByLabel(l); return !!c; }); return c; }
+  function lektier() { return (S.td || []).filter(isLektie).sort(tdSort); }
+  function renderLektier() {
+    var host = $("lk-body"); if (!host) return;
+    if (!S.mcp) { host.innerHTML = '<div class="err">' + errCopy(TD, { code: "not_granted" }) + "</div>"; return; }
+    if (!S.td && S.tdErr) { host.innerHTML = tdErrHtml(); return; }
+    if (!S.td) { host.innerHTML = '<div class="skel"></div>'; return; }
+    var t = todayISO(), all = lektier();
+    var week = all.filter(function (k) { var d = tdDate(k); return d && daysBetween(t, d) <= 7; });
+    var late = week.filter(function (k) { return tdDate(k) < t; }).length;
+    var html = '<div class="w-hero"><span class="big">' + week.length + '</span><span class="big-u">' + (week.length === 1 ? "lektie" : "lektier") + " de næste 7 dage" + (late ? ' · <b class="crit">' + late + " over tid</b>" : "") + "</span></div>";
+    // Load per day for the coming week
+    var maxN = 1, days = [];
+    for (var i = 0; i < 7; i++) { var d = addDays(t, i), n = all.filter(function (k) { return tdDate(k) === d || (i === 0 && tdDate(k) && tdDate(k) < t); }).length; days.push({ d: d, n: n }); maxN = Math.max(maxN, n); }
+    html += '<div class="lk-load" aria-label="Lektier pr. dag">' + days.map(function (x) {
+      return '<div class="lk-day' + (x.d === t ? " today" : "") + '" title="' + esc(dayName(x.d) + ": " + x.n + " lektier") + '"><i style="height:' + (x.n ? Math.max(12, x.n / maxN * 100) : 4) + '%"></i><span>' + DAYS_S[isoToUTC(x.d).getUTCDay()].charAt(0).toUpperCase() + "</span></div>";
+    }).join("") + "</div>";
+    var list = all.filter(function (k) { return tdDate(k); }).slice(0, 4);
+    if (!all.length) html += '<div class="empty">Ingen lektier i Todoist. Giv en opgave fagets tag, fx #Change-management, så kommer den her.</div>';
+    else html += '<ul class="lk-list">' + list.map(function (k) {
+      var c = courseOfTask(k);
+      return '<li><span class="lk-c" style="--cc:' + courseColor(c) + '">' + esc(c ? c.tag : "Studie") + '</span><span class="lk-t">' + esc(k.content) + "</span>" + dueChip(tdDate(k)) + "</li>";
+    }).join("") + "</ul>";
+    html += '<a class="w-foot" href="#studie">Alle lektier pr. fag →</a>';
+    host.innerHTML = html;
   }
 
   // =================================================================
-  // KALENDER — week and month view, one colour per calendar.
+  // KALENDER on I dag — today as a time strip, then the coming days.
   // =================================================================
-  var CAL_C = { "Rune Hansen": "--k-rune", "Arbejdstid": "--k-work", "Arbejde": "--k-job", "Neptun": "--k-neptun", "Maria og Rune": "--k-maria", "Studiegruppe": "--k-group" };
+  var CAL_C = { "Rune Hansen": "--k-rune", "Arbejdstid": "--k-work", "Arbejde": "--k-job", "Neptun": "--k-neptun", "Maria og Rune": "--k-maria", "Studiegruppe": "--k-group", "Træning": "--a-health" };
   function calName(cal) {
     var s = (cal && cal.summary) || "";
     if (cal && (cal.primary || s === cal.id || /@gmail\.com$/i.test(s))) return "Rune Hansen";
@@ -4652,181 +4745,102 @@
     return s || "Kalender";
   }
   function calColor(name) { return name === "Helligdage" ? "var(--a-cal)" : CAL_C[name] ? "var(" + CAL_C[name] + ")" : "var(--ink-3)"; }
-  S.kal = null; S.kalErr = null; S.kalView = "week"; S.kalAnchor = null; S.kalSel = null; S.kalHide = {};
-  function kalRange() {
-    var a = S.kalAnchor || todayISO();
-    if (S.kalView === "week") { var m = mondayOf(a); return { from: m, to: addDays(m, 7) }; }
-    var first = a.slice(0, 8) + "01", m0 = mondayOf(first);
-    return { from: m0, to: addDays(m0, 42) };
-  }
   function calList(force) {
     if (S.calList && !force) return Promise.resolve(S.calList);
     return call(GCAL, "list_calendars", {}, force).then(function (d) { S.calList = (d && d.calendars) || []; return S.calList; });
   }
-  var kalSeq = 0;
-  function loadKal(force) {
-    if (!S.mcp) { S.kalErr = { code: "not_granted" }; renderKal(); return Promise.resolve(); }
-    var seq = ++kalSeq, r = kalRange(), key = r.from + "|" + r.to;
-    if (!force && S.kal && S.kal.key === key) { renderKal(); return Promise.resolve(); }
-    S.kalLoading = true; renderKal();
-    return calList(force).then(function (cals) {
-      return Promise.all(cals.map(function (c) {
-        return settle(call(GCAL, "list_events", { calendarId: c.id, startTime: r.from + "T00:00:00", endTime: r.to + "T00:00:00", timeZone: TZ, orderBy: "startTime", pageSize: 250 }, force))
-          .then(function (er) { return { cal: c, r: er }; });
-      }));
-    }).then(function (list) {
-      if (seq !== kalSeq) return;
-      var evs = [], fails = 0;
-      list.forEach(function (x) {
-        if (!x.r.ok) { fails++; return; }
-        ((x.r.data && x.r.data.events) || []).forEach(function (e) { if (e.status !== "cancelled") evs.push(normEvent(e, x.cal)); });
-      });
-      S.kalLoading = false;
-      if (fails && fails === list.length) { S.kalErr = list[0].r.error; return renderKal(); }
-      S.kalErr = null; S.kal = { key: key, events: evs, fails: fails };
-      renderKal();
-    }, function (e) { if (seq !== kalSeq) return; S.kalLoading = false; S.kalErr = e; renderKal(); });
-  }
-  function kalEventsOn(iso) {
-    return ((S.kal && S.kal.events) || []).filter(function (e) { return !S.kalHide[e.cal] && e.start <= iso && e.end >= iso; })
-      .sort(function (a, b) { return (b.allDay - a.allDay) || (a.sT < b.sT ? -1 : 1); });
-  }
-  function kalTitle() {
-    var r = kalRange();
-    if (S.kalView === "week") {
-      var a = isoToUTC(r.from), b = isoToUTC(addDays(r.to, -1));
-      return "Uge " + isoWeek(r.from) + " · " + a.getUTCDate() + ". " + (a.getUTCMonth() !== b.getUTCMonth() ? MONTHS_S[a.getUTCMonth()] + " " : "") + "– " + b.getUTCDate() + ". " + MONTHS_S[b.getUTCMonth()];
-    }
-    var k = (S.kalAnchor || todayISO()).slice(0, 7); var l = monthLabel(k); return l.charAt(0).toUpperCase() + l.slice(1);
-  }
-  function renderKalLegend() {
-    var host = $("kal-legend"); if (!host) return;
-    var names = {};
-    ((S.kal && S.kal.events) || []).forEach(function (e) { names[e.cal] = 1; });
-    (S.calList || []).forEach(function (c) { names[calName(c)] = 1; });
-    var order = ["Rune Hansen", "Arbejdstid", "Arbejde", "Neptun", "Studiegruppe", "Maria og Rune", "Helligdage"];
-    var list = Object.keys(names).sort(function (a, b) { var ia = order.indexOf(a), ib = order.indexOf(b); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || (a < b ? -1 : 1); });
-    host.innerHTML = list.map(function (n) {
-      return '<button type="button" class="kal-chip' + (S.kalHide[n] ? " off" : "") + '" data-kalcal="' + esc(n) + '" aria-pressed="' + (S.kalHide[n] ? "false" : "true") + '" style="--kc:' + calColor(n) + '"><i></i>' + esc(n) + "</button>";
-    }).join("");
-    host.querySelectorAll("[data-kalcal]").forEach(function (b) {
-      b.addEventListener("click", function () { var n = b.getAttribute("data-kalcal"); S.kalHide[n] = !S.kalHide[n]; renderKal(); });
+  // Calendar events + planned training for one day, de-duplicated.
+  function dayItems(iso) {
+    var out = [], used = [];
+    (S.cal || []).forEach(function (e) {
+      if (e.allDay || e.holiday || e.start !== iso) return;
+      out.push({ s: e.sT, e: e.end > iso ? "24:00" : e.eT, title: e.title, where: e.where, cal: e.cal });
     });
-  }
-  function evChip(e, withTime) {
-    return '<div class="kev' + (e.allDay ? " ad" : "") + '" style="--kc:' + calColor(e.cal) + '" title="' + esc(e.title + (e.sT ? " · " + e.sT + "–" + e.eT : "") + (e.where ? " · " + e.where : "") + " · " + e.cal) + '">' +
-      (withTime && !e.allDay ? '<span class="kt">' + e.sT + "</span>" : "") + '<span class="kn">' + esc(e.title) + "</span></div>";
-  }
-  function dayListHtml(iso) {
-    var evs = kalEventsOn(iso);
-    if (!evs.length) return '<div class="empty">Intet i kalenderen.</div>';
-    return '<ul class="kal-agenda">' + evs.map(function (e) {
-      return '<li style="--kc:' + calColor(e.cal) + '"><span class="kat">' + (e.allDay ? "Hele dagen" : e.sT + "–" + e.eT) + '</span><span class="kab"><b>' + esc(e.title) + "</b><span>" + esc([e.where, e.cal].filter(Boolean).join(" · ")) + "</span></span></li>";
-    }).join("") + "</ul>";
-  }
-  function renderKal() {
-    var host = $("kal-body"); if (!host) return;
-    $("kal-title").textContent = kalTitle();
-    document.querySelectorAll("[data-kalview]").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-kalview") === S.kalView ? "true" : "false"); });
-    renderKalLegend();
-    if (S.kalErr) { host.innerHTML = '<div class="err">' + errCopy(GCAL, S.kalErr) + "</div>"; return; }
-    if (!S.kal || S.kal.key !== kalRange().from + "|" + kalRange().to) { host.innerHTML = '<div class="skel tall"></div>'; return; }
-    var r = kalRange(), t = todayISO(), html = "";
-    if (S.kal.fails) html += '<div class="sub muted" style="margin-bottom:8px">' + S.kal.fails + " kalender(e) kunne ikke hentes.</div>";
-    if (S.kalView === "week") html += weekHtml(r.from, t);
-    else html += monthHtml(r.from, t);
-    host.innerHTML = html;
-    host.querySelectorAll("[data-kday]").forEach(function (b) {
-      b.addEventListener("click", function () { S.kalSel = b.getAttribute("data-kday"); renderKal(); });
+    if (S.events) eventsArr().forEach(function (ev) {
+      if (ev.start_date_local.slice(0, 10) !== iso) return;
+      var a = iso <= todayISO() ? matchActivity(ev, used) : null; if (a) used.push(a.id);
+      var st = ev.start_date_local.slice(11, 16), mins = ev.duration_minutes || 45;
+      var end = new Date(Date.UTC(2000, 0, 1, +st.slice(0, 2), +st.slice(3, 5) + mins)), et = pad(end.getUTCHours()) + ":" + pad(end.getUTCMinutes());
+      out.push({ s: st, e: et < st ? "24:00" : et, title: ev.name, where: a ? "Klaret" : mins + " min", cal: "Træning", done: !!a });
     });
-    host.classList.toggle("loading", !!S.kalLoading);
+    var wo = out.filter(function (x) { return x.cal === "Træning"; }).map(function (x) { return x.s.slice(0, 2); });
+    out = out.filter(function (x) { return x.cal === "Træning" || wo.indexOf(x.s.slice(0, 2)) === -1 || !/løb|run|lower|upper|styrke|tærskel|interval/i.test(x.title); });
+    return out.sort(function (a, b) { return a.s < b.s ? -1 : 1; });
   }
-  function weekHtml(from, t) {
-    var days = []; for (var i = 0; i < 7; i++) days.push(addDays(from, i));
-    var timed = [];
-    days.forEach(function (d) { kalEventsOn(d).forEach(function (e) { if (!e.allDay && e.start === d) timed.push(e); }); });
+  function allDayOn(iso) { return (S.cal || []).filter(function (e) { return e.allDay && e.start <= iso && e.end >= iso; }); }
+  function hm(s) { var a = String(s).split(":"); return (+a[0]) * 60 + (+a[1] || 0); }
+  function renderPlan() {
+    var host = $("plan-body"); if (!host) return;
+    if (!S.cal && !S.calErr && !S.events) { host.innerHTML = '<div class="skel"></div>'; return; }
+    var t = todayISO(), now = nowLocal().slice(11, 16), nowM = hm(now), items = dayItems(t), html = "";
+    if (S.calErr) html += '<div class="err" style="margin-bottom:8px">' + errCopy(GCAL, S.calErr) + "</div>";
+    // Next up
+    var next = items.filter(function (x) { return !x.done && x.s > now; })[0], cur = items.filter(function (x) { return x.s <= now && x.e > now; })[0];
+    var head = '<div class="pl-now">';
+    if (cur) head += '<span class="pl-tag live">Nu</span><b>' + esc(cur.title) + '</b><span class="muted">til ' + cur.e + (cur.where ? " · " + esc(cur.where) : "") + "</span>";
+    else if (next) { var m = hm(next.s) - nowM; head += '<span class="pl-tag">Om ' + inWords(m) + "</span><b>" + esc(next.title) + '</b><span class="muted">kl. ' + next.s + (next.where ? " · " + esc(next.where) : "") + "</span>"; }
+    else head += '<span class="pl-tag done">Fri</span><b>' + (items.length ? "Ikke mere i dag" : "Intet i kalenderen i dag") + "</b>";
+    var ad = allDayOn(t); if (ad.length) head += '<span class="pl-ad">' + ad.map(function (e) { return '<span class="chip neutral">' + esc(e.title) + "</span>"; }).join("") + "</span>";
+    html += head + "</div>";
+    // Time strip
     var h0 = 7, h1 = 22;
-    timed.forEach(function (e) { h0 = Math.min(h0, +e.sT.slice(0, 2)); h1 = Math.max(h1, Math.min(24, +e.eT.slice(0, 2) + (e.eT.slice(3) !== "00" ? 1 : 0) || 24)); });
-    var PX = 46, H = (h1 - h0) * PX;
-    function mins(s) { var a = s.split(":"); return (+a[0]) * 60 + (+a[1]); }
-    var head = '<div class="wk-h"><div></div>' + days.map(function (d) {
-      var x = isoToUTC(d);
-      return '<div class="wk-dh' + (d === t ? " today" : "") + '"><span>' + DAYS_S[x.getUTCDay()] + "</span><b>" + x.getUTCDate() + "</b></div>";
-    }).join("") + "</div>";
-    var all = '<div class="wk-ad"><div class="wk-tl">hele dagen</div>' + days.map(function (d) {
-      return "<div>" + kalEventsOn(d).filter(function (e) { return e.allDay; }).map(function (e) { return evChip(e, false); }).join("") + "</div>";
-    }).join("") + "</div>";
-    var hrs = ""; for (var h = h0; h < h1; h++) hrs += '<div class="wk-hr" style="top:' + ((h - h0) * PX) + 'px"><span>' + pad(h) + "</span></div>";
-    var nowP = partsInTZ(new Date()), nowM = (+nowP.hour) * 60 + (+nowP.minute);
-    var cols = days.map(function (d) {
-      var evs = kalEventsOn(d).filter(function (e) { return !e.allDay && e.start === d; });
-      // Put overlapping events side by side.
-      var lanes = [];
-      evs.forEach(function (e) {
-        var s = mins(e.sT), en = e.end > d ? 24 * 60 : Math.max(mins(e.eT), s + 20);
-        e._s = s; e._e = en;
-        for (var li = 0; li < lanes.length; li++) if (lanes[li] <= s) { lanes[li] = en; e._l = li; return; }
-        e._l = lanes.length; lanes.push(en);
-      });
-      var n = Math.max(1, lanes.length);
-      var blocks = evs.map(function (e) {
-        var top = (e._s - h0 * 60) / 60 * PX, ht = Math.max(20, (e._e - e._s) / 60 * PX - 2);
-        return '<div class="wk-ev" style="--kc:' + calColor(e.cal) + ";top:" + top.toFixed(1) + "px;height:" + ht.toFixed(1) + "px;left:calc(" + (e._l * 100 / n) + "% + 1px);width:calc(" + (100 / n) + '% - 3px)" title="' + esc(e.title + " · " + e.sT + "–" + e.eT + (e.where ? " · " + e.where : "") + " · " + e.cal) + '">' +
-          "<b>" + esc(e.title) + "</b>" + (ht > 34 ? "<span>" + e.sT + "–" + e.eT + (e.where ? " · " + esc(e.where) : "") + "</span>" : "") + "</div>";
-      }).join("");
-      var nowLine = d === t && nowM >= h0 * 60 && nowM <= h1 * 60 ? '<div class="wk-now" style="top:' + ((nowM - h0 * 60) / 60 * PX).toFixed(1) + 'px"></div>' : "";
-      return '<div class="wk-col' + (d === t ? " today" : "") + '">' + blocks + nowLine + "</div>";
-    }).join("");
-    var grid = '<div class="wk-grid" style="height:' + H + 'px"><div class="wk-tl">' + hrs + "</div>" + cols + "</div>";
-    // Phones get a simple day-by-day list instead of the grid.
-    var agenda = '<div class="wk-list">' + days.map(function (d) {
-      var rd = relDay(d), near = /^i /.test(rd);
-      return '<section class="wk-ld' + (d === t ? " today" : "") + '"><h3>' + esc(near ? rd : dayName(d)) + " <span>" + esc((near ? dayName(d) + " " : "") + shortDate(d)) + "</span></h3>" + dayListHtml(d) + "</section>";
-    }).join("") + "</div>";
-    return '<div class="wk">' + head + all + '<div class="wk-scroll">' + grid + "</div></div>" + agenda;
-  }
-  function monthHtml(from, t) {
-    var mk = (S.kalAnchor || t).slice(0, 7), sel = S.kalSel && S.kalSel.slice(0, 7) === mk ? S.kalSel : (t.slice(0, 7) === mk ? t : mk + "-01");
-    var html = '<div class="mo"><div class="mo-h">' + ["man", "tir", "ons", "tor", "fre", "lør", "søn"].map(function (d) { return "<div>" + d + "</div>"; }).join("") + '</div><div class="mo-g">';
-    for (var i = 0; i < 42; i++) {
-      var d = addDays(from, i), evs = kalEventsOn(d), x = isoToUTC(d);
-      var cls = "mo-d" + (d.slice(0, 7) !== mk ? " out" : "") + (d === t ? " today" : "") + (d === sel ? " sel" : "");
-      html += '<button type="button" class="' + cls + '" data-kday="' + d + '" aria-label="' + esc(dayName(d) + " " + shortDate(d) + ", " + evs.length + " aftaler") + '"><span class="mo-n">' + x.getUTCDate() + "</span>" +
-        '<span class="mo-evs">' + evs.slice(0, 3).map(function (e) { return evChip(e, true); }).join("") + (evs.length > 3 ? '<span class="mo-more">+' + (evs.length - 3) + "</span>" : "") + "</span>" +
-        '<span class="mo-dots">' + evs.slice(0, 5).map(function (e) { return '<i style="--kc:' + calColor(e.cal) + '"></i>'; }).join("") + "</span></button>";
+    items.forEach(function (x) { h0 = Math.min(h0, Math.floor(hm(x.s) / 60)); h1 = Math.max(h1, Math.ceil(hm(x.e) / 60)); });
+    if (nowM >= h0 * 60) h1 = Math.max(h1, Math.ceil((nowM + 1) / 60));
+    h1 = Math.min(24, h1); var span = (h1 - h0) * 60;
+    var lanes = [], blocks = items.map(function (x) {
+      var s = hm(x.s), e = Math.max(hm(x.e), s + 20), li = 0;
+      while (lanes[li] != null && lanes[li] > s) li++; lanes[li] = e;
+      return { x: x, l: (s - h0 * 60) / span * 100, w: (e - s) / span * 100, lane: li };
+    });
+    var nl = Math.max(1, lanes.length);
+    var ticks = ""; for (var h = h0; h <= h1; h += (h1 - h0 > 12 ? 2 : 1)) ticks += '<span style="left:' + ((h - h0) * 60 / span * 100).toFixed(2) + '%">' + pad(h % 24) + "</span>";
+    html += '<div class="strip" style="--lanes:' + nl + '"><div class="strip-track">' + blocks.map(function (b) {
+      var past = hm(b.x.e) <= nowM;
+      return '<div class="sb' + (past ? " past" : "") + (b.x.done ? " done" : "") + '" style="--kc:' + calColor(b.x.cal) + ";left:" + b.l.toFixed(2) + "%;width:" + b.w.toFixed(2) + "%;top:calc(" + b.lane + ' * (var(--lane-h) + 4px))" title="' + esc(b.x.s + "–" + b.x.e + " " + b.x.title + (b.x.where ? " · " + b.x.where : "") + " · " + b.x.cal) + '"><b>' + esc(b.x.title) + "</b><span>" + b.x.s + "</span></div>";
+    }).join("") + (nowM >= h0 * 60 && nowM <= h1 * 60 ? '<div class="strip-now" style="left:' + ((nowM - h0 * 60) / span * 100).toFixed(2) + '%"><span>' + now + "</span></div>" : "") +
+      '</div><div class="strip-ticks">' + ticks + "</div></div>";
+    // Phone: plain list for today
+    html += '<ul class="pl-list">' + (items.length ? items.map(function (x) {
+      return '<li class="' + (hm(x.e) <= nowM ? "past" : "") + '" style="--kc:' + calColor(x.cal) + '"><span class="kat">' + x.s + "–" + x.e + "</span><span><b>" + esc(x.title) + "</b>" + (x.where ? '<span class="muted"> · ' + esc(x.where) + "</span>" : "") + "</span></li>";
+    }).join("") : '<li class="empty">Intet i dag.</li>') + "</ul>";
+    // The coming days
+    var days = "";
+    for (var i = 1; i <= 6; i++) {
+      var d = addDays(t, i), its = dayItems(d), ads = allDayOn(d), x = isoToUTC(d);
+      days += '<div class="wd' + (x.getUTCDay() === 0 || x.getUTCDay() === 6 ? " we" : "") + '"><div class="wd-h"><span>' + (i === 1 ? "I morgen" : DAYS[x.getUTCDay()].charAt(0).toUpperCase() + DAYS[x.getUTCDay()].slice(1)) + "</span><b>" + x.getUTCDate() + ". " + MONTHS_S[x.getUTCMonth()] + "</b></div>" +
+        ads.slice(0, 1).map(function (e) { return '<div class="wd-ad">' + esc(e.title) + "</div>"; }).join("") +
+        its.slice(0, 4).map(function (e) { return '<div class="wd-e" style="--kc:' + calColor(e.cal) + '"><span>' + e.s + "</span>" + esc(e.title) + "</div>"; }).join("") +
+        (its.length > 4 ? '<div class="wd-more">+' + (its.length - 4) + " mere</div>" : "") + (!its.length && !ads.length ? '<div class="wd-free">Fri</div>' : "") + "</div>";
     }
-    html += '</div></div><div class="mo-sel card"><div class="card-k"><span class="ad cal"></span>' + esc(dayName(sel) + " " + shortDate(sel)) + "</div>" + dayListHtml(sel) + "</div>";
-    return html;
-  }
-  function kalShift(n) {
-    var a = S.kalAnchor || todayISO();
-    if (S.kalView === "week") S.kalAnchor = addDays(a, 7 * n);
-    else S.kalAnchor = addMonths(a.slice(0, 7), n) + "-01";
-    S.kalSel = null;
-    loadKal(false);
+    html += '<div class="week-strip">' + days + "</div>";
+    // Legend of the calendars that appear
+    var names = {}; for (var j = 0; j <= 6; j++) dayItems(addDays(t, j)).forEach(function (e) { names[e.cal] = 1; });
+    html += '<div class="pl-legend">' + Object.keys(names).map(function (n) { return '<span style="--kc:' + calColor(n) + '"><i></i>' + esc(n) + "</span>"; }).join("") + "</div>";
+    host.innerHTML = html;
   }
 
   // =================================================================
-  // STUDIE — fag fra Neptun, deadlines i databasen, opgaver fra Todoist
-  // (tag = fag) og et resumé af noterne, når rutinen har skrevet et.
+  // STUDIE — lektier pr. fag (Todoist-tags), skema og eksamener (Neptun),
+  // og et resumé af noterne, når rutinen på Mac'en har skrevet et.
   // =================================================================
   var COURSES = [
-    { id: "mne", name: "Managing the Multinational Enterprise", short: "Multinational Enterprise", re: /multinational/i, label: "Multinational-Enterprise" },
-    { id: "fpav", name: "Financial Planning, Analysis and Valuation", short: "Financial Planning", re: /financial planning/i, label: "Financial-Planning" },
-    { id: "cm", name: "Change Management", short: "Change Management", re: /change management/i, label: "Change-management" },
-    { id: "tikm", name: "Technology Innovation and Knowledge Management", short: "Technology Innovation", re: /technology innovation/i, label: "Technology-Innovation" },
-    { id: "im", name: "Innovation Management", short: "Innovation Management", re: /^\s*innovation management/i, label: "Innovation-Management" }
+    { id: "mne", name: "Managing the Multinational Enterprise", short: "Multinational Enterprise", tag: "MNE", re: /multinational/i, label: "Multinational-Enterprise", c: "--c-mne" },
+    { id: "fpav", name: "Financial Planning, Analysis and Valuation", short: "Financial Planning", tag: "FP", re: /financial planning/i, label: "Financial-Planning", c: "--c-fp" },
+    { id: "cm", name: "Change Management", short: "Change Management", tag: "CM", re: /change management/i, label: "Change-management", c: "--c-cm" },
+    { id: "tikm", name: "Technology Innovation and Knowledge Management", short: "Technology Innovation", tag: "TI", re: /technology innovation/i, label: "Technology-Innovation", c: "--c-ti" },
+    { id: "im", name: "Innovation Management", short: "Innovation Management", tag: "IM", re: /^\s*innovation management/i, label: "Innovation-Management", c: "--c-im" }
   ];
+  function courseColor(c) { return c ? "var(" + c.c + ")" : "var(--a-study)"; }
   function courseOf(text) { for (var i = 0; i < COURSES.length; i++) if (COURSES[i].re.test(text || "")) return COURSES[i]; return null; }
   function courseById(id) { return COURSES.filter(function (c) { return c.id === id; })[0] || null; }
   S.nep = null; S.nepErr = null; S.notes = null;
   function loadNeptun(force) {
     if (!S.mcp) return Promise.resolve();
-    var t = todayISO();
+    var t = todayISO(), from = mondayOf(t);
     return calList(force).then(function (cals) {
       var nep = cals.filter(function (c) { return /neptun/i.test(c.summary || ""); })[0];
       if (!nep) { S.nep = []; S.nepMissing = true; return; }
-      return call(GCAL, "list_events", { calendarId: nep.id, startTime: t + "T00:00:00", endTime: addDays(t, 150) + "T00:00:00", timeZone: TZ, orderBy: "startTime", pageSize: 250 }, force).then(function (d) {
+      return call(GCAL, "list_events", { calendarId: nep.id, startTime: from + "T00:00:00", endTime: addDays(t, 150) + "T00:00:00", timeZone: TZ, orderBy: "startTime", pageSize: 250 }, force).then(function (d) {
         S.nep = ((d && d.events) || []).filter(function (e) { return e.status !== "cancelled"; }).map(function (e) {
           var n = normEvent(e, nep), c = courseOf(e.summary || "");
           n.course = c ? c.id : ""; n.exam = /vizsga|exam/i.test(e.summary || "");
@@ -4836,68 +4850,89 @@
       });
     }).then(function () { renderStudie(); }, function (e) { S.nepErr = e; renderStudie(); });
   }
-  function studyDeadlines() {
+  function examsAndDeadlines() {
     var t = todayISO(), out = [];
-    (S.deadlines || []).forEach(function (d) { if (d.date >= t && !d.done) out.push({ id: d.id, title: d.title, date: d.date, courseId: d.courseId || ((courseOf(d.course) || {}).id) || "", kind: d.kind || "hand-in", src: "db" }); });
-    (S.nep || []).forEach(function (e) { if (e.exam) out.push({ title: e.title.replace(/ · eksamen$/, ""), date: e.start, time: e.sT, where: e.where, courseId: e.course, kind: "exam", src: "neptun" }); });
+    (S.nep || []).forEach(function (e) { if (e.exam && e.start >= t) out.push({ title: "Eksamen", date: e.start, time: e.sT, where: e.where, c: courseById(e.course), src: "Neptun" }); });
+    (S.td || []).forEach(function (k) {
+      var d = tdDeadline(k); if (!d || !isLektie(k) || d < t) return;
+      out.push({ title: k.content, date: d, c: courseOfTask(k), src: "Todoist" });
+    });
+    (S.deadlines || []).forEach(function (d) { if (!d.done && d.date >= t) out.push({ title: d.title, date: d.date, c: courseById(d.courseId) || courseOf(d.course), src: "" }); });
     return out.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
   }
-  var KIND_L = { exam: "Eksamen", "hand-in": "Aflevering", other: "Andet" };
   function renderStudie() {
-    var wk = $("st-week-body"); if (!wk) return;
-    var t = todayISO();
-    // This week from Neptun
-    if (!S.mcp) wk.innerHTML = '<div class="err">' + errCopy(GCAL, { code: "not_granted" }) + "</div>";
-    else if (S.nepErr) wk.innerHTML = '<div class="err">' + errCopy(GCAL, S.nepErr) + "</div>";
-    else if (!S.nep) wk.innerHTML = '<div class="skel"></div>';
-    else if (S.nepMissing) wk.innerHTML = '<div class="empty">Neptun-kalenderen er ikke fundet i Google Kalender.</div>';
+    var board = $("st-board"); if (!board) return;
+    var t = todayISO(), now = nowLocal().slice(11, 16);
+    // ---- Lektier pr. fag ----
+    if (!S.mcp) board.innerHTML = '<div class="err">' + errCopy(TD, { code: "not_granted" }) + "</div>";
+    else if (!S.td && S.tdErr) board.innerHTML = tdErrHtml();
+    else if (!S.td) board.innerHTML = '<div class="skel tall"></div>';
     else {
-      var week = S.nep.filter(function (e) { return e.start >= t && daysBetween(t, e.start) < 7; });
-      if (!week.length) wk.innerHTML = '<div class="empty">Ingen undervisning de næste 7 dage.</div>';
-      else {
-        var html = "", cur = "";
-        week.forEach(function (e) {
-          if (e.start !== cur) { if (cur) html += "</ul>"; cur = e.start; html += '<div class="op-day">' + esc(/^i /.test(relDay(e.start)) ? relDay(e.start) : dayName(e.start)) + " <span>" + esc(shortDate(e.start)) + '</span></div><ul class="st-lessons">'; }
-          var c = courseById(e.course);
-          html += '<li class="' + (e.end < t || (e.start === t && e.eT <= nowLocal().slice(11, 16)) ? "past" : "") + '"><span class="kat">' + e.sT + "–" + e.eT + "</span><span><b>" + esc(c ? c.short : e.title) + "</b>" + (e.where ? '<span class="muted"> · ' + esc(e.where) + "</span>" : "") + (e.exam ? ' <span class="prio p1">Eksamen</span>' : "") + "</span></li>";
-        });
-        wk.innerHTML = html + "</ul>";
-      }
+      var all = lektier(), groups = COURSES.map(function (c) { return { c: c, ks: [] }; }), other = { c: null, ks: [] };
+      all.forEach(function (k) { var c = courseOfTask(k), g = c ? groups.filter(function (x) { return x.c === c; })[0] : other; g.ks.push(k); });
+      if (other.ks.length) groups.push(other);
+      var late = all.filter(function (k) { return tdDate(k) && tdDate(k) < t; }).length, wk = all.filter(function (k) { var d = tdDate(k); return d && daysBetween(t, d) <= 7; }).length;
+      $("st-lk-meta").innerHTML = all.length ? wk + " de næste 7 dage" + (late ? ' · <b class="crit">' + late + " over tid</b>" : "") + " · " + all.length + " i alt" : "";
+      board.style.setProperty("--cols", String(groups.length));
+      board.innerHTML = groups.map(function (g) {
+        var c = g.c, next = c && (S.nep || []).filter(function (e) { return e.course === c.id && !e.exam && (e.start > t || (e.start === t && e.eT > now)); })[0];
+        var sum = c && S.notes && S.notes.courses && S.notes.courses[c.id];
+        return '<section class="lk-col" style="--cc:' + courseColor(c) + '"><header><span class="lk-tag">' + esc(c ? c.tag : "Andet") + "</span><h3>" + esc(c ? c.short : "Uden fag") + '</h3><span class="lk-n">' + (g.ks.length || "") + "</span></header>" +
+          (next ? '<div class="lk-next">Næste time ' + esc(relDay(next.start)) + " kl. " + next.sT + (next.where ? " · " + esc(next.where) : "") + "</div>" : "") +
+          (g.ks.length ? '<ul class="lk-cards">' + g.ks.map(function (k) {
+            var d = tdDate(k);
+            return '<li class="' + (d && d < t ? "late" : d === t ? "today" : "") + '"><b>' + esc(k.content) + "</b>" + (k.description ? '<span class="lk-d">' + esc(String(k.description).split("\n")[0].slice(0, 100)) + "</span>" : "") +
+              '<span class="lk-meta">' + dueChip(d) + (tdDeadline(k) ? '<span class="due dl">frist ' + esc(relDay(tdDeadline(k))) + "</span>" : "") + "</span></li>";
+          }).join("") + "</ul>" : '<div class="lk-empty">Ingen lektier</div>') +
+          (sum && sum.text ? '<div class="st-sum"><span class="k">Fra dine noter' + (sum.updatedAt ? " · " + esc(agoText(sum.updatedAt)) : "") + "</span>" + esc(sum.text) + "</div>" : "") + "</section>";
+      }).join("");
     }
-    // Deadlines
-    var dl = $("st-dl-body");
-    if (!S.db) dl.innerHTML = '<div class="err">' + dbErrCopy({ code: "not_granted" }) + "</div>";
-    else if (!S.deadlines) dl.innerHTML = '<div class="skel"></div>';
-    else {
-      var items = studyDeadlines();
-      if (!items.length) dl.innerHTML = '<div class="empty">Ingen kommende deadlines. Tilføj en med <b>+</b>, når du får en aflevering eller eksamensdato.</div>';
-      else dl.innerHTML = '<ul class="list">' + items.slice(0, 12).map(function (d) {
-        var n = daysBetween(t, d.date), c = courseById(d.courseId);
-        return "<li>" + (d.src === "db" ? '<input type="checkbox" class="chk round" data-dldone="' + esc(d.id) + '" aria-label="Marker ' + esc(d.title) + ' som klaret">' : '<span class="chk-ph"></span>') +
-          '<div class="li-main"><div class="li-title">' + esc(d.title) + '</div><div class="li-sub">' + esc([KIND_L[d.kind] || d.kind, c ? c.short : "", dayName(d.date) + " " + shortDate(d.date) + (d.time ? " kl. " + d.time : ""), d.where].filter(Boolean).join(" · ")) + (d.src === "neptun" ? " · fra Neptun" : "") + "</div></div>" +
-          '<div class="dd' + (n <= 3 ? " soon" : "") + '">' + n + "<small>" + (n === 1 ? "dag" : "dage") + "</small></div>" +
-          (d.src === "db" ? '<button type="button" class="xbtn" data-dldel="' + esc(d.id) + '" aria-label="Slet ' + esc(d.title) + '">×</button>' : "") + "</li>";
-      }).join("") + "</ul>";
-      dl.querySelectorAll("[data-dldone]").forEach(function (cb) { cb.addEventListener("change", function () { if (cb.checked) dbWrite(S.db.doc("deadlines/" + cb.getAttribute("data-dldone")).update({ done: true, doneAt: Date.now() })); }); });
-      dl.querySelectorAll("[data-dldel]").forEach(function (b) { b.addEventListener("click", function () { dbWrite(S.db.doc("deadlines/" + b.getAttribute("data-dldel")).delete()); }); });
-    }
-    // Courses
-    var host = $("st-courses"), dls = S.deadlines ? studyDeadlines() : [];
-    host.innerHTML = COURSES.map(function (c) {
-      var lessons = (S.nep || []).filter(function (e) { return e.course === c.id && !e.exam && (e.start > t || (e.start === t && e.eT > nowLocal().slice(11, 16))); });
-      var next = lessons[0], perWeek = (S.nep || []).filter(function (e) { return e.course === c.id && !e.exam && daysBetween(t, e.start) < 7; }).length;
-      var tasks = (S.td || []).filter(function (k) { return (k.labels || []).some(function (l) { return l.toLowerCase() === c.label.toLowerCase(); }); }).sort(tdSort);
-      var dlc = dls.filter(function (d) { return d.courseId === c.id; })[0];
-      var sum = S.notes && S.notes.courses && S.notes.courses[c.id];
-      var rows = '<div class="st-row"><span class="k">Næste time</span><span>' + (next ? esc(relDay(next.start) + " kl. " + next.sT) + (next.where ? '<span class="muted"> · ' + esc(next.where) + "</span>" : "") : S.nep ? '<span class="muted">Ingen planlagt</span>' : "…") + "</span></div>" +
-        '<div class="st-row"><span class="k">Deadline</span><span>' + (dlc ? esc(dlc.title) + '<span class="muted"> · ' + esc(relDay(dlc.date)) + "</span>" : '<span class="muted">Ingen</span>') + "</span></div>";
-      var tk = tasks.length ? '<ul class="list st-tasks">' + tasks.slice(0, 3).map(function (k) { return tdTaskRow(k, { showProject: false, showDate: true, showDesc: false }); }).join("") + "</ul>" + (tasks.length > 3 ? '<div class="sub muted">+ ' + (tasks.length - 3) + " mere</div>" : "")
-        : '<div class="empty">Ingen opgaver. Giv en opgave i Todoist tagget <b>#' + esc(c.label) + "</b>, så kommer den her.</div>";
-      return '<article class="card st-course"><div class="st-ch"><div><h3>' + esc(c.short) + "</h3>" + (c.name !== c.short ? '<div class="sub muted">' + esc(c.name) + "</div>" : "") + "</div>" +
-        (perWeek ? '<span class="st-badge" title="Undervisning de næste 7 dage">' + perWeek + (perWeek === 1 ? " time" : " timer") + "</span>" : "") + "</div>" + rows + tk +
-        (sum && sum.text ? '<div class="st-sum"><span class="k">Fra dine noter' + (sum.updatedAt ? " · " + esc(agoText(sum.updatedAt)) : "") + "</span>" + esc(sum.text) + "</div>" : "") + "</article>";
+    // ---- Skema (Neptun) ----
+    var sk = $("st-week-body");
+    if (!S.mcp) sk.innerHTML = '<div class="err">' + errCopy(GCAL, { code: "not_granted" }) + "</div>";
+    else if (S.nepErr) sk.innerHTML = '<div class="err">' + errCopy(GCAL, S.nepErr) + "</div>";
+    else if (!S.nep) sk.innerHTML = '<div class="skel tall"></div>';
+    else if (S.nepMissing) sk.innerHTML = '<div class="empty">Neptun-kalenderen er ikke fundet i Google Kalender.</div>';
+    else sk.innerHTML = scheduleHtml();
+    // ---- Eksamener og frister ----
+    var dl = $("st-dl-body"), items = examsAndDeadlines();
+    if (!S.nep && !S.td) dl.innerHTML = '<div class="skel"></div>';
+    else if (!items.length) dl.innerHTML = '<div class="empty">Ingen eksamener i Neptun endnu, og ingen frister i Todoist. En opgave med en <b>deadline</b> i Todoist og et fag-tag dukker op her.</div>';
+    else dl.innerHTML = '<ul class="ex-list">' + items.slice(0, 10).map(function (d) {
+      var n = daysBetween(t, d.date);
+      return '<li style="--cc:' + courseColor(d.c) + '"><div class="ex-n' + (n <= 7 ? " soon" : "") + '"><b>' + n + "</b><span>" + (n === 1 ? "dag" : "dage") + '</span></div><div class="li-main"><div class="li-title">' + esc(d.c ? d.c.short : d.title) + (d.c && d.title !== "Eksamen" ? " · " + esc(d.title) : d.c ? " · eksamen" : "") + '</div><div class="li-sub">' +
+        esc([dayName(d.date) + " " + shortDate(d.date) + (d.time ? " kl. " + d.time : ""), d.where, d.src ? "fra " + d.src : ""].filter(Boolean).join(" · ")) + "</div></div></li>";
+    }).join("") + "</ul>";
+  }
+  function scheduleHtml() {
+    var t = todayISO(), wd = isoToUTC(t).getUTCDay(), mon = mondayOf(wd === 6 || wd === 0 ? addDays(t, 2) : t);
+    var days = []; for (var i = 0; i < 5; i++) days.push(addDays(mon, i));
+    var evs = (S.nep || []).filter(function (e) { return e.start >= mon && e.start < addDays(mon, 5); });
+    if (!evs.length) return '<div class="empty">Ingen undervisning i uge ' + isoWeek(mon) + ".</div>";
+    var h0 = 24, h1 = 0; evs.forEach(function (e) { h0 = Math.min(h0, Math.floor(hm(e.sT) / 60)); h1 = Math.max(h1, Math.ceil(hm(e.eT) / 60)); });
+    var PX = 52, nowM = hm(nowLocal().slice(11, 16));
+    var head = '<div class="sk-h"><div></div>' + days.map(function (d) { var x = isoToUTC(d); return '<div class="' + (d === t ? "today" : "") + '"><span>' + DAYS_S[x.getUTCDay()] + "</span><b>" + x.getUTCDate() + "</b></div>"; }).join("") + "</div>";
+    var hrs = ""; for (var h = h0; h <= h1; h++) hrs += '<span style="top:' + ((h - h0) * PX) + 'px">' + pad(h) + "</span>";
+    var cols = days.map(function (d) {
+      var de = evs.filter(function (e) { return e.start === d; }), lanes = [];
+      de.forEach(function (e) { var s = hm(e.sT), li = 0; while (lanes[li] != null && lanes[li] > s) li++; lanes[li] = hm(e.eT); e._l = li; });
+      var n = Math.max(1, lanes.length);
+      return '<div class="sk-col' + (d === t ? " today" : "") + '">' + de.map(function (e) {
+        var c = courseById(e.course), top = (hm(e.sT) - h0 * 60) / 60 * PX, ht = Math.max(24, (hm(e.eT) - hm(e.sT)) / 60 * PX - 3);
+        var past = d < t || (d === t && hm(e.eT) <= nowM);
+        return '<div class="sk-ev' + (past ? " past" : "") + (e.exam ? " exam" : "") + '" style="--cc:' + courseColor(c) + ";top:" + top.toFixed(1) + "px;height:" + ht.toFixed(1) + "px;left:calc(" + (e._l * 100 / n) + "% + 3px);width:calc(" + (100 / n) + '% - 6px)"><b>' + esc(c ? c.short : e.title) + "</b><span>" + e.sT + "–" + e.eT + (e.where ? " · " + esc(e.where) : "") + "</span>" + (e.exam ? "<em>Eksamen</em>" : "") + "</div>";
+      }).join("") + (d === t && nowM > h0 * 60 && nowM < h1 * 60 ? '<div class="wk-now" style="top:' + ((nowM - h0 * 60) / 60 * PX).toFixed(1) + 'px"></div>' : "") + "</div>";
     }).join("");
-    wireTd(host);
+    var grid = '<div class="sk-grid" style="height:' + ((h1 - h0) * PX) + 'px;--px:' + PX + 'px"><div class="sk-tl">' + hrs + "</div>" + cols + "</div>";
+    var list = '<div class="sk-list">' + days.map(function (d) {
+      var de = evs.filter(function (e) { return e.start === d; }); if (!de.length) return "";
+      return '<div class="op-day">' + esc(/^i /.test(relDay(d)) ? relDay(d) : dayName(d)) + " <span>" + esc(shortDate(d)) + '</span></div><ul class="st-lessons">' + de.map(function (e) {
+        var c = courseById(e.course);
+        return '<li style="--cc:' + courseColor(c) + '"><span class="kat">' + e.sT + "–" + e.eT + "</span><span><b>" + esc(c ? c.short : e.title) + "</b>" + (e.where ? '<span class="muted"> · ' + esc(e.where) + "</span>" : "") + (e.exam ? ' <span class="prio p1">Eksamen</span>' : "") + "</span></li>";
+      }).join("") + "</ul>";
+    }).join("") + "</div>";
+    $("st-week-title").textContent = "Skema · uge " + isoWeek(mon);
+    return '<div class="sk">' + head + grid + "</div>" + list;
   }
 
   // =================================================================
@@ -5108,7 +5143,7 @@
         after();
       }, function (e) { S.dbErr = e; setSrc("src-db", "err", "Fejl"); after(); });
     }
-    sub(db.collection("tdDone").where("date", ">=", addDays(t, -14)).limit(500), "tdDone", function () { renderTodoAll(); });
+    sub(db.collection("rlog").limit(5000), "rlog", function () { renderTodoAll(); if (!S.rlogSynced && S.td) { S.rlogSynced = true; syncRoutineLog(false); } });
     sub(db.collection("budgetCats").limit(100), "cats", function () { renderBudget(); try { renderBriefing(); } catch (e) {} });
     sub(db.collection("expenses").where("date", ">=", addMonths(monthKey(t), -12) + "-01").limit(3000), "exp", function () { renderBudget(); try { renderBriefing(); } catch (e) {} });
     sub(db.collection("savings").limit(2000), "sav", renderSavings);
@@ -5121,37 +5156,7 @@
     db.doc("study/summaries").onSnapshot(function (d) { S.notes = d.exists ? d.data() : null; renderStudie(); }, function () { S.notes = null; });
   }
 
-  // ----- forms and controls -----
-  $("td-add").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var v = $("td-title").value.trim(); if (!v) return;
-    var b = e.target.querySelector("button"); b.disabled = true;
-    tdAdd(v, $("td-proj").value, "today").then(function () { $("td-title").value = ""; b.disabled = false; }, function () { b.disabled = false; });
-  });
-  $("op-add").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var v = $("op-title").value.trim(); if (!v) return;
-    var b = e.target.querySelector("button"); b.disabled = true;
-    tdAdd(v, $("op-proj").value, $("op-date").value || "").then(function () { $("op-title").value = ""; b.disabled = false; }, function () { b.disabled = false; });
-  });
-  document.querySelectorAll("[data-kalview]").forEach(function (b) {
-    b.addEventListener("click", function () { S.kalView = b.getAttribute("data-kalview"); S.kalSel = null; loadKal(false); });
-  });
-  $("kal-prev").addEventListener("click", function () { kalShift(-1); });
-  $("kal-next").addEventListener("click", function () { kalShift(1); });
-  $("kal-today").addEventListener("click", function () { S.kalAnchor = null; S.kalSel = null; loadKal(false); });
-  $("st-dl-btn").addEventListener("click", function () {
-    var f = $("st-dl-add"); f.hidden = !f.hidden;
-    if (!f.hidden) { $("st-dl-date").value = $("st-dl-date").value || addDays(todayISO(), 7); $("st-dl-title").focus(); }
-  });
-  $("st-dl-course").innerHTML = COURSES.map(function (c) { return '<option value="' + c.id + '">' + esc(c.short) + "</option>"; }).join("") + '<option value="">Andet</option>';
-  $("st-dl-add").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var title = $("st-dl-title").value.trim(), date = $("st-dl-date").value; if (!title || !date || !S.db) return;
-    var c = courseById($("st-dl-course").value);
-    dbWrite(S.db.collection("deadlines").add({ title: title, date: date, courseId: c ? c.id : "", course: c ? c.short : "", kind: $("st-dl-kind").value, done: false, createdAt: Date.now() }));
-    $("st-dl-title").value = ""; $("st-dl-add").hidden = true;
-  });
+  // ----- Økonomi controls -----
   $("bud-prev").addEventListener("click", function () { S.budMonth = addMonths(S.budMonth, -1); renderBudget(); });
   $("bud-next").addEventListener("click", function () { if (S.budMonth < monthKey(todayISO())) { S.budMonth = addMonths(S.budMonth, 1); renderBudget(); } });
   $("bud-add").addEventListener("submit", function (e) {
@@ -5214,7 +5219,7 @@
         setSrc("src-icu", "err", "Ingen adgang"); setSrc("src-cal", "err", "Ingen adgang");
         setSrc("src-wx", "err", "Ingen adgang"); renderWeather();
         setSrc("src-mail", "err", "Ingen adgang"); renderMail();
-        setSrc("src-td", "err", "Ingen adgang"); setSrc("src-av", "err", "Ingen adgang"); renderTodoAll(); S.kalErr = { code: "not_granted" }; renderKal();
+        setSrc("src-td", "err", "Ingen adgang"); setSrc("src-av", "err", "Ingen adgang"); renderTodoAll();
         renderHealthAll(); renderAgenda();
       }
     });
