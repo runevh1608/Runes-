@@ -484,6 +484,56 @@
 
 
 
+
+  /* ================= I dag: widget grid ================= */
+  .widgets {
+    display: grid; gap: 14px; align-items: stretch;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      "attn attn wx"
+      "attn attn rec"
+      "wo   ag   tk"
+      "hb   dl   news";
+  }
+  #c-attn { grid-area: attn; } #c-weather { grid-area: wx; } #c-recovery { grid-area: rec; }
+  #c-workout { grid-area: wo; } #c-agenda { grid-area: ag; } #c-tasks { grid-area: tk; }
+  #c-habits { grid-area: hb; } #c-deadlines { grid-area: dl; } #c-news { grid-area: news; }
+  @media (max-width: 1099px) {
+    .widgets { grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas: "attn attn" "wx rec" "wo ag" "tk hb" "dl news"; }
+  }
+  @media (max-width: 640px) {
+    .widgets { grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "attn" "wx" "wo" "ag" "tk" "hb" "rec" "dl" "news"; }
+  }
+  .widgets .card { scroll-margin-top: 20px; }
+
+  /* Needs-attention list */
+  .attn-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .attn-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .attn-item {
+    appearance: none; border: none; font: inherit; color: inherit; text-align: left; cursor: pointer; width: 100%;
+    display: grid; grid-template-columns: 4px 30px minmax(0, 1fr) auto; gap: 0 12px; align-items: center;
+    padding: 9px 12px 9px 0; border-radius: 12px; background: var(--surface-2); overflow: hidden;
+    transition: background-color .15s ease, transform .15s ease;
+  }
+  .attn-item:hover { background: color-mix(in srgb, var(--ink) 6%, var(--surface-2)); }
+  .attn-item:active { transform: scale(0.995); }
+  .attn-item .sev { align-self: stretch; margin: -9px 0; background: var(--ink-3); }
+  .attn-item.high .sev { background: var(--critical); }
+  .attn-item.med .sev { background: var(--warning); }
+  .attn-item.low .sev { background: var(--line-2); }
+  .ai { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; --bc: var(--ink); color: var(--bc); background: color-mix(in srgb, var(--bc) 13%, transparent); }
+  .ai svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .ai.cal { --bc: var(--a-cal); } .ai.health { --bc: var(--a-health); } .ai.tasks { --bc: var(--a-tasks); } .ai.study { --bc: var(--a-study); } .ai.wx { --bc: var(--a-study); } .ai.sys { --bc: var(--critical); }
+  .attn-item .tx { min-width: 0; font-size: 0.9rem; line-height: 1.35; color: var(--ink-2); overflow-wrap: anywhere; }
+  .attn-item .tx b { color: var(--ink); font-weight: 600; }
+  .attn-item .mt { font-family: var(--f-mono); font-size: 0.72rem; color: var(--ink-3); white-space: nowrap; text-align: right; }
+  .attn-item.high .mt { color: var(--critical); }
+  .attn-ok { display: flex; align-items: center; gap: 12px; padding: 18px 4px; color: var(--ink-2); }
+  .attn-ok .ai { --bc: var(--good); width: 40px; height: 40px; border-radius: 12px; }
+  .attn-ok b { color: var(--ink); display: block; font-size: 1rem; }
+
   /* ================= I dag: greeting + briefing ================= */
   .brief-card { gap: 14px; }
   .brief-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px 28px; }
@@ -1874,32 +1924,33 @@
         <div><span class="eyebrow" id="dateline">&nbsp;</span><h1 id="greet">I dag</h1></div>
         <span class="sub muted" id="today-meta"></span>
       </header>
-      <article class="card brief-card" id="c-brief">
-        <div class="card-k"><span class="ad tasks"></span>Dagens briefing<span class="src-note" id="brief-src"></span></div>
-        <div class="brief-grid">
-          <div class="brief-rows" id="brief-rows"><div class="skel"></div></div>
-          <div class="brief-news">
-            <div class="bn-head"><span class="bn-k">Nyheder</span><span class="bn-meta" id="news-meta"></span></div>
-            <div id="news-body"><div class="skel"></div></div>
-          </div>
-        </div>
+      <div class="widgets">
+      <article class="card" id="c-attn">
+        <div class="card-k"><span class="ad tasks"></span>Kræver din opmærksomhed<span class="src-note" id="attn-src"></span></div>
+        <div id="attn-body"><div class="skel"></div></div>
       </article>
-      <div class="today">
-        <div class="col">
-    <!-- Today's workout -->
-    <article class="card" id="c-workout">
+      <article class="card" id="c-weather">
+      <div class="card-k"><span class="ad cal"></span>Vejret<span class="src-note" id="wx-src"></span></div>
+      <div id="wx-body"><div class="skel"></div></div>
+      <form class="add" id="wx-form" autocomplete="off" hidden>
+        <input class="field" type="text" id="wx-city" placeholder="By, fx Aarhus" aria-label="By til vejret" maxlength="60">
+        <button class="btn" type="submit">Brug by</button>
+        <button class="btn ghost" type="button" id="wx-cancel">Annuller</button>
+      </form>
+    </article>
+      <article class="card" id="c-recovery">
+      <div class="card-k"><span class="ad health"></span>Restitution<span class="src-note" id="rec-src"></span></div>
+      <div id="rec-body"><div class="skel"></div></div>
+    </article>
+      <article class="card" id="c-workout">
       <div class="card-k"><span class="ad health"></span>Dagens træning</div>
       <div id="wo-body"><div class="skel"></div></div>
     </article>
-
-    <!-- Calendar today -->
-    <article class="card" id="c-agenda">
+      <article class="card" id="c-agenda">
       <div class="card-k"><span class="ad cal"></span>Aftaler i dag</div>
       <div id="ag-body"><div class="skel"></div></div>
     </article>
-
-    <!-- Tasks today -->
-    <article class="card" id="c-tasks">
+      <article class="card" id="c-tasks">
       <div class="card-k"><span class="ad tasks"></span>Opgaver i dag</div>
       <div id="tk-body"><div class="skel"></div></div>
       <form class="add" id="tk-add" autocomplete="off" hidden>
@@ -1913,28 +1964,7 @@
         <button class="btn" type="submit">Tilføj</button>
       </form>
     </article>
-
-        </div>
-        <div class="col">
-    <!-- Weather -->
-    <article class="card" id="c-weather">
-      <div class="card-k"><span class="ad cal"></span>Vejret<span class="src-note" id="wx-src"></span></div>
-      <div id="wx-body"><div class="skel"></div></div>
-      <form class="add" id="wx-form" autocomplete="off" hidden>
-        <input class="field" type="text" id="wx-city" placeholder="By, fx Aarhus" aria-label="By til vejret" maxlength="60">
-        <button class="btn" type="submit">Brug by</button>
-        <button class="btn ghost" type="button" id="wx-cancel">Annuller</button>
-      </form>
-    </article>
-
-    <!-- Recovery -->
-    <article class="card" id="c-recovery">
-      <div class="card-k"><span class="ad health"></span>Restitution<span class="src-note" id="rec-src"></span></div>
-      <div id="rec-body"><div class="skel"></div></div>
-    </article>
-
-    <!-- Habits -->
-    <article class="card" id="c-habits">
+      <article class="card" id="c-habits">
       <div class="card-k"><span class="ad tasks"></span>Vaner</div>
       <div id="hb-body"><div class="skel"></div></div>
       <form class="add" id="hb-add" autocomplete="off" hidden>
@@ -1942,13 +1972,14 @@
         <button class="btn ghost" type="submit">Tilføj vane</button>
       </form>
     </article>
-
-    <!-- Deadlines -->
-    <article class="card" id="c-deadlines">
+      <article class="card" id="c-deadlines">
       <div class="card-k"><span class="ad study"></span>Nærmeste deadlines</div>
       <div id="dl-body"><div class="skel"></div></div>
     </article>
-        </div>
+      <article class="card" id="c-news">
+        <div class="card-k"><span class="ad study"></span>Nyheder<span class="src-note" id="news-meta"></span></div>
+        <div id="news-body"><div class="skel"></div></div>
+      </article>
       </div>
     </section>
 
@@ -2776,6 +2807,7 @@
     return txt;
   }
   function renderBriefing() {
+    try { renderAttention(); } catch (e) { console.error(e); }
     var host = $("brief-rows"); if (!host) return;
     var rows = [
       ["wx", "wx", "Vejret", briefWeather(), "c-weather"],
@@ -2797,6 +2829,106 @@
     var p = partsInTZ(new Date());
     $("brief-src").textContent = "kl. " + p.hour + ":" + p.minute;
   }
+
+  // =================================================================
+  // KRÆVER DIN OPMÆRKSOMHED — one list across calendar, tasks, training,
+  // weather and data sources, most urgent first.
+  // =================================================================
+  var AI_ICON = {
+    task: BI.task, cal: BI.cal, run: BI.run, wx: BI.wx,
+    flag: '<svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>',
+    heart: '<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
+    repeat: '<svg viewBox="0 0 24 24"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>',
+    warn: '<svg viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>'
+  };
+  var SEV = { high: 0, med: 1, low: 2 };
+  function minsUntil(hhmm) { var p = partsInTZ(new Date()); var a = hhmm.split(":"); return (+a[0]) * 60 + (+a[1]) - ((+p.hour) * 60 + (+p.minute)); }
+  function inWords(m) { return m < 60 ? m + " min" : Math.floor(m / 60) + " t" + (m % 60 ? " " + (m % 60) + " min" : ""); }
+  function attentionItems() {
+    var t = todayISO(), now = nowLocal(), hour = +partsInTZ(new Date()).hour, out = [];
+    function add(sev, area, icon, text, meta, jump, key) { out.push({ sev: sev, area: area, icon: icon, text: text, meta: meta || "", jump: jump, key: key || "" }); }
+    // Tasks
+    if (S.tasks) {
+      S.tasks.filter(function (k) { return !k.done && k.due && k.due < t; }).sort(function (a, b) { return a.due < b.due ? -1 : 1; }).slice(0, 4)
+        .forEach(function (k) { add("high", "tasks", "task", "Forsinket: <b>" + esc(k.title) + "</b>", "forfaldt " + relDay(k.due), "c-tasks", k.due); });
+      S.tasks.filter(function (k) { return !k.done && k.due === t && (k.priority || 2) === 1; }).slice(0, 3)
+        .forEach(function (k) { add("med", "tasks", "task", "Vigtigt i dag: <b>" + esc(k.title) + "</b>", "høj prioritet", "c-tasks", t); });
+    }
+    // Deadlines within 3 days (deadline list + high-priority tasks ahead)
+    var dls = [];
+    (S.deadlines || []).forEach(function (d) { if (!d.done && d.date >= t && daysBetween(t, d.date) <= 3) dls.push({ title: d.title, date: d.date, sub: d.course }); });
+    (S.tasks || []).forEach(function (k) { if (!k.done && k.due > t && (k.priority || 2) === 1 && daysBetween(t, k.due) <= 3) dls.push({ title: k.title, date: k.due }); });
+    dls.sort(function (a, b) { return a.date < b.date ? -1 : 1; }).forEach(function (d) {
+      var n = daysBetween(t, d.date);
+      add(n <= 1 ? "high" : "med", "study", "flag", "Deadline: <b>" + esc(d.title) + "</b>" + (d.sub ? " · " + esc(d.sub) : ""), n === 0 ? "i dag" : n === 1 ? "i morgen" : "om " + n + " dage", "c-deadlines", d.date);
+    });
+    // Next appointment within two hours
+    if (S.cal) {
+      S.cal.filter(function (e) { return e.start === t && !e.allDay && !e.holiday; }).forEach(function (e) {
+        var m = minsUntil(e.sT);
+        if (m >= 0 && m <= 120) add(m <= 30 ? "high" : "med", "cal", "cal", "Om " + inWords(m) + ": <b>" + esc(e.title) + "</b>" + (e.where ? " · " + esc(e.where) : ""), "kl. " + e.sT, "c-agenda", e.sT);
+        else if (m < 0 && minsUntil(e.eT) > 0) add("low", "cal", "cal", "I gang nu: <b>" + esc(e.title) + "</b>", "til " + e.eT, "c-agenda", e.sT);
+      });
+    }
+    // Training today
+    if (S.events) {
+      var used = [];
+      eventsArr().filter(function (e) { return e.start_date_local.slice(0, 10) === t; }).forEach(function (ev) {
+        var a = matchActivity(ev, used); if (a) { used.push(a.id); return; }
+        var st = ev.start_date_local.slice(11, 16), past = now > ev.start_date_local.slice(0, 16);
+        var w = hourWx(st.slice(0, 2)), rp = w && w.extended ? parseInt(w.extended.rainProbability, 10) || 0 : 0;
+        if (past && minsUntil(st) < -(ev.duration_minutes || 30)) add("med", "health", "run", "Ikke logget endnu: <b>" + esc(ev.name) + "</b>", "kl. " + st, "c-workout", st);
+        else if (!past) add(rp >= 40 ? "med" : "low", "health", "run", "<b>" + esc(ev.name) + "</b> (" + (ev.duration_minutes || "?") + " min)" + (w ? " · " + esc(w.temperature) + ", " + esc(lc(w.phrase)) : "") + (rp >= 40 ? " · regn " + rp + " %" : ""), "kl. " + st, "c-workout", st);
+      });
+    }
+    // Recovery
+    var rec = null; try { rec = computeRecovery(); } catch (e) {}
+    if (rec && rec.status.c === "critical") {
+      var l = rec.last || {};
+      add("med", "health", "heart", "Lav restitution: <b>" + esc(lc(rec.status.l)) + "</b> — tag det roligt i dag" + (l.hrv != null ? " (HRV " + fmt0(l.hrv) + ")" : ""), "", "c-recovery", "");
+    }
+    // Air quality on a training day
+    var aq = S.wx && S.wx.cur && S.wx.cur.currentAirQuality;
+    if (aq && aq.overallPlumeLabsIndex >= 60 && S.events && eventsArr().some(function (e) { return e.start_date_local.slice(0, 10) === t && isRun(e.type); }))
+      add("low", "wx", "wx", "Luftkvalitet: <b>" + esc(lc(aq.category)) + "</b> — overvej at løbe uden for trafikken", "", "c-weather", "");
+    // Habits in the evening
+    if (hour >= 18 && S.habits && S.hlog) {
+      var miss = S.habits.filter(function (h) { return h.active !== false && !habitDone(h.id, t); });
+      if (miss.length) add("low", "tasks", "repeat", miss.length === 1 ? "Vane mangler i dag: <b>" + esc(miss[0].name) + "</b>" : "<b>" + miss.length + " vaner</b> mangler i dag", "", "c-habits", "");
+    }
+    // Data sources that fail
+    Object.keys(SRC_LABEL).forEach(function (k) { if (SRC_STATE[k] === "err") add("low", "sys", "warn", "<b>" + SRC_LABEL[k] + "</b> kan ikke hentes", "", "", ""); });
+    out.sort(function (a, b) { return (SEV[a.sev] - SEV[b.sev]) || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0); });
+    return out;
+  }
+  function renderAttention() {
+    var host = $("attn-body"); if (!host) return;
+    var ready = (S.tasks || !S.db) && (S.cal || S.calErr) && (S.events || S.icuErr.events);
+    if (!ready) { host.innerHTML = '<div class="skel"></div>'; return; }
+    var items = attentionItems();
+    var p = partsInTZ(new Date());
+    $("attn-src").textContent = "kl. " + p.hour + ":" + p.minute;
+    if (!items.length) {
+      host.innerHTML = '<div class="attn-ok"><span class="ai">' + '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' + '</span><div><b>Alt under kontrol</b>Intet haster lige nu.</div></div>';
+      return;
+    }
+    var high = items.filter(function (i) { return i.sev === "high"; }).length;
+    var html = '<div class="headline attn-head"><span class="big">' + items.length + '</span><span class="big-u">' + (items.length === 1 ? "ting" : "ting") +
+      (high ? ' · <span style="color:var(--critical);font-weight:600">' + high + " haster</span>" : "") + "</span></div>";
+    html += '<ul class="attn-list">' + items.slice(0, 8).map(function (i) {
+      return '<li><button class="attn-item ' + i.sev + '" type="button"' + (i.jump ? ' data-jump="' + i.jump + '"' : "") + '><span class="sev"></span><span class="ai ' + i.area + '">' + AI_ICON[i.icon] + '</span><span class="tx">' + i.text + '</span><span class="mt">' + esc(i.meta) + "</span></button></li>";
+    }).join("") + "</ul>";
+    if (items.length > 8) html += '<div class="sub muted">+ ' + (items.length - 8) + " mere</div>";
+    host.innerHTML = html;
+    host.querySelectorAll("[data-jump]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var el = $(b.getAttribute("data-jump")); if (!el) return;
+        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      });
+    });
+  }
+
   // News is written into the database by a morning routine (see news/latest).
   function renderNews() {
     var host = $("news-body"); if (!host) return;
