@@ -4819,7 +4819,7 @@
   ];
   function courseOf(text) { for (var i = 0; i < COURSES.length; i++) if (COURSES[i].re.test(text || "")) return COURSES[i]; return null; }
   function courseById(id) { return COURSES.filter(function (c) { return c.id === id; })[0] || null; }
-  S.nep = null; S.nepErr = null; S.study = null;
+  S.nep = null; S.nepErr = null; S.notes = null;
   function loadNeptun(force) {
     if (!S.mcp) return Promise.resolve();
     var t = todayISO();
@@ -4888,7 +4888,7 @@
       var next = lessons[0], perWeek = (S.nep || []).filter(function (e) { return e.course === c.id && !e.exam && daysBetween(t, e.start) < 7; }).length;
       var tasks = (S.td || []).filter(function (k) { return (k.labels || []).some(function (l) { return l.toLowerCase() === c.label.toLowerCase(); }); }).sort(tdSort);
       var dlc = dls.filter(function (d) { return d.courseId === c.id; })[0];
-      var sum = S.study && S.study.summaries && S.study.summaries[c.id];
+      var sum = S.notes && S.notes.courses && S.notes.courses[c.id];
       var rows = '<div class="st-row"><span class="k">Næste time</span><span>' + (next ? esc(relDay(next.start) + " kl. " + next.sT) + (next.where ? '<span class="muted"> · ' + esc(next.where) + "</span>" : "") : S.nep ? '<span class="muted">Ingen planlagt</span>' : "…") + "</span></div>" +
         '<div class="st-row"><span class="k">Deadline</span><span>' + (dlc ? esc(dlc.title) + '<span class="muted"> · ' + esc(relDay(dlc.date)) + "</span>" : '<span class="muted">Ingen</span>') + "</span></div>";
       var tk = tasks.length ? '<ul class="list st-tasks">' + tasks.slice(0, 3).map(function (k) { return tdTaskRow(k, { showProject: false, showDate: true, showDesc: false }); }).join("") + "</ul>" + (tasks.length > 3 ? '<div class="sub muted">+ ' + (tasks.length - 3) + " mere</div>" : "")
@@ -5117,7 +5117,8 @@
     }, function () { S.stocks = {}; renderStocks(); });
     db.doc("settings/stocks").onSnapshot(function (d) { S.watch = d.exists ? d.data() : false; renderStocks(); refreshStocks(false); }, function () { S.watch = false; });
     db.doc("settings/savings").onSnapshot(function (d) { S.savGoal = d.exists ? (d.data() || {}).goal || null : null; renderSavings(); }, function () {});
-    db.doc("settings/study").onSnapshot(function (d) { S.study = d.exists ? d.data() : {}; renderStudie(); }, function () { S.study = {}; });
+    // Written once a week by the notes routine on Rune's Mac (Claude app with access to Desktop/Corvinus).
+    db.doc("study/summaries").onSnapshot(function (d) { S.notes = d.exists ? d.data() : null; renderStudie(); }, function () { S.notes = null; });
   }
 
   // ----- forms and controls -----
