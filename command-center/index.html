@@ -494,6 +494,28 @@
   .dash > * { order: 0 !important; }
   .todo-h { align-items: center; }
   .todo-h .add-btn { margin-left: auto; width: 24px; height: 24px; padding: 0; border-radius: 50%; font-size: 0.95rem; line-height: 1; display: grid; place-items: center; }
+
+  /* Restitution: status + three trend rows that fill the card */
+  #c-recovery { display: flex; flex-direction: column; }
+  #rec-body { flex: 1; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+  .rs-head { display: flex; align-items: center; gap: 10px; }
+  .rs-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--ink-3); flex: none; }
+  .rs-dot.good { background: var(--good); } .rs-dot.warning { background: var(--warning); } .rs-dot.critical { background: var(--critical); }
+  .rs-status { font-family: var(--f-display); font-stretch: 75%; font-weight: 800; font-size: 2rem; line-height: 1; }
+  .rs-flags { font-size: 0.8rem; color: var(--ink-3); padding-left: 22px; }
+  .rs-rows { flex: 1; display: flex; flex-direction: column; justify-content: space-around; margin-top: 6px; }
+  .rs-row { display: grid; grid-template-columns: 5.2rem minmax(0, 1fr) 6.2rem; align-items: center; gap: 12px; padding: 10px 0; }
+  .rs-row + .rs-row { border-top: 1px solid var(--line); }
+  .rs-l { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+  .rs-spark { width: 100%; height: 28px; display: block; }
+  .rs-spark path { fill: none; stroke: var(--a-health); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .rs-spark circle { fill: var(--a-health); }
+  .rs-v { text-align: right; line-height: 1.15; }
+  .rs-v b { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: 1.45rem; font-variant-numeric: tabular-nums; }
+  .rs-v small { font-size: 0.72rem; color: var(--ink-3); margin-left: 3px; }
+  .rs-v .dl { display: block; font-size: 0.72rem; font-weight: 600; }
+  .rs-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.74rem; color: var(--ink-3); padding-top: 8px; border-top: 1px solid var(--line); }
+  .rs-foot .linkbtn { color: var(--ink-2); font-size: 0.76rem; }
   /* ================= I dag: six widgets ================= */
   .dash { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
   .dash > * { grid-area: auto; }
@@ -2089,19 +2111,6 @@
         <span class="sub muted" id="today-meta"></span>
       </header>
       <div class="dash">
-      <article class="card" id="c-recovery">
-      <div class="card-k"><span class="ad health"></span>Restitution<span class="src-note" id="rec-src"></span></div>
-      <div id="rec-body"><div class="skel"></div></div>
-    </article>
-      <article class="card" id="c-weather">
-      <div class="card-k"><span class="ad cal"></span>Vejret<span class="src-note" id="wx-src"></span></div>
-      <div id="wx-body"><div class="skel"></div></div>
-      <form class="add" id="wx-form" autocomplete="off" hidden>
-        <input class="field" type="text" id="wx-city" placeholder="By, fx Aarhus" aria-label="By til vejret" maxlength="60">
-        <button class="btn" type="submit">Brug by</button>
-        <button class="btn ghost" type="button" id="wx-cancel">Annuller</button>
-      </form>
-    </article>
       <article class="card" id="c-plan">
         <div class="card-k"><span class="ad cal"></span>I dag i kalenderen<span class="src-note" id="plan-src"></span></div>
         <div id="plan-body"><div class="skel"></div></div>
@@ -2127,10 +2136,23 @@
         <div class="todo-sec"><div class="todo-h">Opgaver <span id="tk-count"></span><button class="add-btn" type="button" id="add-task-btn" aria-controls="tk-add" aria-label="Ny opgave" title="Ny opgave">+</button></div><div id="tk-body"><div class="skel"></div></div></div>
         <div class="todo-sec"><div class="todo-h">Rutiner <span id="hb-count"></span><button class="add-btn" type="button" id="add-habit-btn" aria-controls="hb-add" aria-label="Ny rutine" title="Ny rutine">+</button></div><div id="hb-body"><div class="skel"></div></div></div>
       </article>
+      <article class="card" id="c-recovery">
+      <div class="card-k"><span class="ad health"></span>Restitution<span class="src-note" id="rec-src"></span></div>
+      <div id="rec-body"><div class="skel"></div></div>
+    </article>
       <article class="card" id="c-mail">
         <div class="card-k"><span class="ad tasks"></span>Mail<span class="src-note" id="mail-src"></span></div>
         <div id="mail-body"><div class="skel"></div></div>
       </article>
+      <article class="card" id="c-weather">
+      <div class="card-k"><span class="ad cal"></span>Vejret<span class="src-note" id="wx-src"></span></div>
+      <div id="wx-body"><div class="skel"></div></div>
+      <form class="add" id="wx-form" autocomplete="off" hidden>
+        <input class="field" type="text" id="wx-city" placeholder="By, fx Aarhus" aria-label="By til vejret" maxlength="60">
+        <button class="btn" type="submit">Brug by</button>
+        <button class="btn ghost" type="button" id="wx-cancel">Annuller</button>
+      </form>
+    </article>
       <article class="card" id="c-news">
         <div class="card-k"><span class="ad study"></span>Nyheder<span class="src-note" id="news-meta"></span></div>
         <div id="news-body"><div class="skel"></div></div>
@@ -3417,18 +3439,39 @@
     $("rec-src").textContent = last.date === t ? "målt i morges" : "senest " + relDay(last.date);
     var b = rec ? rec.base : {};
     var status = rec ? rec.status : { l: "–", c: "neutral" };
+    var dotCls = status.c === "neutral" ? "warning" : status.c;
+    var flags = rec ? (rec.flags === 0 ? "Ingen advarsler i ugen" : rec.flags + (rec.flags > 1 ? " advarsler" : " advarsel") + " i ugen") : "For lidt data til en status";
+    var recent = all.slice(-14);
+    function spark(field) {
+      var vals = recent.map(function (r) { return r[field]; });
+      var nums = vals.filter(function (v) { return v != null; });
+      if (nums.length < 2) return "";
+      var lo = Math.min.apply(null, nums), hi = Math.max.apply(null, nums); if (hi === lo) { hi += 1; lo -= 1; }
+      var W = 100, H = 28, n = vals.length, d = "", pen = false, lx = 0, ly = 0;
+      vals.forEach(function (v, i) {
+        if (v == null) { pen = false; return; }
+        var x = n === 1 ? W : (i / (n - 1)) * (W - 4) + 2, y = H - 3 - ((v - lo) / (hi - lo)) * (H - 6);
+        d += (pen ? "L" : "M") + x.toFixed(1) + "," + y.toFixed(1); pen = true; lx = x; ly = y;
+      });
+      return '<svg class="rs-spark" viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" aria-hidden="true"><path d="' + d + '"/><circle cx="' + lx.toFixed(1) + '" cy="' + ly.toFixed(1) + '" r="2.6"/></svg>';
+    }
+    function row(label, field, val, unit, delta) {
+      return '<div class="rs-row"><span class="rs-l">' + label + "</span>" + spark(field) +
+        '<span class="rs-v"><b>' + val + "</b><small>" + unit + "</small>" + delta + "</span></div>";
+    }
     var html =
-      '<div class="headline"><span class="big word">' + esc(status.l) + '</span>' +
-      '<span class="chip ' + status.c + '"><span class="d"></span>' + (rec ? (rec.flags === 0 ? "ingen advarsler" : rec.flags + " advarsel" + (rec.flags > 1 ? "er" : "") + " i ugen") : "for lidt data") + "</span></div>" +
-      '<div class="trio">' +
-        '<div class="m"><div class="l">Søvn</div><div class="v">' + fmt1(last.sleep_hours) + '<small>t</small></div>' + deltaSpan(last.sleep_hours, b.sleep_hours, true, " t", true) + "</div>" +
-        '<div class="m"><div class="l">HRV</div><div class="v">' + fmt0(last.hrv) + '<small>ms</small></div>' + deltaSpan(last.hrv, b.hrv, true, "", false) + "</div>" +
-        '<div class="m"><div class="l">Hvilepuls</div><div class="v">' + fmt0(last.resting_hr) + '<small>bpm</small></div>' + deltaSpan(last.resting_hr, b.resting_hr, false, "", false) + "</div>" +
-      "</div>";
-    if (last.notes) html += '<button class="linkbtn rec-more" type="button" data-goto-health>Din note og detaljer i Sundhed →</button>';
+      '<div class="rs-head"><span class="rs-dot ' + dotCls + '"></span><span class="rs-status">' + esc(status.l) + '</span></div>' +
+      '<div class="rs-flags">' + esc(flags) + "</div>" +
+      '<div class="rs-rows">' +
+        row("Søvn", "sleep_hours", fmt1(last.sleep_hours), "t", deltaSpan(last.sleep_hours, b.sleep_hours, true, " t", true)) +
+        row("HRV", "hrv", fmt0(last.hrv), "ms", deltaSpan(last.hrv, b.hrv, true, "", false)) +
+        row("Hvilepuls", "resting_hr", fmt0(last.resting_hr), "bpm", deltaSpan(last.resting_hr, b.resting_hr, false, "", false)) +
+      "</div>" +
+      '<div class="rs-foot"><span>14 dage · tal i farve mod din normal</span><button class="linkbtn" type="button" data-goto-health>Sundhed →</button></div>';
     host.innerHTML = html;
     var gh = host.querySelector("[data-goto-health]"); if (gh) gh.addEventListener("click", function () { location.hash = "sundhed"; });
   }
+
 
   // ----- workouts -----
   function eventsArr() { return arr(S.events, "start_date_local").filter(function (e) { return (e.category || "WORKOUT") === "WORKOUT"; }); }
