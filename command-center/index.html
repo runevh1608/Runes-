@@ -486,31 +486,69 @@
 
 
 
-  /* ================= I dag: widget grid ================= */
-  .widgets {
-    display: grid; gap: 14px; align-items: stretch;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-areas:
-      "attn attn wx"
-      "attn attn rec"
-      "mail wo   ag"
-      "tk   hb   dl"
-      "news news news";
-  }
-  #c-mail { grid-area: mail; }
-  #c-attn { grid-area: attn; } #c-weather { grid-area: wx; } #c-recovery { grid-area: rec; }
-  #c-workout { grid-area: wo; } #c-agenda { grid-area: ag; } #c-tasks { grid-area: tk; }
-  #c-habits { grid-area: hb; } #c-deadlines { grid-area: dl; } #c-news { grid-area: news; }
-  @media (max-width: 1099px) {
-    .widgets { grid-template-columns: repeat(2, minmax(0, 1fr));
-      grid-template-areas: "attn attn" "wx rec" "mail wo" "ag tk" "hb dl" "news news"; }
-  }
-  @media (max-width: 640px) {
-    .widgets { grid-template-columns: minmax(0, 1fr);
-      grid-template-areas: "attn" "wx" "mail" "wo" "ag" "tk" "hb" "rec" "dl" "news"; }
-  }
-  .widgets .card { scroll-margin-top: 20px; }
 
+  /* ================= I dag: three calm zones ================= */
+  .now-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 900px) { .now-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .now-tile {
+    appearance: none; font: inherit; color: inherit; text-align: left; cursor: pointer; min-width: 0;
+    display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 15px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+    transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  .now-tile:hover { border-color: var(--line-2); transform: translateY(-1px); box-shadow: var(--shadow); }
+  .now-tile[aria-expanded="true"] { border-color: var(--ink-3); box-shadow: var(--shadow); }
+  .nt-k { display: flex; align-items: center; gap: 8px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+  .nt-k .ai { width: 24px; height: 24px; border-radius: 7px; }
+  .nt-k .ai svg { width: 14px; height: 14px; }
+  .nt-v { font-family: var(--f-display); font-stretch: 75%; font-weight: 800; font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 8px; min-height: 2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nt-v .wi { width: 30px; height: 30px; flex: none; }
+  .nt-v .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--ink-3); }
+  .nt-v .dot.good { background: var(--good); } .nt-v .dot.critical { background: var(--critical); } .nt-v .dot.warning { background: var(--warning); }
+  .nt-v.word { font-size: 1.55rem; }
+  @media (max-width: 520px) { .nt-v { font-size: 1.7rem; } .nt-v.word { font-size: 1.2rem; } .now-tile { padding: 12px 13px; } }
+  .nt-s { font-size: 0.8rem; color: var(--ink-2); line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .now-drawer { display: grid; }
+  .now-drawer[hidden] { display: none; }
+  .now-drawer .card { animation: drawerIn .22s ease both; }
+  .now-drawer .card[hidden] { display: none; }
+  @keyframes drawerIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+  .zone2 > *, .zone3 > *, .now-drawer > * { grid-area: auto; }
+  .zone2 { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 14px; align-items: stretch; }
+  .zone3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
+  @media (max-width: 1099px) { .zone3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } #c-news { grid-column: 1 / -1; } }
+  @media (max-width: 760px) { .zone2, .zone3 { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Day plan timeline */
+  .plan { list-style: none; margin: 0; padding: 0; position: relative; }
+  .plan li { display: grid; grid-template-columns: 3.1rem 14px minmax(0, 1fr); gap: 0 10px; align-items: start; position: relative; }
+  .plan .pt { font-family: var(--f-mono); font-size: 0.78rem; color: var(--ink-2); padding: 9px 0; text-align: right; }
+  .plan .pd { position: relative; align-self: stretch; }
+  .plan .pd::before { content: ""; position: absolute; left: 6px; top: 0; bottom: 0; width: 2px; background: var(--line); }
+  .plan li:first-child .pd::before { top: 14px; } .plan li:last-child .pd::before { bottom: calc(100% - 14px); }
+  .plan .pd i { position: absolute; left: 1px; top: 11px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--a-cal); }
+  .plan li.pw .pd i { border-color: var(--a-health); }
+  .plan li.done .pd i { background: var(--good); border-color: var(--good); }
+  .plan .pc { padding: 7px 0 9px; min-width: 0; }
+  .plan .pc b { display: block; font-weight: 600; font-size: 0.92rem; line-height: 1.3; overflow-wrap: anywhere; }
+  .plan .pc span { display: block; font-size: 0.76rem; color: var(--ink-3); overflow-wrap: anywhere; }
+  .plan li.past .pt, .plan li.past .pc { opacity: 0.45; }
+  .plan li.nowline { display: block; height: 0; }
+  .plan li.nowline::before { content: ""; position: absolute; left: 3.1rem; right: 0; top: -1px; height: 2px; margin-left: 10px; background: var(--critical); border-radius: 1px; }
+  .plan li.nowline span { position: absolute; left: 0; top: -9px; width: 3.1rem; text-align: right; font-family: var(--f-mono); font-size: 0.68rem; font-weight: 700; color: var(--critical); }
+  .plan-allday { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .plan-allday .chip { text-transform: none; letter-spacing: 0; font-weight: 600; }
+
+  /* Gøremål card: tasks + habits */
+  #c-todo .card-k { flex-wrap: wrap; }
+  .todo-add { margin-left: auto; display: flex; gap: 6px; text-transform: none; letter-spacing: 0; }
+  .todo-add .btn { padding: 4px 10px; font-size: 0.76rem; }
+  .todo-sec + .todo-sec { border-top: 1px solid var(--line); padding-top: 12px; }
+  .todo-h { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px; display: flex; gap: 8px; align-items: baseline; }
+  .todo-h span { letter-spacing: 0; text-transform: none; font-weight: 600; color: var(--ink-2); font-family: var(--f-mono); }
+  #c-todo .headline { display: none; }
+  #c-mail .headline .big, #c-attn .headline .big { font-size: 2.1rem; }
 
   /* Mail widget */
   .mail-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
@@ -1941,12 +1979,16 @@
         <div><span class="eyebrow" id="dateline">&nbsp;</span><h1 id="greet">I dag</h1></div>
         <span class="sub muted" id="today-meta"></span>
       </header>
-      <div class="widgets">
-      <article class="card" id="c-attn">
-        <div class="card-k"><span class="ad tasks"></span>Kræver din opmærksomhed<span class="src-note" id="attn-src"></span></div>
-        <div id="attn-body"><div class="skel"></div></div>
-      </article>
-      <article class="card" id="c-weather">
+
+      <!-- Zone 1: right now -->
+      <div class="now-strip" role="group" aria-label="Lige nu">
+        <button class="now-tile" id="now-wx" type="button" data-now="wx"><span class="nt-k"><span class="ai wx"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><path d="M8 2.5v1.2M2.5 8h1.2M4.1 4.1l.9.9M11.9 4.1l-.9.9"/><path d="M8 19h9a3.5 3.5 0 0 0 .4-7A4.8 4.8 0 0 0 8.3 11 4 4 0 0 0 8 19z"/></svg></span>Vejret</span><span class="nt-v" id="now-wx-v"><span class="skel" style="display:block;height:30px;width:70%"></span></span><span class="nt-s" id="now-wx-s">&nbsp;</span></button>
+        <button class="now-tile" id="now-rec" type="button" data-now="rec"><span class="nt-k"><span class="ai health"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></span>Restitution</span><span class="nt-v" id="now-rec-v"><span class="skel" style="display:block;height:30px;width:70%"></span></span><span class="nt-s" id="now-rec-s">&nbsp;</span></button>
+        <button class="now-tile" id="now-next" type="button" data-now="next"><span class="nt-k"><span class="ai cal"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span>Næste</span><span class="nt-v" id="now-next-v"><span class="skel" style="display:block;height:30px;width:70%"></span></span><span class="nt-s" id="now-next-s">&nbsp;</span></button>
+        <button class="now-tile" id="now-mail" type="button" data-now="mail"><span class="nt-k"><span class="ai tasks"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M4 7l8 6 8-6"/></svg></span>Mail</span><span class="nt-v" id="now-mail-v"><span class="skel" style="display:block;height:30px;width:70%"></span></span><span class="nt-s" id="now-mail-s">&nbsp;</span></button>
+      </div>
+      <div class="now-drawer" id="now-drawer" hidden>
+      <article class="card" id="c-weather" data-drawer="wx" hidden>
       <div class="card-k"><span class="ad cal"></span>Vejret<span class="src-note" id="wx-src"></span></div>
       <div id="wx-body"><div class="skel"></div></div>
       <form class="add" id="wx-form" autocomplete="off" hidden>
@@ -1955,22 +1997,31 @@
         <button class="btn ghost" type="button" id="wx-cancel">Annuller</button>
       </form>
     </article>
-      <article class="card" id="c-recovery">
+      <article class="card" id="c-recovery" data-drawer="rec" hidden>
       <div class="card-k"><span class="ad health"></span>Restitution<span class="src-note" id="rec-src"></span></div>
       <div id="rec-body"><div class="skel"></div></div>
     </article>
-      <article class="card" id="c-workout">
-      <div class="card-k"><span class="ad health"></span>Dagens træning</div>
-      <div id="wo-body"><div class="skel"></div></div>
-    </article>
-      <article class="card" id="c-agenda">
-      <div class="card-k"><span class="ad cal"></span>Aftaler i dag</div>
-      <div id="ag-body"><div class="skel"></div></div>
-    </article>
-      <article class="card" id="c-tasks">
-      <div class="card-k"><span class="ad tasks"></span>Opgaver i dag</div>
-      <div id="tk-body"><div class="skel"></div></div>
-      <form class="add" id="tk-add" autocomplete="off" hidden>
+      </div>
+
+      <!-- Zone 2: what needs you + the day -->
+      <div class="zone2">
+      <article class="card" id="c-attn">
+        <div class="card-k"><span class="ad tasks"></span>Kræver din opmærksomhed<span class="src-note" id="attn-src"></span></div>
+        <div id="attn-body"><div class="skel"></div></div>
+      </article>
+      <article class="card" id="c-plan">
+        <div class="card-k"><span class="ad cal"></span>Dagens plan<span class="src-note" id="plan-src"></span></div>
+        <div id="plan-body"><div class="skel"></div></div>
+      </article>
+      </div>
+
+      <!-- Zone 3: details -->
+      <div class="zone3">
+      <article class="card" id="c-todo">
+        <div class="card-k"><span class="ad tasks"></span>Gøremål
+          <span class="todo-add"><button class="btn ghost small" type="button" id="add-task-btn" aria-controls="tk-add">+ Opgave</button><button class="btn ghost small" type="button" id="add-habit-btn" aria-controls="hb-add">+ Vane</button></span>
+        </div>
+        <form class="add" id="tk-add" autocomplete="off" hidden>
         <input class="field" type="text" id="tk-title" placeholder="Ny opgave…" aria-label="Ny opgave" maxlength="140">
         <select class="field" id="tk-area" aria-label="Område">
           <option value="studie">Studie</option>
@@ -1980,19 +2031,13 @@
         </select>
         <button class="btn" type="submit">Tilføj</button>
       </form>
-    </article>
-      <article class="card" id="c-habits">
-      <div class="card-k"><span class="ad tasks"></span>Vaner</div>
-      <div id="hb-body"><div class="skel"></div></div>
-      <form class="add" id="hb-add" autocomplete="off" hidden>
+        <form class="add" id="hb-add" autocomplete="off" hidden>
         <input class="field" type="text" id="hb-name" placeholder="Ny vane, fx Stræk 10 min" aria-label="Ny vane" maxlength="60">
         <button class="btn ghost" type="submit">Tilføj vane</button>
       </form>
-    </article>
-      <article class="card" id="c-deadlines">
-      <div class="card-k"><span class="ad study"></span>Nærmeste deadlines</div>
-      <div id="dl-body"><div class="skel"></div></div>
-    </article>
+        <div class="todo-sec"><div class="todo-h">Opgaver <span id="tk-count"></span></div><div id="tk-body"><div class="skel"></div></div></div>
+        <div class="todo-sec"><div class="todo-h">Vaner <span id="hb-count"></span></div><div id="hb-body"><div class="skel"></div></div></div>
+      </article>
       <article class="card" id="c-mail">
         <div class="card-k"><span class="ad tasks"></span>Mail<span class="src-note" id="mail-src"></span></div>
         <div id="mail-body"><div class="skel"></div></div>
@@ -2002,6 +2047,9 @@
         <div id="news-body"><div class="skel"></div></div>
       </article>
       </div>
+
+      <!-- Kept for the shared render code; not shown -->
+      <div hidden aria-hidden="true"><div id="wo-body"></div><div id="ag-body"></div><div id="dl-body"></div></div>
     </section>
 
     <!-- ================= SUNDHED ================= -->
@@ -2829,6 +2877,8 @@
   }
   function renderBriefing() {
     try { renderAttention(); } catch (e) { console.error(e); }
+    try { renderNow(); } catch (e) { console.error(e); }
+    try { renderPlan(); } catch (e) { console.error(e); }
     var host = $("brief-rows"); if (!host) return;
     var rows = [
       ["wx", "wx", "Vejret", briefWeather(), "c-weather"],
@@ -2880,7 +2930,7 @@
       }
       setSrc("src-mail", S.mailErr ? "err" : "ok", S.mailErr ? "Fejl" : "OK");
       renderMail();
-      try { renderAttention(); } catch (e) {}
+      try { renderBriefing(); } catch (e) {}
     });
   }
   function senderName(s) {
@@ -2936,9 +2986,9 @@
     // Tasks
     if (S.tasks) {
       S.tasks.filter(function (k) { return !k.done && k.due && k.due < t; }).sort(function (a, b) { return a.due < b.due ? -1 : 1; }).slice(0, 4)
-        .forEach(function (k) { add("high", "tasks", "task", "Forsinket: <b>" + esc(k.title) + "</b>", "forfaldt " + relDay(k.due), "c-tasks", k.due); });
+        .forEach(function (k) { add("high", "tasks", "task", "Forsinket: <b>" + esc(k.title) + "</b>", "forfaldt " + relDay(k.due), "c-todo", k.due); });
       S.tasks.filter(function (k) { return !k.done && k.due === t && (k.priority || 2) === 1; }).slice(0, 3)
-        .forEach(function (k) { add("med", "tasks", "task", "Vigtigt i dag: <b>" + esc(k.title) + "</b>", "høj prioritet", "c-tasks", t); });
+        .forEach(function (k) { add("med", "tasks", "task", "Vigtigt i dag: <b>" + esc(k.title) + "</b>", "høj prioritet", "c-todo", t); });
     }
     // Deadlines within 3 days (deadline list + high-priority tasks ahead)
     var dls = [];
@@ -2946,14 +2996,14 @@
     (S.tasks || []).forEach(function (k) { if (!k.done && k.due > t && (k.priority || 2) === 1 && daysBetween(t, k.due) <= 3) dls.push({ title: k.title, date: k.due }); });
     dls.sort(function (a, b) { return a.date < b.date ? -1 : 1; }).forEach(function (d) {
       var n = daysBetween(t, d.date);
-      add(n <= 1 ? "high" : "med", "study", "flag", "Deadline: <b>" + esc(d.title) + "</b>" + (d.sub ? " · " + esc(d.sub) : ""), n === 0 ? "i dag" : n === 1 ? "i morgen" : "om " + n + " dage", "c-deadlines", d.date);
+      add(n <= 1 ? "high" : "med", "study", "flag", "Deadline: <b>" + esc(d.title) + "</b>" + (d.sub ? " · " + esc(d.sub) : ""), n === 0 ? "i dag" : n === 1 ? "i morgen" : "om " + n + " dage", "c-todo", d.date);
     });
     // Next appointment within two hours
     if (S.cal) {
       S.cal.filter(function (e) { return e.start === t && !e.allDay && !e.holiday; }).forEach(function (e) {
         var m = minsUntil(e.sT);
-        if (m >= 0 && m <= 120) add(m <= 30 ? "high" : "med", "cal", "cal", "Om " + inWords(m) + ": <b>" + esc(e.title) + "</b>" + (e.where ? " · " + esc(e.where) : ""), "kl. " + e.sT, "c-agenda", e.sT);
-        else if (m < 0 && minsUntil(e.eT) > 0) add("low", "cal", "cal", "I gang nu: <b>" + esc(e.title) + "</b>", "til " + e.eT, "c-agenda", e.sT);
+        if (m >= 0 && m <= 120) add(m <= 30 ? "high" : "med", "cal", "cal", "Om " + inWords(m) + ": <b>" + esc(e.title) + "</b>" + (e.where ? " · " + esc(e.where) : ""), "kl. " + e.sT, "c-plan", e.sT);
+        else if (m < 0 && minsUntil(e.eT) > 0) add("low", "cal", "cal", "I gang nu: <b>" + esc(e.title) + "</b>", "til " + e.eT, "c-plan", e.sT);
       });
     }
     // Training today
@@ -2963,8 +3013,8 @@
         var a = matchActivity(ev, used); if (a) { used.push(a.id); return; }
         var st = ev.start_date_local.slice(11, 16), past = now > ev.start_date_local.slice(0, 16);
         var w = hourWx(st.slice(0, 2)), rp = w && w.extended ? parseInt(w.extended.rainProbability, 10) || 0 : 0;
-        if (past && minsUntil(st) < -(ev.duration_minutes || 30)) add("med", "health", "run", "Ikke logget endnu: <b>" + esc(ev.name) + "</b>", "kl. " + st, "c-workout", st);
-        else if (!past) add(rp >= 40 ? "med" : "low", "health", "run", "<b>" + esc(ev.name) + "</b> (" + (ev.duration_minutes || "?") + " min)" + (w ? " · " + esc(w.temperature) + ", " + esc(lc(w.phrase)) : "") + (rp >= 40 ? " · regn " + rp + " %" : ""), "kl. " + st, "c-workout", st);
+        if (past && minsUntil(st) < -(ev.duration_minutes || 30)) add("med", "health", "run", "Ikke logget endnu: <b>" + esc(ev.name) + "</b>", "kl. " + st, "c-plan", st);
+        else if (!past) add(rp >= 40 ? "med" : "low", "health", "run", "<b>" + esc(ev.name) + "</b> (" + (ev.duration_minutes || "?") + " min)" + (w ? " · " + esc(w.temperature) + ", " + esc(lc(w.phrase)) : "") + (rp >= 40 ? " · regn " + rp + " %" : ""), "kl. " + st, "c-plan", st);
       });
     }
     // Recovery
@@ -2980,7 +3030,7 @@
     // Habits in the evening
     if (hour >= 18 && S.habits && S.hlog) {
       var miss = S.habits.filter(function (h) { return h.active !== false && !habitDone(h.id, t); });
-      if (miss.length) add("low", "tasks", "repeat", miss.length === 1 ? "Vane mangler i dag: <b>" + esc(miss[0].name) + "</b>" : "<b>" + miss.length + " vaner</b> mangler i dag", "", "c-habits", "");
+      if (miss.length) add("low", "tasks", "repeat", miss.length === 1 ? "Vane mangler i dag: <b>" + esc(miss[0].name) + "</b>" : "<b>" + miss.length + " vaner</b> mangler i dag", "", "c-todo", "");
     }
     // Mail: important unread from the last three days
     if (S.mail) {
@@ -3015,12 +3065,128 @@
     host.innerHTML = html;
     host.querySelectorAll("[data-jump]").forEach(function (b) {
       b.addEventListener("click", function () {
-        var el = $(b.getAttribute("data-jump")); if (!el) return;
+        var j = b.getAttribute("data-jump");
+        if (j === "c-weather" || j === "c-recovery") { openDrawer(j === "c-weather" ? "wx" : "rec"); j = "now-drawer"; }
+        var el = $(j); if (!el) return;
         var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
       });
     });
   }
+
+
+  // =================================================================
+  // I DAG overview: "Lige nu" tiles, day plan, counts in Gøremål.
+  // =================================================================
+  function planItems() {
+    var t = todayISO(), items = [], used = [];
+    (S.cal || []).forEach(function (e) {
+      if (e.start !== t || e.allDay || e.holiday) return;
+      items.push({ kind: "cal", s: e.sT, e: e.eT, title: e.title, sub: [e.sT + "–" + e.eT, e.where].filter(Boolean).join(" · ") });
+    });
+    if (S.events) eventsArr().forEach(function (ev) {
+      if (ev.start_date_local.slice(0, 10) !== t) return;
+      var a = matchActivity(ev, used); if (a) used.push(a.id);
+      var st = ev.start_date_local.slice(11, 16), w = hourWx(st.slice(0, 2)), shoe = shoeAndText(ev.description).shoe;
+      var sub = (ev.duration_minutes || "?") + " min" + (shoe ? " · " + shoe : "");
+      if (a) sub = "Klaret" + (a.distance_km ? " · " + fmt1(parseFloat(a.distance_km)) + " km" : "") + (a.average_pace ? " · " + a.average_pace : "");
+      else if (w) sub += " · " + w.temperature + ", " + lc(w.phrase);
+      items.push({ kind: "wo", s: st, e: null, title: ev.name, sub: sub, done: !!a });
+    });
+    // Calendar copies of training (iCloud) would show twice; drop calendar items that match a workout's start time.
+    var woStarts = items.filter(function (x) { return x.kind === "wo"; }).map(function (x) { return x.s.slice(0, 2); });
+    items = items.filter(function (x) { return x.kind === "wo" || woStarts.indexOf(x.s.slice(0, 2)) === -1 || !/løb|run|lower|upper|styrke|tærskel|interval/i.test(x.title); });
+    return items.sort(function (a, b) { return a.s < b.s ? -1 : 1; });
+  }
+  function nextPlanItem() {
+    var now = nowLocal().slice(11, 16);
+    return planItems().filter(function (x) { return !x.done && x.s > now; })[0] || null;
+  }
+  function renderPlan() {
+    var host = $("plan-body"); if (!host) return;
+    if (!S.cal && !S.calErr && !S.events) { host.innerHTML = '<div class="skel"></div>'; return; }
+    var t = todayISO(), now = nowLocal().slice(11, 16), items = planItems();
+    var allday = (S.cal || []).filter(function (e) { return e.start <= t && e.end >= t && e.allDay; });
+    var html = "";
+    if (S.calErr) html += '<div class="err" style="margin-bottom:8px">' + errCopy(GCAL, S.calErr) + "</div>";
+    if (allday.length) html += '<div class="plan-allday">' + allday.map(function (e) { return '<span class="chip neutral">' + esc(e.title) + "</span>"; }).join("") + "</div>";
+    if (!items.length) html += '<div class="empty">Intet planlagt i dag.</div>';
+    else {
+      var lines = [], placed = false;
+      items.forEach(function (x) {
+        var past = (x.e ? x.e : x.s) <= now;
+        if (!placed && x.s > now) { lines.push('<li class="nowline" aria-hidden="true"><span>' + now + "</span></li>"); placed = true; }
+        lines.push('<li class="' + (x.kind === "wo" ? "pw" : "pc-cal") + (x.done ? " done" : "") + (past && !x.done ? " past" : "") + (x.done ? " past" : "") + '"><span class="pt">' + x.s + '</span><span class="pd"><i></i></span><span class="pc"><b>' + esc(x.title) + "</b><span>" + esc(x.sub) + "</span></span></li>");
+      });
+      if (!placed) lines.push('<li class="nowline" aria-hidden="true"><span>' + now + "</span></li>");
+      html += '<ul class="plan">' + lines.join("") + "</ul>";
+    }
+    if (+partsInTZ(new Date()).hour >= 17) {
+      var tm = addDays(t, 1), nx = nextWorkout();
+      var first = (S.cal || []).filter(function (e) { return e.start === tm && !e.allDay && !e.holiday; }).sort(function (a, b) { return a.sT < b.sT ? -1 : 1; })[0];
+      var bits = [];
+      if (first) bits.push(first.sT + " " + esc(first.title));
+      if (nx && nx.start_date_local.slice(0, 10) === tm) bits.push(nx.start_date_local.slice(11, 16) + " " + esc(nx.name));
+      if (bits.length) html += '<div class="sub muted" style="margin-top:8px">I morgen: ' + bits.join(" · ") + "</div>";
+    }
+    host.innerHTML = html;
+  }
+  function setNow(id, v, sub, word) {
+    var ve = $("now-" + id + "-v"), se = $("now-" + id + "-s"); if (!ve) return;
+    ve.className = "nt-v" + (word ? " word" : ""); ve.innerHTML = v; se.innerHTML = sub || "&nbsp;";
+  }
+  function renderNow() {
+    // Weather
+    if (S.wx) {
+      var c = S.wx.cur.currentConditions || {}, d0 = S.wx.daily && S.wx.daily.dailyForecast && S.wx.daily.dailyForecast[0];
+      var rp = d0 ? (parseInt(d0.day.rainProbability, 10) || 0) : 0;
+      setNow("wx", wxIcon(c.iconCode) + esc(c.temperature || "–"), d0 ? "Op til " + esc(d0.day.displayTemperature) + " · regn " + rp + " %" : esc(c.phrase || ""));
+    } else if (S.wxErr) setNow("wx", "–", "Vejret kunne ikke hentes");
+    // Recovery
+    var rec = null; try { rec = computeRecovery(); } catch (e) {}
+    var last = wellRecords().slice(-1)[0];
+    if (rec && last) setNow("rec", '<span class="dot ' + (rec.status.c === "neutral" ? "warning" : rec.status.c) + '"></span>' + esc(rec.status.l), "HRV " + fmt0(last.hrv) + " · søvn " + fmt1(last.sleep_hours) + " t", true);
+    else if (S.wellness) setNow("rec", "–", "For lidt data endnu", true);
+    else if (S.icuErr.wellness) setNow("rec", "–", "Kunne ikke hentes", true);
+    // Next
+    if (S.cal || S.events || S.calErr) {
+      var nx = nextPlanItem();
+      if (nx) { var m = minsUntil(nx.s); setNow("next", m <= 90 ? "om " + inWords(m) : nx.s, esc(nx.title), m <= 90); }
+      else setNow("next", "Fri", "Resten af dagen er fri", true);
+    }
+    // Mail
+    if (S.mail) {
+      var imp = S.mail.filter(function (x) { return x.important; }).length;
+      setNow("mail", String(S.mail.length), S.mail.length ? (imp ? imp + " vigtig" + (imp > 1 ? "e" : "") + " · " : "") + "seneste fra " + esc(S.mail.slice().sort(function (a, b) { return b.at - a.at; })[0].from) : "Ingen ulæste");
+    } else if (S.mailErr) setNow("mail", "–", "Gmail kunne ikke hentes");
+    // Counts in Gøremål
+    var t = todayISO();
+    if (S.tasks) { var open = S.tasks.filter(function (k) { return !k.done && k.due && k.due <= t; }).length; $("tk-count").textContent = open ? open + " i dag" : ""; }
+    if (S.habits && S.hlog) { var hs = S.habits.filter(function (h) { return h.active !== false; }); $("hb-count").textContent = hs.length ? hs.filter(function (h) { return habitDone(h.id, t); }).length + "/" + hs.length : ""; }
+  }
+  // The weather and recovery tiles fold their full card open underneath.
+  function openDrawer(which) {
+    var drawer = $("now-drawer"), cur = drawer.getAttribute("data-open");
+    var close = !which || cur === which;
+    document.querySelectorAll(".now-tile").forEach(function (b) { b.setAttribute("aria-expanded", !close && b.getAttribute("data-now") === which ? "true" : "false"); });
+    drawer.querySelectorAll("[data-drawer]").forEach(function (c) { c.hidden = close || c.getAttribute("data-drawer") !== which; });
+    drawer.hidden = close; drawer.setAttribute("data-open", close ? "" : which);
+  }
+  document.querySelectorAll(".now-tile").forEach(function (b) {
+    b.setAttribute("aria-expanded", "false");
+    b.addEventListener("click", function () {
+      var w = b.getAttribute("data-now");
+      if (w === "wx" || w === "rec") return openDrawer(w);
+      var target = w === "mail" ? $("c-mail") : $("c-plan");
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    });
+  });
+  function toggleForm(id, focusId) {
+    var f = $(id); f.hidden = !f.hidden; if (!f.hidden) { $(focusId).focus(); }
+  }
+  $("add-task-btn").addEventListener("click", function () { toggleForm("tk-add", "tk-title"); });
+  $("add-habit-btn").addEventListener("click", function () { toggleForm("hb-add", "hb-name"); });
 
   // News is written into the database by a morning routine (see news/latest).
   function renderNews() {
@@ -3213,7 +3379,6 @@
     if (!S.db) { host.innerHTML = '<div class="err">' + dbErrCopy({ code: "not_granted" }) + "</div>"; return; }
     if (S.dbErr && !S.tasks) { host.innerHTML = '<div class="err">' + dbErrCopy(S.dbErr) + "</div>"; return; }
     if (!S.tasks) { host.innerHTML = '<div class="skel"></div>'; return; }
-    $("tk-add").hidden = false;
     var t = todayISO();
     var list = S.tasks.filter(function (k) {
       if (k.done) return k.doneAt && k.doneDate === t; // ticked off today stays visible
@@ -3258,7 +3423,6 @@
     if (!S.db) { host.innerHTML = '<div class="err">' + dbErrCopy({ code: "not_granted" }) + "</div>"; return; }
     if (S.dbErr && !S.habits) { host.innerHTML = '<div class="err">' + dbErrCopy(S.dbErr) + "</div>"; return; }
     if (!S.habits || !S.hlog) { host.innerHTML = '<div class="skel"></div>'; return; }
-    $("hb-add").hidden = false;
     var t = todayISO();
     var hs = S.habits.filter(function (h) { return h.active !== false; }).sort(function (a, b) { return (a.order || 0) - (b.order || 0) || (a.createdAt || 0) - (b.createdAt || 0); });
     if (!hs.length) { host.innerHTML = '<div class="empty">Ingen vaner endnu. Tilføj den første herunder, fx “Stræk 10 min” eller “Læs 20 sider”.</div>'; return; }
