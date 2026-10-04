@@ -483,6 +483,42 @@
   footer { font-size: 0.74rem; color: var(--ink-3); line-height: 1.6; }
 
 
+
+  /* ================= I dag: greeting + briefing ================= */
+  .brief-card { gap: 14px; }
+  .brief-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px 28px; }
+  @media (max-width: 860px) { .brief-grid { grid-template-columns: minmax(0, 1fr); } }
+  .brief-rows { display: flex; flex-direction: column; }
+  .brow {
+    appearance: none; border: none; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer;
+    display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; align-items: start;
+    padding: 10px 8px; margin: 0 -8px; border-radius: 10px; transition: background-color .15s ease;
+  }
+  .brow + .brow { border-top: 1px solid var(--line); border-radius: 0; }
+  .brow:hover { background: var(--surface-2); border-radius: 10px; }
+  .brow:hover + .brow { border-top-color: transparent; }
+  .bi { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; --bc: var(--ink); color: var(--bc); background: color-mix(in srgb, var(--bc) 13%, transparent); }
+  .bi svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .bi.cal { --bc: var(--a-cal); } .bi.health { --bc: var(--a-health); } .bi.tasks { --bc: var(--a-tasks); } .bi.study { --bc: var(--a-study); } .bi.wx { --bc: var(--a-study); }
+  .bt { min-width: 0; }
+  .bt .bl { display: block; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 1px; }
+  .bt .bx { font-size: 0.92rem; line-height: 1.45; color: var(--ink-2); }
+  .bt .bx b { color: var(--ink); font-weight: 600; }
+  .bt .bx .warn { color: var(--critical); font-weight: 600; }
+  .brief-news { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  @media (min-width: 861px) { .brief-news { border-left: 1px solid var(--line); padding-left: 24px; } }
+  @media (max-width: 860px) { .brief-news { border-top: 1px solid var(--line); padding-top: 12px; } }
+  .bn-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .bn-k { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+  .bn-meta { font-size: 0.72rem; color: var(--ink-3); }
+  .news { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .news li + li { border-top: 1px solid var(--line); }
+  .news a { display: block; padding: 9px 0; text-decoration: none; }
+  .news a:hover .nt { text-decoration: underline; text-underline-offset: 2px; }
+  .news .nt { font-weight: 600; font-size: 0.9rem; line-height: 1.35; color: var(--ink); overflow-wrap: anywhere; }
+  .news .ns { font-size: 0.74rem; color: var(--ink-3); margin-top: 2px; }
+  .news .nsum { font-size: 0.8rem; color: var(--ink-2); margin-top: 3px; line-height: 1.4; }
+
   /* ================= Sidebar polish ================= */
   .side { gap: 26px; }
   .nav { position: relative; }
@@ -1835,9 +1871,19 @@
     <!-- ================= I DAG ================= -->
     <section class="page" id="page-idag">
       <header class="page-head">
-        <div><span class="eyebrow" id="dateline">&nbsp;</span><h1>I dag</h1></div>
+        <div><span class="eyebrow" id="dateline">&nbsp;</span><h1 id="greet">I dag</h1></div>
         <span class="sub muted" id="today-meta"></span>
       </header>
+      <article class="card brief-card" id="c-brief">
+        <div class="card-k"><span class="ad tasks"></span>Dagens briefing<span class="src-note" id="brief-src"></span></div>
+        <div class="brief-grid">
+          <div class="brief-rows" id="brief-rows"><div class="skel"></div></div>
+          <div class="brief-news">
+            <div class="bn-head"><span class="bn-k">Nyheder</span><span class="bn-meta" id="news-meta"></span></div>
+            <div id="news-body"><div class="skel"></div></div>
+          </div>
+        </div>
+      </article>
       <div class="today">
         <div class="col">
     <!-- Today's workout -->
@@ -2418,6 +2464,7 @@
     }).then(function () {
       setSrc("src-cal", S.calErr ? "err" : "ok", S.calErr ? "Fejl" : "OK");
       renderAgenda();
+      try { renderBriefing(); } catch (e) {}
     });
   }
   function normEvent(e, cal) {
@@ -2452,6 +2499,9 @@
     sub(db.collection("habits").limit(50), "habits");
     sub(db.collection("habitLog").where("date", ">=", addDays(t, -120)).limit(1000), "hlog");
     sub(db.collection("deadlines").where("date", ">=", addDays(t, -1)).limit(300), "deadlines");
+    db.doc("news/latest").onSnapshot(function (d) {
+      S.news = d.exists ? d.data() : null; renderNews();
+    }, function () { S.news = null; renderNews(); });
     db.doc("settings/weather").onSnapshot(function (d) {
       var city = d.exists ? ((d.data() || {}).city || "") : "";
       var changed = city !== (S.wxCity || "");
@@ -2513,6 +2563,7 @@
       if (seq !== wxSeq) return;
       setSrc("src-wx", S.wxErr ? "err" : "ok", S.wxErr ? "Fejl" : "OK");
       renderWeather();
+      try { renderBriefing(); } catch (e) {}
     }, function (e) {
       S.wx = null; S.wxErr = { code: "upstream_error", message: String(e && e.message || e) };
       setSrc("src-wx", "err", "Fejl"); renderWeather();
@@ -2620,6 +2671,149 @@
   });
   $("wx-cancel").addEventListener("click", function () { $("wx-form").hidden = true; });
 
+
+  // =================================================================
+  // BRIEFING — a few plain sentences built from the live data above.
+  // =================================================================
+  function greetWord() {
+    var h = +partsInTZ(new Date()).hour;
+    return h < 5 ? "God nat" : h < 10 ? "Godmorgen" : h < 12 ? "God formiddag" : h < 18 ? "God eftermiddag" : "God aften";
+  }
+  var BI = {
+    wx: '<svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><path d="M8 2.5v1.2M2.5 8h1.2M4.1 4.1l.9.9M11.9 4.1l-.9.9"/><path d="M8 19h9a3.5 3.5 0 0 0 .4-7A4.8 4.8 0 0 0 8.3 11 4 4 0 0 0 8 19z"/></svg>',
+    run: '<svg viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg>',
+    cal: '<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+    task: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>'
+  };
+  function lc(s) { s = String(s || ""); return s.charAt(0).toLowerCase() + s.slice(1); }
+  function hourWx(hh) {
+    var t = todayISO(), all = (S.wx && S.wx.hourly && S.wx.hourly.hourlyForecast) || [];
+    return all.filter(function (x) { return (x.date || "").slice(0, 10) === t && (x.date || "").slice(11, 13) === hh; })[0] || null;
+  }
+  function briefWeather() {
+    if (S.wxErr) return "Vejret kunne ikke hentes lige nu.";
+    if (!S.wx) return null;
+    var c = S.wx.cur.currentConditions || {}, loc = S.wx.cur.location || {};
+    var d0 = S.wx.daily && S.wx.daily.dailyForecast && S.wx.daily.dailyForecast[0];
+    var txt = "<b>" + esc(c.temperature || "–") + "</b> og " + esc(lc(c.phrase)) + (loc.localizedName ? " i " + esc(loc.localizedName) : "") + ".";
+    if (d0) {
+      var rp = parseInt(d0.day.rainProbability, 10) || 0;
+      txt += " Op til <b>" + esc(d0.day.displayTemperature) + "</b>, ned til " + esc(d0.night.displayTemperature) + " i nat" +
+        (rp >= 30 ? ", <b>regn " + rp + " %</b>." : ", ingen regn ventet.");
+    }
+    if (c.realFeelValue != null && c.temperatureValue != null && Math.abs(c.realFeelValue - c.temperatureValue) >= 3) txt += " Føles som " + esc(c.realFeel) + ".";
+    return txt;
+  }
+  function briefTraining() {
+    if (!S.events && !S.history && !S.wellness) {
+      var e = S.icuErr.events || S.icuErr.history; return e ? "Træningsdata kunne ikke hentes." : null;
+    }
+    var t = todayISO(), now = nowLocal(), used = [], parts = [];
+    var planned = eventsArr().filter(function (e) { return e.start_date_local.slice(0, 10) === t; });
+    planned.forEach(function (ev) {
+      var a = matchActivity(ev, used); if (a) used.push(a.id);
+      var hh = ev.start_date_local.slice(11, 13), w = hourWx(hh);
+      var s = "<b>" + esc(ev.name) + "</b> kl. " + ev.start_date_local.slice(11, 16) + " (" + (ev.duration_minutes || "?") + " min)";
+      if (a) s += " er klaret" + (a.distance_km ? ": " + fmt1(parseFloat(a.distance_km)) + " km" : "");
+      else if (w && ev.start_date_local.slice(0, 16) > now) s += " — " + esc(w.temperature) + " og " + esc(lc(w.phrase)) + " på det tidspunkt";
+      parts.push(s);
+    });
+    var txt = planned.length ? parts.join("; ") + "." : "Hviledag i dag.";
+    var rest = planned.filter(function (ev) { return !matchActivity(ev, []); }).length;
+    if (!planned.length || +partsInTZ(new Date()).hour >= 17) {
+      var nx = nextWorkout();
+      if (nx && nx.start_date_local.slice(0, 10) !== t) txt += " Næste pas: <b>" + esc(nx.name) + "</b> " + relDay(nx.start_date_local.slice(0, 10)) + " kl. " + nx.start_date_local.slice(11, 16) + ".";
+    }
+    var rec = null; try { rec = computeRecovery(); } catch (e) {}
+    var last = wellRecords().slice(-1)[0];
+    if (rec && last) {
+      txt += " Restitution: <b>" + esc(lc(rec.status.l)) + "</b>" +
+        " (HRV " + fmt0(last.hrv) + ", hvilepuls " + fmt0(last.resting_hr) + ", søvn " + fmt1(last.sleep_hours) + " t).";
+    }
+    return txt;
+  }
+  function briefCalendar() {
+    if (S.calErr) return "Kalenderen kunne ikke hentes.";
+    if (!S.cal) return null;
+    var t = todayISO(), now = nowLocal().slice(11, 16);
+    var today = S.cal.filter(function (e) { return e.start <= t && e.end >= t && !e.holiday; })
+      .sort(function (a, b) { return (a.allDay ? "00" : a.sT) < (b.allDay ? "00" : b.sT) ? -1 : 1; });
+    var hol = S.cal.filter(function (e) { return e.holiday && e.start <= t && e.end >= t; })[0];
+    var ahead = today.filter(function (e) { return e.allDay || e.eT > now; });
+    var txt;
+    if (!today.length) txt = "Ingen aftaler i kalenderen i dag.";
+    else if (!ahead.length) txt = "Dagens " + today.length + (today.length === 1 ? " aftale er" : " aftaler er") + " overstået.";
+    else {
+      var names = ahead.slice(0, 3).map(function (e) { return "<b>" + esc(e.title) + "</b>" + (e.allDay ? "" : " kl. " + e.sT); });
+      txt = (ahead.length === 1 ? "1 aftale tilbage: " : ahead.length + " aftaler tilbage: ") + names.join(", ") + (ahead.length > 3 ? " m.fl." : "") + ".";
+    }
+    if (hol) txt += " " + esc(hol.title) + ".";
+    if (+partsInTZ(new Date()).hour >= 17) {
+      var tm = addDays(t, 1), first = S.cal.filter(function (e) { return e.start === tm && !e.allDay && !e.holiday; }).sort(function (a, b) { return a.sT < b.sT ? -1 : 1; })[0];
+      if (first) txt += " I morgen starter du kl. " + first.sT + " med <b>" + esc(first.title) + "</b>.";
+    }
+    return txt;
+  }
+  function briefTasks() {
+    if (!S.db) return "Opgaver og vaner er ikke tilgængelige her.";
+    if (!S.tasks || !S.habits || !S.hlog) return null;
+    var t = todayISO();
+    var open = S.tasks.filter(function (k) { return !k.done && k.due && k.due <= t; })
+      .sort(function (a, b) { return ((a.priority || 2) - (b.priority || 2)) || (a.due < b.due ? -1 : 1); });
+    var late = open.filter(function (k) { return k.due < t; }).length;
+    var txt = open.length ? "<b>" + open.length + (open.length === 1 ? " opgave" : " opgaver") + "</b> i dag" + (late ? ' (<span class="warn">' + late + " forsinket</span>)" : "") + ", fx " + esc(open[0].title) + "."
+      : "Ingen opgaver på listen i dag.";
+    var hs = S.habits.filter(function (h) { return h.active !== false; });
+    if (hs.length) {
+      var done = hs.filter(function (h) { return habitDone(h.id, t); }).length;
+      txt += " Vaner: <b>" + done + " af " + hs.length + "</b> klaret" + (done === hs.length ? " — flot." : ".");
+    }
+    var dls = (S.deadlines || []).filter(function (d) { return d.date >= t && !d.done; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    if (dls[0] && daysBetween(t, dls[0].date) <= 7) {
+      var n = daysBetween(t, dls[0].date);
+      txt += " Deadline " + (n === 0 ? "i dag" : n === 1 ? "i morgen" : "om " + n + " dage") + ": <b>" + esc(dls[0].title) + "</b>.";
+    }
+    return txt;
+  }
+  function renderBriefing() {
+    var host = $("brief-rows"); if (!host) return;
+    var rows = [
+      ["wx", "wx", "Vejret", briefWeather(), "c-weather"],
+      ["health", "run", "Træning", briefTraining(), "c-workout"],
+      ["cal", "cal", "Kalender", briefCalendar(), "c-agenda"],
+      ["tasks", "task", "Opgaver og vaner", briefTasks(), "c-tasks"]
+    ];
+    host.innerHTML = rows.map(function (r) {
+      return '<button class="brow" type="button" data-jump="' + r[4] + '"><span class="bi ' + r[0] + '">' + BI[r[1]] + '</span><span class="bt"><span class="bl">' + r[2] + "</span>" +
+        (r[3] === null ? '<span class="skel short" style="display:block;height:18px;margin-top:4px"></span>' : '<span class="bx">' + r[3] + "</span>") + "</span></button>";
+    }).join("");
+    host.querySelectorAll("[data-jump]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var el = $(b.getAttribute("data-jump")); if (!el) return;
+        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      });
+    });
+    var p = partsInTZ(new Date());
+    $("brief-src").textContent = "kl. " + p.hour + ":" + p.minute;
+  }
+  // News is written into the database by a morning routine (see news/latest).
+  function renderNews() {
+    var host = $("news-body"); if (!host) return;
+    if (!S.db) { host.innerHTML = '<div class="empty">Nyheder kræver databasen, som ikke er tilgængelig her.</div>'; return; }
+    if (S.news === undefined) { host.innerHTML = '<div class="skel"></div>'; return; }
+    var n = S.news;
+    if (!n || !n.items || !n.items.length) { $("news-meta").textContent = ""; host.innerHTML = '<div class="empty">Ingen nyheder endnu. De kommer ind hver morgen, når nyhedsrutinen er sat op.</div>'; return; }
+    var t = todayISO();
+    $("news-meta").textContent = n.date === t ? "i dag" + (n.updatedAt ? " kl. " + partsInTZ(new Date(n.updatedAt)).hour + ":" + partsInTZ(new Date(n.updatedAt)).minute : "") : (n.date ? "fra " + relDay(n.date) : "");
+    host.innerHTML = '<ul class="news">' + n.items.slice(0, 6).map(function (it) {
+      var safeUrl = /^https:\/\//.test(it.url || "") ? it.url : "";
+      var inner = '<div class="nt">' + esc(it.title) + '</div><div class="ns">' + esc([it.section, it.source].filter(Boolean).join(" · ")) + "</div>" +
+        (it.summary ? '<div class="nsum">' + esc(it.summary) + "</div>" : "");
+      return "<li>" + (safeUrl ? '<a href="' + esc(safeUrl) + '" target="_blank" rel="noopener noreferrer">' + inner + "</a>" : '<div style="padding:9px 0">' + inner + "</div>") + "</li>";
+    }).join("") + "</ul>";
+  }
+
   // =================================================================
   // I DAG
   // =================================================================
@@ -2629,7 +2823,8 @@
     $("dateline").textContent = label + " · uge " + isoWeek(t);
     var h = +partsInTZ(new Date()).hour;
     var hi = h < 5 ? "God nat" : h < 10 ? "Godmorgen" : h < 12 ? "God formiddag" : h < 18 ? "God eftermiddag" : "God aften";
-    $("today-meta").textContent = hi + ", Rune";
+    $("greet").textContent = hi + ", Rune";
+    $("today-meta").textContent = "";
   }
 
   // ----- recovery -----
@@ -2786,7 +2981,7 @@
 
   // ----- tasks / habits / deadlines (database) -----
   var AREA_L = { studie: "Studie", sundhed: "Sundhed", okonomi: "Økonomi", privat: "Privat" };
-  function renderTodayDb() { renderTasks(); renderHabits(); renderDeadlines(); }
+  function renderTodayDb() { renderTasks(); renderHabits(); renderDeadlines(); try { renderBriefing(); } catch (e) {} }
 
   function renderTasks() {
     var host = $("tk-body");
@@ -2891,7 +3086,7 @@
   // =================================================================
   function renderHealthAll() {
     function safe(fn) { try { fn(); } catch (e) { console.error(e); } }
-    safe(renderRecovery); safe(renderWorkout);
+    safe(renderRecovery); safe(renderWorkout); safe(renderBriefing);
     var hasGarmin = acts().some(function (a) { return a.garmin_attribution || (a.device_name && /Garmin/.test(a.device_name)); });
     $("garmin").hidden = !hasGarmin;
   }
@@ -3203,8 +3398,13 @@
   try { if (localStorage.getItem("cc-side") === "1") setCollapsed(true); } catch (e) {}
 
   // ----- live clock -----
+  var lastMinute = "";
   function tickClock() {
     var p = partsInTZ(new Date()), sec = pad(new Date().getSeconds());
+    if (p.minute !== lastMinute) {
+      lastMinute = p.minute;
+      try { renderDateline(); if (lastMinute && S.mcp) renderBriefing(); } catch (e) {}
+    }
     $("clock-t").innerHTML = p.hour + ":" + p.minute + '<span class="sec">' + sec + "</span>";
     $("mclock").textContent = p.hour + ":" + p.minute;
     var t = todayISO(), d = isoToUTC(t);
@@ -3287,7 +3487,7 @@
       S.mcp = caps[0]; S.db = caps[1];
       if (!S.mcp && !S.db) { $("no-runtime").hidden = false; }
       if (S.db) { setSrc("src-db", "", "Henter…"); startDb(); }
-      else { setSrc("src-db", "err", "Ingen adgang"); renderTodayDb(); }
+      else { setSrc("src-db", "err", "Ingen adgang"); renderTodayDb(); renderNews(); }
       if (S.mcp) refresh(false);
       else {
         S.icuErr = { wellness: { code: "not_granted" }, fitness: { code: "not_granted" }, events: { code: "not_granted" }, history: { code: "not_granted" } };
