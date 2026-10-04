@@ -487,6 +487,64 @@
 
 
 
+
+  /* ================= I dag: six widgets ================= */
+  .dash { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
+  .dash > * { grid-area: auto; }
+  @media (max-width: 1099px) { .dash { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 700px) { .dash { grid-template-columns: minmax(0, 1fr); } }
+  /* Weather: five days */
+  .wx-days { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .wx-d { background: var(--surface-2); border-radius: 10px; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
+  .wx-d .t { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); }
+  .wx-d .wi { width: 24px; height: 24px; }
+  .wx-d .v { font-weight: 700; font-size: 0.86rem; font-variant-numeric: tabular-nums; }
+  .wx-d .v small { color: var(--ink-3); font-weight: 500; }
+  .wx-d .r { font-size: 0.66rem; color: var(--a-study); font-weight: 600; min-height: 1em; }
+  .wx-d.today { box-shadow: inset 0 0 0 1.5px var(--line-2); }
+  /* Mail: mark as read */
+  .mail-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+  .mail-read {
+    appearance: none; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink-2); cursor: pointer;
+    width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex: none;
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .mail-read svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .mail-read:hover { background: var(--good); border-color: var(--good); color: #fff; }
+  .mail-read[disabled] { opacity: .5; cursor: default; }
+  .mail-msg { font-size: 0.78rem; color: var(--critical); }
+  /* Notification bell + panel */
+  .brand-btns { display: flex; align-items: center; gap: 2px; }
+  .bell {
+    appearance: none; border: none; background: transparent; color: var(--ink-2); cursor: pointer; position: relative;
+    width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; flex: none;
+  }
+  .bell:hover, .bell[aria-expanded="true"] { background: var(--surface-2); color: var(--ink); }
+  .bell svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .bell .badge {
+    position: absolute; top: 1px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
+    background: var(--critical); color: #fff; font-size: 0.62rem; font-weight: 700; line-height: 16px; text-align: center;
+    box-shadow: 0 0 0 2px var(--surface);
+  }
+  .bell .badge[hidden] { display: none; }
+  .bell.ring svg { animation: ring .9s ease 1; transform-origin: 50% 15%; }
+  @keyframes ring { 0%,100% { transform: rotate(0); } 15% { transform: rotate(14deg); } 30% { transform: rotate(-12deg); } 45% { transform: rotate(8deg); } 60% { transform: rotate(-5deg); } }
+  #bell-m { width: 34px; height: 34px; border-radius: 50%; }
+  .notif {
+    position: fixed; z-index: 80; width: min(400px, calc(100vw - 24px)); max-height: min(70vh, 560px); overflow: auto;
+    background: var(--surface); border: 1px solid var(--line-2); border-radius: 16px; box-shadow: 0 18px 50px -12px rgba(0,0,0,.35);
+    padding: 14px 14px 16px; animation: drawerIn .18s ease both;
+  }
+  .notif[hidden] { display: none; }
+  .notif-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .notif-head b { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .notif-head .muted { font-size: 0.74rem; }
+  .notif-x { margin-left: auto; appearance: none; border: none; background: none; color: var(--ink-3); font-size: 1.3rem; line-height: 1; cursor: pointer; padding: 2px 6px; }
+  .notif-x:hover { color: var(--ink); }
+  .notif .headline { display: none; }
+  .attn-item.new .tx b { color: var(--ink); }
+  .attn-item .newdot { width: 7px; height: 7px; border-radius: 50%; background: var(--critical); display: inline-block; margin-right: 6px; vertical-align: middle; }
+
   /* ================= I dag: three calm zones ================= */
   .now-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
   @media (max-width: 900px) { .now-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -1914,7 +1972,8 @@
     <div class="brand">
       <div class="brand-top">
         <span class="eyebrow">Command Center</span>
-        <button class="collapse" id="collapse" type="button" aria-label="Skjul menu" title="Skjul menu  [" aria-expanded="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M9 4.5v15M15.5 10l-2 2 2 2"/></svg></button>
+        <span class="brand-btns"><button class="bell" id="bell" type="button" aria-label="Notifikationer" aria-expanded="false" aria-controls="notif"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span class="badge" data-bell-n hidden></span></button>
+        <button class="collapse" id="collapse" type="button" aria-label="Skjul menu" title="Skjul menu  [" aria-expanded="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M9 4.5v15M15.5 10l-2 2 2 2"/></svg></button></span>
       </div>
       <div class="clock">
         <div class="clock-row">
@@ -1965,6 +2024,7 @@
           <span class="src" data-src="wx" title="AccuWeather"><span class="d"></span><span class="sn">Vejr</span><span class="s"></span></span>
           <span class="src" data-src="mail" title="Gmail"><span class="d"></span><span class="sn">Mail</span><span class="s"></span></span>
         </div>
+        <button class="bell" id="bell-m" type="button" aria-label="Notifikationer" aria-expanded="false" aria-controls="notif"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span class="badge" data-bell-n hidden></span></button>
         <button class="btn ghost icon" id="refresh-m" type="button" aria-label="Opdater"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg></button>
       </div>
     </div>
@@ -1979,16 +2039,12 @@
         <div><span class="eyebrow" id="dateline">&nbsp;</span><h1 id="greet">I dag</h1></div>
         <span class="sub muted" id="today-meta"></span>
       </header>
-
-      <!-- Zone 1: right now -->
-      <div class="now-strip" role="group" aria-label="Lige nu">
-        <button class="now-tile" id="now-wx" type="button" data-now="wx"><span class="nt-k"><span class="ai wx"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><path d="M8 2.5v1.2M2.5 8h1.2M4.1 4.1l.9.9M11.9 4.1l-.9.9"/><path d="M8 19h9a3.5 3.5 0 0 0 .4-7A4.8 4.8 0 0 0 8.3 11 4 4 0 0 0 8 19z"/></svg></span>Vejret</span><span class="nt-v" id="now-wx-v"><span class="skel" style="display:block;height:30px;width:70%"></span></span><span class="nt-s" id="now-wx-s">&nbsp;</span></button>
-        <button class="now-tile" id="now-rec" type="button" data-now="rec"><span class="nt-k"><span class="ai health"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></span>Restitution</span><span class="nt-v" id="now-rec-v"><span class="skel" style="display:block;height:30px;width:70%"></span></span><span class="nt-s" id="now-rec-s">&nbsp;</span></button>
-        <button class="now-tile" id="now-next" type="button" data-now="next"><span class="nt-k"><span class="ai cal"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span>Næste</span><span class="nt-v" id="now-next-v"><span class="skel" style="display:block;height:30px;width:70%"></span></span><span class="nt-s" id="now-next-s">&nbsp;</span></button>
-        <button class="now-tile" id="now-mail" type="button" data-now="mail"><span class="nt-k"><span class="ai tasks"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M4 7l8 6 8-6"/></svg></span>Mail</span><span class="nt-v" id="now-mail-v"><span class="skel" style="display:block;height:30px;width:70%"></span></span><span class="nt-s" id="now-mail-s">&nbsp;</span></button>
-      </div>
-      <div class="now-drawer" id="now-drawer" hidden>
-      <article class="card" id="c-weather" data-drawer="wx" hidden>
+      <div class="dash">
+      <article class="card" id="c-recovery">
+      <div class="card-k"><span class="ad health"></span>Restitution<span class="src-note" id="rec-src"></span></div>
+      <div id="rec-body"><div class="skel"></div></div>
+    </article>
+      <article class="card" id="c-weather">
       <div class="card-k"><span class="ad cal"></span>Vejret<span class="src-note" id="wx-src"></span></div>
       <div id="wx-body"><div class="skel"></div></div>
       <form class="add" id="wx-form" autocomplete="off" hidden>
@@ -1997,29 +2053,13 @@
         <button class="btn ghost" type="button" id="wx-cancel">Annuller</button>
       </form>
     </article>
-      <article class="card" id="c-recovery" data-drawer="rec" hidden>
-      <div class="card-k"><span class="ad health"></span>Restitution<span class="src-note" id="rec-src"></span></div>
-      <div id="rec-body"><div class="skel"></div></div>
-    </article>
-      </div>
-
-      <!-- Zone 2: what needs you + the day -->
-      <div class="zone2">
-      <article class="card" id="c-attn">
-        <div class="card-k"><span class="ad tasks"></span>Kræver din opmærksomhed<span class="src-note" id="attn-src"></span></div>
-        <div id="attn-body"><div class="skel"></div></div>
-      </article>
       <article class="card" id="c-plan">
-        <div class="card-k"><span class="ad cal"></span>Dagens plan<span class="src-note" id="plan-src"></span></div>
+        <div class="card-k"><span class="ad cal"></span>I dag i kalenderen<span class="src-note" id="plan-src"></span></div>
         <div id="plan-body"><div class="skel"></div></div>
       </article>
-      </div>
-
-      <!-- Zone 3: details -->
-      <div class="zone3">
       <article class="card" id="c-todo">
-        <div class="card-k"><span class="ad tasks"></span>Gøremål
-          <span class="todo-add"><button class="btn ghost small" type="button" id="add-task-btn" aria-controls="tk-add">+ Opgave</button><button class="btn ghost small" type="button" id="add-habit-btn" aria-controls="hb-add">+ Vane</button></span>
+        <div class="card-k"><span class="ad tasks"></span>Opgaver og rutiner
+          <span class="todo-add"><button class="btn ghost small" type="button" id="add-task-btn" aria-controls="tk-add">+ Opgave</button><button class="btn ghost small" type="button" id="add-habit-btn" aria-controls="hb-add">+ Rutine</button></span>
         </div>
         <form class="add" id="tk-add" autocomplete="off" hidden>
         <input class="field" type="text" id="tk-title" placeholder="Ny opgave…" aria-label="Ny opgave" maxlength="140">
@@ -2036,7 +2076,7 @@
         <button class="btn ghost" type="submit">Tilføj vane</button>
       </form>
         <div class="todo-sec"><div class="todo-h">Opgaver <span id="tk-count"></span></div><div id="tk-body"><div class="skel"></div></div></div>
-        <div class="todo-sec"><div class="todo-h">Vaner <span id="hb-count"></span></div><div id="hb-body"><div class="skel"></div></div></div>
+        <div class="todo-sec"><div class="todo-h">Rutiner <span id="hb-count"></span></div><div id="hb-body"><div class="skel"></div></div></div>
       </article>
       <article class="card" id="c-mail">
         <div class="card-k"><span class="ad tasks"></span>Mail<span class="src-note" id="mail-src"></span></div>
@@ -2047,7 +2087,6 @@
         <div id="news-body"><div class="skel"></div></div>
       </article>
       </div>
-
       <!-- Kept for the shared render code; not shown -->
       <div hidden aria-hidden="true"><div id="wo-body"></div><div id="ag-body"></div><div id="dl-body"></div></div>
     </section>
@@ -2319,6 +2358,10 @@
   </main>
 </div>
 
+<div class="notif" id="notif" role="dialog" aria-label="Notifikationer" hidden>
+  <div class="notif-head"><b>Notifikationer</b><span class="muted" id="attn-src"></span><button class="notif-x" id="notif-x" type="button" aria-label="Luk">×</button></div>
+  <div class="notif-body" id="attn-body"><div class="skel"></div></div>
+</div>
 <div id="tip" role="status" aria-live="polite"></div>
 
 <script>
@@ -2599,6 +2642,9 @@
     sub(db.collection("habits").limit(50), "habits");
     sub(db.collection("habitLog").where("date", ">=", addDays(t, -120)).limit(1000), "hlog");
     sub(db.collection("deadlines").where("date", ">=", addDays(t, -1)).limit(300), "deadlines");
+    db.doc("settings/notify").onSnapshot(function (d) {
+      S.notifSeen = d.exists ? ((d.data() || {}).seen || []) : []; updateBell();
+    }, function () { S.notifSeen = []; });
     db.doc("news/latest").onSnapshot(function (d) {
       S.news = d.exists ? d.data() : null; renderNews();
     }, function () { S.news = null; renderNews(); });
@@ -2644,7 +2690,7 @@
       var q = { locationKey: String(k.key), unit: "metric", lang: "da" };
       return Promise.all([
         settle(callRaw(WX, "widgets-current-claude", { queryParams: q }, force)),
-        settle(callRaw(WX, "widgets-todayTonightForecast-claude", { queryParams: { locationKey: String(k.key), unit: "metric", lang: "da", days: 2 } }, force)),
+        settle(callRaw(WX, "widgets-todayTonightForecast-claude", { queryParams: { locationKey: String(k.key), unit: "metric", lang: "da", days: 5 } }, force)),
         settle(callRaw(WX, "widgets-hourly-claude", { queryParams: q }, force))
       ]).then(function (r) {
         if (seq !== wxSeq) return;
@@ -2725,28 +2771,15 @@
       '<span class="sub">Føles som ' + esc(c.realFeel || "–") + (c.extended && c.extended.wind ? " · vind " + esc(c.extended.wind) : "") + "</span>" +
       (dayLine ? '<span class="sub muted">' + dayLine + "</span>" : "") + "</div></div>";
 
-    // Next hours, with the hour of today's planned session outlined.
-    var hours = ((S.wx.hourly && S.wx.hourly.hourlyForecast) || []).slice(0, 6);
-    var woHours = {};
-    var t = todayISO();
-    if (S.events) eventsArr().forEach(function (e) { if (e.start_date_local.slice(0, 10) === t) woHours[e.start_date_local.slice(11, 13)] = e; });
-    if (hours.length) {
-      html += '<div class="wx-hours">' + hours.map(function (h) {
-        var hh = (h.date || "").slice(11, 13), rp = h.extended && h.extended.rainProbability ? parseInt(h.extended.rainProbability, 10) : 0;
-        return '<div class="wx-h' + (woHours[hh] ? " wo" : "") + '" title="' + esc(h.phrase || "") + (woHours[hh] ? " · " + esc(woHours[hh].name) : "") + '"><span class="t">' + hh + "</span>" + wxIcon(h.icon) +
-          '<span class="v">' + esc(h.temperature) + '</span><span class="r">' + (rp >= 20 ? rp + " %" : "") + "</span></div>";
+    // Today and the next days
+    var days = ((S.wx.daily && S.wx.daily.dailyForecast) || []).slice(0, 5);
+    if (days.length) {
+      html += '<div class="wx-days">' + days.map(function (d, i) {
+        var rp = parseInt(d.day && d.day.rainProbability, 10) || 0;
+        return '<div class="wx-d' + (i === 0 ? " today" : "") + '" title="' + esc((d.day && d.day.phrase) || "") + '"><span class="t">' + (i === 0 ? "I dag" : esc(d.dayOfWeek || "")) + "</span>" + wxIcon(d.day && d.day.icon) +
+          '<span class="v">' + esc(d.day && d.day.displayTemperature) + " <small>" + esc(d.night && d.night.displayTemperature) + '</small></span><span class="r">' + (rp >= 20 ? rp + " %" : "") + "</span></div>";
       }).join("") + "</div>";
     }
-    // Weather at the time of today's run, when it falls inside the hourly window.
-    var all = (S.wx.hourly && S.wx.hourly.hourlyForecast) || [];
-    var runs = Object.keys(woHours).map(function (hh) {
-      var e = woHours[hh], h = all.filter(function (x) { return (x.date || "").slice(0, 10) === t && (x.date || "").slice(11, 13) === hh; })[0];
-      if (!h) return "";
-      return "<b>" + esc(e.name) + "</b> kl. " + e.start_date_local.slice(11, 16) + ": " + esc(h.temperature) + ", føles som " + esc(h.realFeel) + ", " + esc((h.phrase || "").toLowerCase()) +
-        (h.extended && h.extended.wind ? ", vind " + esc(h.extended.wind) : "");
-    }).filter(Boolean);
-    if (runs.length) html += '<div class="wx-run">' + runs.join("<br>") + "</div>";
-    if (aq && aq.overallPlumeLabsIndex >= 60) html += '<div class="wx-run"><span class="chip warning"><span class="d"></span>Luft: ' + esc(aq.category) + "</span></div>";
     html += '<div class="wx-loc">' + (S.wxCity ? "Fast by: " + esc(S.wxCity) + ' · <button class="linkbtn" type="button" data-wx-auto>Følg min tidszone</button> · ' : "Følger din tidszone · ") +
       '<button class="linkbtn" type="button" data-wx-pick>Vælg by</button></div>';
     host.innerHTML = html;
@@ -2933,6 +2966,26 @@
       try { renderBriefing(); } catch (e) {}
     });
   }
+
+  // Marks a whole thread as read in Gmail (removes the UNREAD label). The only
+  // change this page makes in the inbox, and only on a click.
+  function markRead(id, btn) {
+    if (!S.mcp || !id) return;
+    btn.disabled = true;
+    var p;
+    try { p = S.mcp.callTool(GMAIL, "unlabel_thread", { threadId: id, labelIds: ["UNREAD"] }, { cache: false }); } catch (e) { p = Promise.reject({ code: "upstream_error" }); }
+    p.then(function () {
+      S.mail = (S.mail || []).filter(function (m) { return m.id !== id; });
+      renderMail(); try { renderBriefing(); } catch (e) {}
+      try { S.mcp.invalidate(GMAIL, "search_threads"); } catch (e) {}
+    }, function (err) {
+      btn.disabled = false;
+      var li = btn.closest("li"), msg = document.createElement("div");
+      msg.className = "mail-msg"; msg.style.gridColumn = "1 / -1";
+      msg.textContent = (err && (err.code === "not_granted" || err.code === "not_in_manifest")) ? "Siden mangler lov til at ændre mails — giv adgang, når claude.ai spørger." : "Kunne ikke markere som læst. Prøv igen.";
+      if (li && !li.querySelector(".mail-msg")) li.appendChild(msg);
+    });
+  }
   function senderName(s) {
     s = String(s || "");
     var m = s.match(/^\s*"?([^"<]+?)"?\s*<[^>]+>\s*$/); if (m) return m[1];
@@ -2958,11 +3011,15 @@
     if (!S.mail.length) html += '<div class="empty">Indbakken er tom for ulæste mails fra den sidste uge.</div>';
     else html += '<ul class="mail-list">' + S.mail.slice(0, 5).map(function (m) {
       var inner = '<span class="mf">' + (m.important ? '<span class="imp" title="Vigtig"></span>' : "") + esc(m.from) + (m.count > 1 ? " (" + m.count + ")" : "") + '</span><span class="mt">' + mailAgo(m.at) + '</span><span class="ms">' + esc(m.subject) + '</span><span class="sn2">' + esc(m.snippet) + "</span>";
-      return "<li>" + (m.url ? '<a href="' + esc(m.url) + '" target="_blank" rel="noopener noreferrer">' + inner + "</a>" : '<a>' + inner + "</a>") + "</li>";
+      return "<li>" + (m.url ? '<a href="' + esc(m.url) + '" target="_blank" rel="noopener noreferrer">' + inner + "</a>" : '<a>' + inner + "</a>") +
+        '<button class="mail-read" type="button" data-read="' + esc(m.id) + '" title="Markér som læst" aria-label="Markér som læst: ' + esc(m.subject) + '"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button></li>';
     }).join("") + "</ul>";
     if (S.mail.length > 5) html += '<div class="sub muted">+ ' + (S.mail.length - 5) + " flere ulæste i Gmail</div>";
     host.innerHTML = html;
     var p = partsInTZ(new Date()); $("mail-src").textContent = "Gmail · kl. " + p.hour + ":" + p.minute;
+    host.querySelectorAll("[data-read]").forEach(function (btn) {
+      btn.addEventListener("click", function () { markRead(btn.getAttribute("data-read"), btn); });
+    });
   }
 
   // =================================================================
@@ -2982,7 +3039,7 @@
   function inWords(m) { return m < 60 ? m + " min" : Math.floor(m / 60) + " t" + (m % 60 ? " " + (m % 60) + " min" : ""); }
   function attentionItems() {
     var t = todayISO(), now = nowLocal(), hour = +partsInTZ(new Date()).hour, out = [];
-    function add(sev, area, icon, text, meta, jump, key) { out.push({ sev: sev, area: area, icon: icon, text: text, meta: meta || "", jump: jump, key: key || "" }); }
+    function add(sev, area, icon, text, meta, jump, key, id) { out.push({ sev: sev, area: area, icon: icon, text: text, meta: meta || "", jump: jump, key: key || "", id: id || (area + ":" + text.replace(/<[^>]*>/g, "")) }); }
     // Tasks
     if (S.tasks) {
       S.tasks.filter(function (k) { return !k.done && k.due && k.due < t; }).sort(function (a, b) { return a.due < b.due ? -1 : 1; }).slice(0, 4)
@@ -3027,16 +3084,16 @@
     var aq = S.wx && S.wx.cur && S.wx.cur.currentAirQuality;
     if (aq && aq.overallPlumeLabsIndex >= 60 && S.events && eventsArr().some(function (e) { return e.start_date_local.slice(0, 10) === t && isRun(e.type); }))
       add("low", "wx", "wx", "Luftkvalitet: <b>" + esc(lc(aq.category)) + "</b> — overvej at løbe uden for trafikken", "", "c-weather", "");
-    // Habits in the evening
-    if (hour >= 18 && S.habits && S.hlog) {
+    // Habits are left out of the bell: they are visible in Opgaver og rutiner.
+    if (false && hour >= 18 && S.habits && S.hlog) {
       var miss = S.habits.filter(function (h) { return h.active !== false && !habitDone(h.id, t); });
       if (miss.length) add("low", "tasks", "repeat", miss.length === 1 ? "Vane mangler i dag: <b>" + esc(miss[0].name) + "</b>" : "<b>" + miss.length + " vaner</b> mangler i dag", "", "c-todo", "");
     }
     // Mail: important unread from the last three days
     if (S.mail) {
       var DL_RE = /\b(frist|deadline|aflevering|afleveres|senest|i morgen|due|reminder|påmindelse|svar)\b/i;
-      S.mail.filter(function (m) { return (m.important || DL_RE.test(m.subject + " " + m.snippet)) && Date.now() - m.at < 3 * 864e5; }).slice(0, 3).forEach(function (m) {
-        add(DL_RE.test(m.subject + " " + m.snippet) ? "med" : "low", "tasks", "mail", "Mail fra <b>" + esc(m.from) + "</b>: " + esc(m.subject), mailAgo(m.at) + " siden", "c-mail", "");
+      S.mail.filter(function (m) { return Date.now() - m.at < 2 * 864e5; }).slice(0, 6).forEach(function (m) {
+        add((m.important || DL_RE.test(m.subject + " " + m.snippet)) ? "med" : "low", "tasks", "mail", "Ny mail fra <b>" + esc(m.from) + "</b>: " + esc(m.subject), mailAgo(m.at) + " siden", "c-mail", "", "mail:" + m.id);
       });
     }
     // Data sources that fail
@@ -3049,6 +3106,7 @@
     var ready = (S.tasks || !S.db) && (S.cal || S.calErr) && (S.events || S.icuErr.events);
     if (!ready) { host.innerHTML = '<div class="skel"></div>'; return; }
     var items = attentionItems();
+    S.notifItems = items; updateBell();
     var p = partsInTZ(new Date());
     $("attn-src").textContent = "kl. " + p.hour + ":" + p.minute;
     if (!items.length) {
@@ -3058,15 +3116,16 @@
     var high = items.filter(function (i) { return i.sev === "high"; }).length;
     var html = '<div class="headline attn-head"><span class="big">' + items.length + '</span><span class="big-u">' + (items.length === 1 ? "ting" : "ting") +
       (high ? ' · <span style="color:var(--critical);font-weight:600">' + high + " haster</span>" : "") + "</span></div>";
-    html += '<ul class="attn-list">' + items.slice(0, 8).map(function (i) {
-      return '<li><button class="attn-item ' + i.sev + '" type="button"' + (i.jump ? ' data-jump="' + i.jump + '"' : "") + '><span class="sev"></span><span class="ai ' + i.area + '">' + AI_ICON[i.icon] + '</span><span class="tx">' + i.text + '</span><span class="mt">' + esc(i.meta) + "</span></button></li>";
+    html += '<ul class="attn-list">' + items.slice(0, 14).map(function (i) {
+      var isNew = !isSeen(i.id);
+      return '<li><button class="attn-item ' + i.sev + (isNew ? " new" : "") + '" type="button"' + (i.jump ? ' data-jump="' + i.jump + '"' : "") + '><span class="sev"></span><span class="ai ' + i.area + '">' + AI_ICON[i.icon] + '</span><span class="tx">' + (isNew ? '<span class="newdot" title="Ny"></span>' : "") + i.text + '</span><span class="mt">' + esc(i.meta) + "</span></button></li>";
     }).join("") + "</ul>";
-    if (items.length > 8) html += '<div class="sub muted">+ ' + (items.length - 8) + " mere</div>";
+    if (items.length > 14) html += '<div class="sub muted">+ ' + (items.length - 14) + " mere</div>";
     host.innerHTML = html;
     host.querySelectorAll("[data-jump]").forEach(function (b) {
       b.addEventListener("click", function () {
         var j = b.getAttribute("data-jump");
-        if (j === "c-weather" || j === "c-recovery") { openDrawer(j === "c-weather" ? "wx" : "rec"); j = "now-drawer"; }
+        closeNotif(); setPage("idag");
         var el = $(j); if (!el) return;
         var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
@@ -3187,6 +3246,54 @@
   }
   $("add-task-btn").addEventListener("click", function () { toggleForm("tk-add", "tk-title"); });
   $("add-habit-btn").addEventListener("click", function () { toggleForm("hb-add", "hb-name"); });
+
+
+  // =================================================================
+  // NOTIFICATION BELL — what changed or needs you. "Seen" is kept in the
+  // database (settings/notify) so phone and computer agree.
+  // =================================================================
+  S.notifSeen = null; S.notifItems = [];
+  function isSeen(id) { return !!(S.notifSeen && S.notifSeen.indexOf(id) !== -1); }
+  var lastBadge = 0;
+  function updateBell() {
+    var n = (S.notifItems || []).filter(function (i) { return !isSeen(i.id); }).length;
+    document.querySelectorAll("[data-bell-n]").forEach(function (b) { b.hidden = !n; b.textContent = n > 9 ? "9+" : String(n); });
+    document.querySelectorAll(".bell").forEach(function (b) {
+      b.setAttribute("aria-label", "Notifikationer" + (n ? ", " + n + " nye" : ""));
+      if (n > lastBadge && S.notifSeen) { b.classList.remove("ring"); void b.offsetWidth; b.classList.add("ring"); }
+    });
+    lastBadge = n;
+  }
+  function markAllSeen() {
+    var ids = (S.notifItems || []).map(function (i) { return i.id; });
+    var keep = (S.notifSeen || []).concat(ids.filter(function (id) { return !isSeen(id); })).slice(-300);
+    S.notifSeen = keep; updateBell();
+    if (S.db) dbWrite(S.db.doc("settings/notify").set({ seen: keep, updatedAt: Date.now() }));
+  }
+  var notifOpener = null;
+  function openNotif(btn) {
+    var panel = $("notif");
+    if (!panel.hidden && notifOpener === btn) return closeNotif();
+    notifOpener = btn;
+    try { renderAttention(); } catch (e) {}
+    panel.hidden = false;
+    var r = btn.getBoundingClientRect(), w = panel.offsetWidth;
+    var left = Math.min(Math.max(12, r.left), window.innerWidth - w - 12);
+    panel.style.left = left + "px"; panel.style.top = (r.bottom + 8) + "px";
+    document.querySelectorAll(".bell").forEach(function (b) { b.setAttribute("aria-expanded", b === btn ? "true" : "false"); });
+    // Seen once opened; the "new" dots stay visible until the panel closes.
+    markAllSeen();
+  }
+  function closeNotif() {
+    var panel = $("notif"); if (panel.hidden) return;
+    panel.hidden = true; notifOpener = null;
+    document.querySelectorAll(".bell").forEach(function (b) { b.setAttribute("aria-expanded", "false"); });
+  }
+  $("bell").addEventListener("click", function (e) { e.stopPropagation(); openNotif($("bell")); });
+  $("bell-m").addEventListener("click", function (e) { e.stopPropagation(); openNotif($("bell-m")); });
+  $("notif-x").addEventListener("click", closeNotif);
+  document.addEventListener("click", function (e) { var p = $("notif"); if (!p.hidden && !p.contains(e.target)) closeNotif(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeNotif(); });
 
   // News is written into the database by a morning routine (see news/latest).
   function renderNews() {
