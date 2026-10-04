@@ -236,7 +236,8 @@
     .mclock { font-family: var(--f-display); font-stretch: 75%; font-weight: 800; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
     .mdots { display: flex; gap: 5px; align-items: center; }
     .mdots .src { gap: 4px; font-size: 0.68rem; }
-    .mdots .src .s { display: none; }
+    .mdots .src .s, .mdots .src .sn { display: none; }
+    .mdots { gap: 6px; }
   }
   @media (min-width: 900px) { .nav a .lbl-short { display: none; } }
 
@@ -492,21 +493,35 @@
     grid-template-areas:
       "attn attn wx"
       "attn attn rec"
-      "wo   ag   tk"
-      "hb   dl   news";
+      "mail wo   ag"
+      "tk   hb   dl"
+      "news news news";
   }
+  #c-mail { grid-area: mail; }
   #c-attn { grid-area: attn; } #c-weather { grid-area: wx; } #c-recovery { grid-area: rec; }
   #c-workout { grid-area: wo; } #c-agenda { grid-area: ag; } #c-tasks { grid-area: tk; }
   #c-habits { grid-area: hb; } #c-deadlines { grid-area: dl; } #c-news { grid-area: news; }
   @media (max-width: 1099px) {
     .widgets { grid-template-columns: repeat(2, minmax(0, 1fr));
-      grid-template-areas: "attn attn" "wx rec" "wo ag" "tk hb" "dl news"; }
+      grid-template-areas: "attn attn" "wx rec" "mail wo" "ag tk" "hb dl" "news news"; }
   }
   @media (max-width: 640px) {
     .widgets { grid-template-columns: minmax(0, 1fr);
-      grid-template-areas: "attn" "wx" "wo" "ag" "tk" "hb" "rec" "dl" "news"; }
+      grid-template-areas: "attn" "wx" "mail" "wo" "ag" "tk" "hb" "rec" "dl" "news"; }
   }
   .widgets .card { scroll-margin-top: 20px; }
+
+
+  /* Mail widget */
+  .mail-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .mail-list li + li { border-top: 1px solid var(--line); }
+  .mail-list a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: 8px 0; text-decoration: none; }
+  .mail-list a:hover .ms { text-decoration: underline; text-underline-offset: 2px; }
+  .mail-list .mf { font-weight: 700; font-size: 0.86rem; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+  .mail-list .mf .imp { width: 7px; height: 7px; border-radius: 50%; background: var(--warning); flex: none; }
+  .mail-list .mt { font-family: var(--f-mono); font-size: 0.7rem; color: var(--ink-3); white-space: nowrap; }
+  .mail-list .ms { grid-column: 1 / -1; font-size: 0.84rem; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mail-list .sn2 { grid-column: 1 / -1; font-size: 0.76rem; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* Needs-attention list */
   .attn-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
@@ -1891,6 +1906,7 @@
         <span class="src" data-src="cal" title="Google Kalender"><span class="d"></span><span class="sn">Google Kalender</span><span class="s"></span></span>
         <span class="src" data-src="db" title="Database"><span class="d"></span><span class="sn">Database</span><span class="s"></span></span>
         <span class="src" data-src="wx" title="AccuWeather"><span class="d"></span><span class="sn">AccuWeather</span><span class="s"></span></span>
+        <span class="src" data-src="mail" title="Gmail"><span class="d"></span><span class="sn">Gmail</span><span class="s"></span></span>
       </div>
       <div class="foot-row">
         <button class="btn ghost small" id="refresh" type="button" title="Hent nye data"><svg class="rf" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg><span id="refresh-l">Opdater</span></button>
@@ -1905,10 +1921,11 @@
       <div class="mtop-r">
         <span class="mclock" id="mclock">--:--</span>
         <div class="mdots" aria-label="Datakilder">
-          <span class="src" data-src="icu" title="IcuSync"><span class="d"></span>Icu<span class="s"></span></span>
-          <span class="src" data-src="cal" title="Google Kalender"><span class="d"></span>Kal<span class="s"></span></span>
-          <span class="src" data-src="db" title="Database"><span class="d"></span>DB<span class="s"></span></span>
-          <span class="src" data-src="wx" title="AccuWeather"><span class="d"></span>Vejr<span class="s"></span></span>
+          <span class="src" data-src="icu" title="IcuSync"><span class="d"></span><span class="sn">Icu</span><span class="s"></span></span>
+          <span class="src" data-src="cal" title="Google Kalender"><span class="d"></span><span class="sn">Kal</span><span class="s"></span></span>
+          <span class="src" data-src="db" title="Database"><span class="d"></span><span class="sn">DB</span><span class="s"></span></span>
+          <span class="src" data-src="wx" title="AccuWeather"><span class="d"></span><span class="sn">Vejr</span><span class="s"></span></span>
+          <span class="src" data-src="mail" title="Gmail"><span class="d"></span><span class="sn">Mail</span><span class="s"></span></span>
         </div>
         <button class="btn ghost icon" id="refresh-m" type="button" aria-label="Opdater"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg></button>
       </div>
@@ -1976,6 +1993,10 @@
       <div class="card-k"><span class="ad study"></span>Nærmeste deadlines</div>
       <div id="dl-body"><div class="skel"></div></div>
     </article>
+      <article class="card" id="c-mail">
+        <div class="card-k"><span class="ad tasks"></span>Mail<span class="src-note" id="mail-src"></span></div>
+        <div id="mail-body"><div class="skel"></div></div>
+      </article>
       <article class="card" id="c-news">
         <div class="card-k"><span class="ad study"></span>Nyheder<span class="src-note" id="news-meta"></span></div>
         <div id="news-body"><div class="skel"></div></div>
@@ -2364,7 +2385,7 @@
     return "<b>Kunne ikke gemme eller hente fra databasen.</b> Prøv igen.";
   }
   var SRC_STATE = {};
-  var SRC_LABEL = { icu: "IcuSync", cal: "Google Kalender", db: "Database", wx: "AccuWeather" };
+  var SRC_LABEL = { icu: "IcuSync", cal: "Google Kalender", db: "Database", wx: "AccuWeather", mail: "Gmail" };
   function setSrc(id, state, title) {
     var key = id.replace("src-", "");
     document.querySelectorAll('[data-src="' + key + '"]').forEach(function (el) {
@@ -2830,6 +2851,70 @@
     $("brief-src").textContent = "kl. " + p.hour + ":" + p.minute;
   }
 
+
+  // =================================================================
+  // MAIL (Gmail, read-only search). Private Outlook mail is forwarded here.
+  // =================================================================
+  var GMAIL = "Gmail";
+  SRC_NAME[GMAIL] = "Gmail";
+  function loadMail(force) {
+    if (!S.mcp) return Promise.resolve();
+    setSrc("src-mail", "", "Henter…");
+    return settle(callRaw(GMAIL, "search_threads", { query: "in:inbox is:unread newer_than:7d -category:promotions -category:social", pageSize: 25 }, force)).then(function (r) {
+      if (!r.ok) { S.mail = null; S.mailErr = r.error; }
+      else {
+        var threads = pickFrom(r.data, "threads");
+        S.mailErr = null;
+        S.mail = (Array.isArray(threads) ? threads : []).map(function (th) {
+          var msgs = (th.messages || []).slice().sort(function (a, b) { return (+a.internalDate || 0) - (+b.internalDate || 0); });
+          var last = msgs[msgs.length - 1] || {}, unread = msgs.filter(function (m) { return (m.labelIds || []).indexOf("UNREAD") !== -1; });
+          var lastUnread = unread[unread.length - 1] || last;
+          var labels = (lastUnread.labelIds || []);
+          return {
+            id: th.id, subject: lastUnread.subject || last.subject || "(uden emne)", from: senderName(lastUnread.sender || last.sender),
+            snippet: lastUnread.snippet || "", at: +lastUnread.internalDate || Date.parse(lastUnread.date) || 0,
+            important: labels.indexOf("IMPORTANT") !== -1, count: unread.length || 1,
+            url: /^https:\/\/mail\.google\.com\//.test(th.viewUrl || "") ? th.viewUrl : ""
+          };
+        }).sort(function (a, b) { return (b.important - a.important) || (b.at - a.at); });
+      }
+      setSrc("src-mail", S.mailErr ? "err" : "ok", S.mailErr ? "Fejl" : "OK");
+      renderMail();
+      try { renderAttention(); } catch (e) {}
+    });
+  }
+  function senderName(s) {
+    s = String(s || "");
+    var m = s.match(/^\s*"?([^"<]+?)"?\s*<[^>]+>\s*$/); if (m) return m[1];
+    var e = s.match(/^([^@\s]+)@([^>\s]+)/);
+    if (e) {
+      var dom = e[2].split(".").slice(-2, -1)[0] || e[2];
+      return /no-?reply|notification|account|security|info|mail/i.test(e[1]) ? dom.charAt(0).toUpperCase() + dom.slice(1) : e[1];
+    }
+    return s || "Ukendt";
+  }
+  function mailAgo(ms) {
+    var d = Math.max(0, Date.now() - ms) / 60000;
+    if (d < 60) return Math.round(d) + " min";
+    if (d < 60 * 24) return Math.round(d / 60) + " t";
+    return Math.round(d / 1440) + " d";
+  }
+  function renderMail() {
+    var host = $("mail-body"); if (!host) return;
+    if (S.mailErr) { host.innerHTML = '<div class="err">' + errCopy(GMAIL, S.mailErr) + "</div>"; return; }
+    if (!S.mail) { host.innerHTML = S.mcp ? '<div class="skel"></div>' : '<div class="err">' + errCopy(GMAIL, { code: "not_granted" }) + "</div>"; return; }
+    var imp = S.mail.filter(function (m) { return m.important; }).length;
+    var html = '<div class="headline"><span class="big">' + S.mail.length + '</span><span class="big-u">ulæste' + (imp ? " · " + imp + " vigtige" : "") + "</span></div>";
+    if (!S.mail.length) html += '<div class="empty">Indbakken er tom for ulæste mails fra den sidste uge.</div>';
+    else html += '<ul class="mail-list">' + S.mail.slice(0, 5).map(function (m) {
+      var inner = '<span class="mf">' + (m.important ? '<span class="imp" title="Vigtig"></span>' : "") + esc(m.from) + (m.count > 1 ? " (" + m.count + ")" : "") + '</span><span class="mt">' + mailAgo(m.at) + '</span><span class="ms">' + esc(m.subject) + '</span><span class="sn2">' + esc(m.snippet) + "</span>";
+      return "<li>" + (m.url ? '<a href="' + esc(m.url) + '" target="_blank" rel="noopener noreferrer">' + inner + "</a>" : '<a>' + inner + "</a>") + "</li>";
+    }).join("") + "</ul>";
+    if (S.mail.length > 5) html += '<div class="sub muted">+ ' + (S.mail.length - 5) + " flere ulæste i Gmail</div>";
+    host.innerHTML = html;
+    var p = partsInTZ(new Date()); $("mail-src").textContent = "Gmail · kl. " + p.hour + ":" + p.minute;
+  }
+
   // =================================================================
   // KRÆVER DIN OPMÆRKSOMHED — one list across calendar, tasks, training,
   // weather and data sources, most urgent first.
@@ -2839,7 +2924,8 @@
     flag: '<svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>',
     heart: '<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
     repeat: '<svg viewBox="0 0 24 24"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>',
-    warn: '<svg viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>'
+    warn: '<svg viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>',
+    mail: '<svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M4 7l8 6 8-6"/></svg>'
   };
   var SEV = { high: 0, med: 1, low: 2 };
   function minsUntil(hhmm) { var p = partsInTZ(new Date()); var a = hhmm.split(":"); return (+a[0]) * 60 + (+a[1]) - ((+p.hour) * 60 + (+p.minute)); }
@@ -2895,6 +2981,13 @@
     if (hour >= 18 && S.habits && S.hlog) {
       var miss = S.habits.filter(function (h) { return h.active !== false && !habitDone(h.id, t); });
       if (miss.length) add("low", "tasks", "repeat", miss.length === 1 ? "Vane mangler i dag: <b>" + esc(miss[0].name) + "</b>" : "<b>" + miss.length + " vaner</b> mangler i dag", "", "c-habits", "");
+    }
+    // Mail: important unread from the last three days
+    if (S.mail) {
+      var DL_RE = /\b(frist|deadline|aflevering|afleveres|senest|i morgen|due|reminder|påmindelse|svar)\b/i;
+      S.mail.filter(function (m) { return (m.important || DL_RE.test(m.subject + " " + m.snippet)) && Date.now() - m.at < 3 * 864e5; }).slice(0, 3).forEach(function (m) {
+        add(DL_RE.test(m.subject + " " + m.snippet) ? "med" : "low", "tasks", "mail", "Mail fra <b>" + esc(m.from) + "</b>: " + esc(m.subject), mailAgo(m.at) + " siden", "c-mail", "");
+      });
     }
     // Data sources that fail
     Object.keys(SRC_LABEL).forEach(function (k) { if (SRC_STATE[k] === "err") add("low", "sys", "warn", "<b>" + SRC_LABEL[k] + "</b> kan ikke hentes", "", "", ""); });
@@ -3569,7 +3662,7 @@
     busy(true);
     if (force && window.__ssRefresh) window.__ssRefresh();
     renderDateline();
-    return withTimeout(Promise.all([loadIcu(force), loadCal(force), loadWeather(force)]), 45000, null).then(function () {
+    return withTimeout(Promise.all([loadIcu(force), loadCal(force), loadWeather(force), loadMail(force)]), 45000, null).then(function () {
       busy(false);
       lastLoad = Date.now();
       var p = partsInTZ(new Date());
@@ -3626,6 +3719,7 @@
         S.calErr = { code: "not_granted" };
         setSrc("src-icu", "err", "Ingen adgang"); setSrc("src-cal", "err", "Ingen adgang");
         setSrc("src-wx", "err", "Ingen adgang"); renderWeather();
+        setSrc("src-mail", "err", "Ingen adgang"); renderMail();
         renderHealthAll(); renderAgenda();
       }
     });
