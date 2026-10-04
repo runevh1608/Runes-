@@ -2199,11 +2199,8 @@
   .st-badge { flex: none; font-size: 0.72rem; font-weight: 700; color: var(--a-study); background: color-mix(in srgb, var(--a-study) 12%, transparent); padding: 3px 8px; border-radius: 999px; }
   .st-row { display: grid; grid-template-columns: 6.2rem minmax(0, 1fr); gap: 8px; font-size: 0.86rem; }
   .st-row .k { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); padding-top: 3px; }
-  .st-links { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--line); margin-top: auto; }
-  .st-links .linkbtn { font-size: 0.76rem; color: var(--ink-3); }
-  .folder-f { flex: 1; } .folder-f input { min-width: 0; flex: 1 1 140px; }
-  .vault-f { margin: 14px 0 0; align-items: center; }
-  .vault-f #st-vault-in { flex: 1 1 240px; }
+  .st-sum { font-size: 0.86rem; line-height: 1.45; padding-top: 10px; border-top: 1px solid var(--line); }
+  .st-sum .k { display: block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); margin-bottom: 3px; }
   .dl-f { margin-bottom: 4px; }
   .dl-f #st-dl-title { flex: 1 1 100%; }
   .chk-ph { width: 20px; flex: none; }
@@ -2627,14 +2624,7 @@
     <section class="page" id="page-studie" hidden>
       <header class="page-head">
         <div><span class="eyebrow">Corvinus · timer fra Neptun · opgaver fra Todoist</span><h1><span class="ad study"></span>Studie</h1></div>
-        <div class="head-btns"><span class="sub muted" id="st-vault-name"></span><button class="btn ghost small" type="button" id="st-vault-btn">Obsidian</button></div>
       </header>
-      <form class="add vault-f" id="st-vault" autocomplete="off" hidden>
-        <input class="field" type="text" id="st-vault-in" placeholder="Navnet på din Obsidian-vault, fx Noter" aria-label="Navn på Obsidian-vault" maxlength="80">
-        <button class="btn" type="submit">Gem</button>
-        <button class="btn ghost" type="button" id="st-vault-x">Annuller</button>
-        <span class="sub muted">Står øverst til venstre i Obsidian. Så kan knapperne åbne noterne til hvert fag.</span>
-      </form>
       <div class="st-top">
         <article class="card" id="st-week">
           <div class="card-k"><span class="ad study"></span>De næste 7 dage</div>
@@ -4818,7 +4808,7 @@
 
   // =================================================================
   // STUDIE — fag fra Neptun, deadlines i databasen, opgaver fra Todoist
-  // (tag = fag), og noter i Obsidian.
+  // (tag = fag) og et resumé af noterne, når rutinen har skrevet et.
   // =================================================================
   var COURSES = [
     { id: "mne", name: "Managing the Multinational Enterprise", short: "Multinational Enterprise", re: /multinational/i, label: "Multinational-Enterprise" },
@@ -4846,11 +4836,6 @@
       });
     }).then(function () { renderStudie(); }, function (e) { S.nepErr = e; renderStudie(); });
   }
-  function obsidianUrl(folder) {
-    var v = S.study && S.study.vault; if (!v) return "";
-    return "obsidian://search?vault=" + encodeURIComponent(v) + "&query=" + encodeURIComponent('path:"' + folder + '"');
-  }
-  function courseFolder(c) { return (S.study && S.study.folders && S.study.folders[c.id]) || c.short; }
   function studyDeadlines() {
     var t = todayISO(), out = [];
     (S.deadlines || []).forEach(function (d) { if (d.date >= t && !d.done) out.push({ id: d.id, title: d.title, date: d.date, courseId: d.courseId || ((courseOf(d.course) || {}).id) || "", kind: d.kind || "hand-in", src: "db" }); });
@@ -4903,35 +4888,16 @@
       var next = lessons[0], perWeek = (S.nep || []).filter(function (e) { return e.course === c.id && !e.exam && daysBetween(t, e.start) < 7; }).length;
       var tasks = (S.td || []).filter(function (k) { return (k.labels || []).some(function (l) { return l.toLowerCase() === c.label.toLowerCase(); }); }).sort(tdSort);
       var dlc = dls.filter(function (d) { return d.courseId === c.id; })[0];
-      var ob = obsidianUrl(courseFolder(c));
+      var sum = S.study && S.study.summaries && S.study.summaries[c.id];
       var rows = '<div class="st-row"><span class="k">Næste time</span><span>' + (next ? esc(relDay(next.start) + " kl. " + next.sT) + (next.where ? '<span class="muted"> · ' + esc(next.where) + "</span>" : "") : S.nep ? '<span class="muted">Ingen planlagt</span>' : "…") + "</span></div>" +
         '<div class="st-row"><span class="k">Deadline</span><span>' + (dlc ? esc(dlc.title) + '<span class="muted"> · ' + esc(relDay(dlc.date)) + "</span>" : '<span class="muted">Ingen</span>') + "</span></div>";
       var tk = tasks.length ? '<ul class="list st-tasks">' + tasks.slice(0, 3).map(function (k) { return tdTaskRow(k, { showProject: false, showDate: true, showDesc: false }); }).join("") + "</ul>" + (tasks.length > 3 ? '<div class="sub muted">+ ' + (tasks.length - 3) + " mere</div>" : "")
         : '<div class="empty">Ingen opgaver. Giv en opgave i Todoist tagget <b>#' + esc(c.label) + "</b>, så kommer den her.</div>";
       return '<article class="card st-course"><div class="st-ch"><div><h3>' + esc(c.short) + "</h3>" + (c.name !== c.short ? '<div class="sub muted">' + esc(c.name) + "</div>" : "") + "</div>" +
         (perWeek ? '<span class="st-badge" title="Undervisning de næste 7 dage">' + perWeek + (perWeek === 1 ? " time" : " timer") + "</span>" : "") + "</div>" + rows + tk +
-        '<div class="st-links">' + (ob ? '<a class="btn ghost small" href="' + esc(ob) + '">Noter i Obsidian ↗</a>' : '<button class="btn ghost small" type="button" data-vault>Forbind Obsidian</button>') +
-        '<button class="linkbtn" type="button" data-folder="' + c.id + '" title="Mappen i Obsidian med noter til faget">Mappe: ' + esc(courseFolder(c)) + "</button></div></article>";
+        (sum && sum.text ? '<div class="st-sum"><span class="k">Fra dine noter' + (sum.updatedAt ? " · " + esc(agoText(sum.updatedAt)) : "") + "</span>" + esc(sum.text) + "</div>" : "") + "</article>";
     }).join("");
     wireTd(host);
-    host.querySelectorAll("[data-vault]").forEach(function (b) { b.addEventListener("click", openVaultForm); });
-    host.querySelectorAll("[data-folder]").forEach(function (b) {
-      b.addEventListener("click", function () {
-        var c = courseById(b.getAttribute("data-folder"));
-        var f = document.createElement("form"); f.className = "add folder-f"; f.autocomplete = "off";
-        f.innerHTML = '<input class="field" type="text" maxlength="120" aria-label="Mappe i Obsidian til ' + esc(c.short) + '" value="' + esc(courseFolder(c)) + '"><button class="btn small" type="submit">Gem</button>';
-        b.replaceWith(f); f.querySelector("input").focus(); f.querySelector("input").select();
-        f.addEventListener("submit", function (e) {
-          e.preventDefault(); if (!S.db) return;
-          var cur = Object.assign({}, (S.study && S.study.folders) || {}); cur[c.id] = f.querySelector("input").value.trim() || c.short;
-          dbWrite(S.db.doc("settings/study").set(Object.assign({}, S.study || {}, { folders: cur })));
-        });
-      });
-    });
-    var vs = $("st-vault-name"); if (vs) vs.textContent = S.study && S.study.vault ? "Obsidian: " + S.study.vault : "";
-  }
-  function openVaultForm() {
-    var f = $("st-vault"); f.hidden = false; $("st-vault-in").value = (S.study && S.study.vault) || ""; $("st-vault-in").focus();
   }
 
   // =================================================================
@@ -4965,7 +4931,7 @@
   function refreshStocks(force) {
     if (!S.mcp || !S.db || avBusy || S.stocks == null || S.watch === null) return;
     var todo = watchList().filter(function (w) { var d = stockDoc(w.sym); return force ? (!d || Date.now() - d.fetchedAt > 15 * 60e3) : (!d || Date.now() - (d.fetchedAt || 0) > STOCK_TTL); });
-    if (!todo.length) return;
+    if (!todo.length) { if (!S.avErr) setSrc("src-av", "ok", "OK"); return; }
     avBusy = true; setSrc("src-av", "", "Henter…"); renderStocks();
     var i = 0;
     (function next() {
@@ -5185,14 +5151,6 @@
     dbWrite(S.db.collection("deadlines").add({ title: title, date: date, courseId: c ? c.id : "", course: c ? c.short : "", kind: $("st-dl-kind").value, done: false, createdAt: Date.now() }));
     $("st-dl-title").value = ""; $("st-dl-add").hidden = true;
   });
-  $("st-vault").addEventListener("submit", function (e) {
-    e.preventDefault();
-    if (!S.db) return;
-    dbWrite(S.db.doc("settings/study").set(Object.assign({}, S.study || {}, { vault: $("st-vault-in").value.trim() })));
-    $("st-vault").hidden = true;
-  });
-  $("st-vault-x").addEventListener("click", function () { $("st-vault").hidden = true; });
-  $("st-vault-btn").addEventListener("click", openVaultForm);
   $("bud-prev").addEventListener("click", function () { S.budMonth = addMonths(S.budMonth, -1); renderBudget(); });
   $("bud-next").addEventListener("click", function () { if (S.budMonth < monthKey(todayISO())) { S.budMonth = addMonths(S.budMonth, 1); renderBudget(); } });
   $("bud-add").addEventListener("submit", function (e) {
