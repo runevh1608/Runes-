@@ -2691,7 +2691,14 @@
       sT = sp.hour + ":" + sp.minute; eT = ep.hour + ":" + ep.minute;
     }
     var holiday = /holiday/.test(cal.id);
-    return { title: e.summary || "(uden titel)", allDay: allDay, start: sISO, end: eISO, sT: sT, eT: eT, where: e.location || "", cal: cal.summary || "", holiday: holiday };
+    return { title: cleanTitle(e.summary, cal), allDay: allDay, start: sISO, end: eISO, sT: sT, eT: eT, where: e.location || "", cal: cal.summary || "", holiday: holiday };
+  }
+  // Busy-only calendars (work) have no titles; Neptun titles carry group, teacher and type.
+  function cleanTitle(t, cal) {
+    if (!t) return (cal && cal.summary ? cal.summary : "Optaget") + " (optaget)";
+    var m = String(t).match(/^(.+?)\s*\(\s*-\s*[^)]*\)\s*-\s*.+?-\s*(\S+)\s*$/);
+    if (m) return m[1].trim() + (/vizsga|exam/i.test(m[2]) ? " · eksamen" : "");
+    return t;
   }
 
   // ---------- database ----------
