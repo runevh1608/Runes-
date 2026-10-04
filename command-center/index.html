@@ -488,6 +488,12 @@
 
 
 
+
+
+  .wx-d .lo { font-size: 0.74rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .dash > * { order: 0 !important; }
+  .todo-h { align-items: center; }
+  .todo-h .add-btn { margin-left: auto; width: 24px; height: 24px; padding: 0; border-radius: 50%; font-size: 0.95rem; line-height: 1; display: grid; place-items: center; }
   /* ================= I dag: six widgets ================= */
   .dash { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
   .dash > * { grid-area: auto; }
@@ -544,6 +550,49 @@
   .notif .headline { display: none; }
   .attn-item.new .tx b { color: var(--ink); }
   .attn-item .newdot { width: 7px; height: 7px; border-radius: 50%; background: var(--critical); display: inline-block; margin-right: 6px; vertical-align: middle; }
+
+  /* ================= I dag: calmer widgets ================= */
+  .dash { gap: 16px; }
+  .dash .card { padding: 20px 22px 22px; gap: 16px; border-radius: 18px; }
+  .dash .card-k { font-size: 0.68rem; }
+  .dash .headline .big { font-size: 2.3rem; }
+  /* Restitution */
+  #c-recovery .big.word { font-size: 2rem; }
+  #c-recovery .trio { gap: 10px; }
+  #c-recovery .m { padding: 10px 12px; }
+  .rec-more { align-self: flex-start; font-size: 0.78rem; color: var(--ink-3); }
+  /* Vejret */
+  #c-weather .card-k .src-note { text-transform: none; letter-spacing: 0; }
+  #c-weather .card-k .linkbtn { color: var(--ink-3); font-size: 0.72rem; }
+  .wx-now { gap: 12px; align-items: center; }
+  .wx-now .wi { width: 46px; height: 46px; }
+  .wx-now .big { font-size: 2.6rem; }
+  .wx-side .ph { font-size: 1rem; }
+  .wx-days { gap: 8px; }
+  .wx-d { padding: 10px 4px; gap: 5px; border-radius: 12px; }
+  #c-weather .wx-run, #c-weather .wx-loc { display: none; }
+  /* Kalender */
+  .plan .pc { padding: 9px 0 11px; }
+  .plan .pc b { font-size: 0.95rem; }
+  /* Opgaver og rutiner */
+  .todo-add { gap: 4px; }
+  .add-btn {
+    appearance: none; border: none; background: var(--surface-2); color: var(--ink-2); cursor: pointer;
+    font: inherit; font-size: 0.74rem; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+    transition: background-color .15s ease, color .15s ease;
+  }
+  .add-btn:hover { background: color-mix(in srgb, var(--ink) 9%, var(--surface-2)); color: var(--ink); }
+  #c-todo .list li { padding: 10px 0; }
+  #c-todo .habit { padding: 10px 12px; }
+  #c-todo .habit .dots7 { display: none; }
+  /* Mail: sender + subject only */
+  #c-mail .sn2 { display: none; }
+  #c-mail .mail-list a { padding: 10px 0; gap: 3px 10px; }
+  #c-mail .headline .big { font-size: 2rem; }
+  /* Nyheder: headline + source */
+  #c-news .nsum { display: none; }
+  #c-news .news a { padding: 10px 0; }
+  #c-news .news .nt { font-size: 0.92rem; }
 
   /* ================= I dag: three calm zones ================= */
   .now-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
@@ -2059,7 +2108,7 @@
       </article>
       <article class="card" id="c-todo">
         <div class="card-k"><span class="ad tasks"></span>Opgaver og rutiner
-          <span class="todo-add"><button class="btn ghost small" type="button" id="add-task-btn" aria-controls="tk-add">+ Opgave</button><button class="btn ghost small" type="button" id="add-habit-btn" aria-controls="hb-add">+ Rutine</button></span>
+          
         </div>
         <form class="add" id="tk-add" autocomplete="off" hidden>
         <input class="field" type="text" id="tk-title" placeholder="Ny opgave…" aria-label="Ny opgave" maxlength="140">
@@ -2075,8 +2124,8 @@
         <input class="field" type="text" id="hb-name" placeholder="Ny vane, fx Stræk 10 min" aria-label="Ny vane" maxlength="60">
         <button class="btn ghost" type="submit">Tilføj vane</button>
       </form>
-        <div class="todo-sec"><div class="todo-h">Opgaver <span id="tk-count"></span></div><div id="tk-body"><div class="skel"></div></div></div>
-        <div class="todo-sec"><div class="todo-h">Rutiner <span id="hb-count"></span></div><div id="hb-body"><div class="skel"></div></div></div>
+        <div class="todo-sec"><div class="todo-h">Opgaver <span id="tk-count"></span><button class="add-btn" type="button" id="add-task-btn" aria-controls="tk-add" aria-label="Ny opgave" title="Ny opgave">+</button></div><div id="tk-body"><div class="skel"></div></div></div>
+        <div class="todo-sec"><div class="todo-h">Rutiner <span id="hb-count"></span><button class="add-btn" type="button" id="add-habit-btn" aria-controls="hb-add" aria-label="Ny rutine" title="Ny rutine">+</button></div><div id="hb-body"><div class="skel"></div></div></div>
       </article>
       <article class="card" id="c-mail">
         <div class="card-k"><span class="ad tasks"></span>Mail<span class="src-note" id="mail-src"></span></div>
@@ -2762,14 +2811,13 @@
     var aq = S.wx.cur.currentAirQuality;
     side.innerHTML = wxIcon(c.iconCode) + "<b>" + esc(c.temperature || "–") + '</b><span class="ph">' + esc(c.phrase || "") + "</span>";
     side.title = (loc.localizedName || S.wx.city) + ": " + (c.phrase || "") + ", føles som " + (c.realFeel || "");
-    $("wx-src").textContent = loc.localizedName || S.wx.city;
+    $("wx-src").innerHTML = esc(loc.localizedName || S.wx.city) + ' · <button class="linkbtn" type="button" data-wx-pick>skift</button>' +
+      (S.wxCity ? ' · <button class="linkbtn" type="button" data-wx-auto>følg tidszone</button>' : "");
 
     var d0 = S.wx.daily && S.wx.daily.dailyForecast && S.wx.daily.dailyForecast[0];
     var dayLine = d0 ? "I dag " + esc(d0.day.displayTemperature) + " / i nat " + esc(d0.night.displayTemperature) + " · regn " + esc(d0.day.rainProbability || "0 pct.").replace(" pct.", " %") : "";
-    var html = '<div class="wx-now">' + wxIcon(c.iconCode) +
-      '<span class="big">' + esc(c.temperature || "–") + '</span><div class="wx-side"><span class="ph">' + esc(c.phrase || "") + "</span>" +
-      '<span class="sub">Føles som ' + esc(c.realFeel || "–") + (c.extended && c.extended.wind ? " · vind " + esc(c.extended.wind) : "") + "</span>" +
-      (dayLine ? '<span class="sub muted">' + dayLine + "</span>" : "") + "</div></div>";
+    var html = '<div class="wx-now">' + wxIcon(c.iconCode) + '<span class="big">' + esc(c.temperature || "–") + "</span>" +
+      '<div class="wx-side"><span class="ph">' + esc(c.phrase || "") + '</span><span class="sub">Føles som ' + esc(c.realFeel || "–") + "</span></div></div>";
 
     // Today and the next days
     var days = ((S.wx.daily && S.wx.daily.dailyForecast) || []).slice(0, 5);
@@ -2777,11 +2825,9 @@
       html += '<div class="wx-days">' + days.map(function (d, i) {
         var rp = parseInt(d.day && d.day.rainProbability, 10) || 0;
         return '<div class="wx-d' + (i === 0 ? " today" : "") + '" title="' + esc((d.day && d.day.phrase) || "") + '"><span class="t">' + (i === 0 ? "I dag" : esc(d.dayOfWeek || "")) + "</span>" + wxIcon(d.day && d.day.icon) +
-          '<span class="v">' + esc(d.day && d.day.displayTemperature) + " <small>" + esc(d.night && d.night.displayTemperature) + '</small></span><span class="r">' + (rp >= 20 ? rp + " %" : "") + "</span></div>";
+          '<span class="v">' + esc(d.day && d.day.displayTemperature) + '</span><span class="lo">' + esc(d.night && d.night.displayTemperature) + '</span><span class="r">' + (rp >= 20 ? rp + " %" : "") + "</span></div>";
       }).join("") + "</div>";
     }
-    html += '<div class="wx-loc">' + (S.wxCity ? "Fast by: " + esc(S.wxCity) + ' · <button class="linkbtn" type="button" data-wx-auto>Følg min tidszone</button> · ' : "Følger din tidszone · ") +
-      '<button class="linkbtn" type="button" data-wx-pick>Vælg by</button></div>';
     host.innerHTML = html;
     bindWxButtons();
   }
@@ -3378,10 +3424,10 @@
         '<div class="m"><div class="l">Søvn</div><div class="v">' + fmt1(last.sleep_hours) + '<small>t</small></div>' + deltaSpan(last.sleep_hours, b.sleep_hours, true, " t", true) + "</div>" +
         '<div class="m"><div class="l">HRV</div><div class="v">' + fmt0(last.hrv) + '<small>ms</small></div>' + deltaSpan(last.hrv, b.hrv, true, "", false) + "</div>" +
         '<div class="m"><div class="l">Hvilepuls</div><div class="v">' + fmt0(last.resting_hr) + '<small>bpm</small></div>' + deltaSpan(last.resting_hr, b.resting_hr, false, "", false) + "</div>" +
-      "</div>" + '<div class="sub muted" style="font-size:0.74rem">Tal i farve = forskel fra din normal (gennemsnit af de 3 uger før sidste uge).</div>';
-    if (last.notes) html += '<div class="note" id="rec-note" title="Tryk for at læse hele noten"><b>Din note:</b> ' + esc(last.notes) + "</div>";
+      "</div>";
+    if (last.notes) html += '<button class="linkbtn rec-more" type="button" data-goto-health>Din note og detaljer i Sundhed →</button>';
     host.innerHTML = html;
-    var nt = $("rec-note"); if (nt) nt.addEventListener("click", function () { nt.classList.toggle("open"); });
+    var gh = host.querySelector("[data-goto-health]"); if (gh) gh.addEventListener("click", function () { location.hash = "sundhed"; });
   }
 
   // ----- workouts -----
