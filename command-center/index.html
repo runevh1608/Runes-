@@ -3475,7 +3475,7 @@
   function loadMail(force) {
     if (!S.mcp) return Promise.resolve();
     setSrc("src-mail", "", "Henter…");
-    return settle(callRaw(GMAIL, "search_threads", { query: "in:inbox newer_than:1d -category:promotions -category:social", pageSize: 25 }, force)).then(function (r) {
+    return settle(callRaw(GMAIL, "search_threads", { query: "in:inbox is:unread newer_than:14d -category:promotions -category:social", pageSize: 25 }, force)).then(function (r) {
       if (!r.ok) { S.mail = null; S.mailErr = r.error; }
       else {
         var threads = pickFrom(r.data, "threads");
@@ -3519,13 +3519,14 @@
     var host = $("mail-body"); if (!host) return;
     if (S.mailErr) { host.innerHTML = '<div class="err">' + errCopy(GMAIL, S.mailErr) + "</div>"; return; }
     if (!S.mail) { host.innerHTML = S.mcp ? '<div class="skel"></div>' : '<div class="err">' + errCopy(GMAIL, { code: "not_granted" }) + "</div>"; return; }
-    var list = S.mail.slice().sort(function (a, b) { return b.at - a.at; });
-    var html = '<div class="w-hero"><span class="big">' + list.length + '</span><span class="big-u">' + (list.length === 1 ? "mail" : "mails") + " det seneste døgn</span></div>";
-    if (!list.length) html += '<div class="empty">Ingen nye mails det seneste døgn.</div>';
+    var list = S.mail.slice().sort(function (a, b) { return (b.important - a.important) || (b.at - a.at); });
+    var imp = list.filter(function (m) { return m.important; }).length;
+    var html = '<div class="w-hero"><span class="big">' + list.length + '</span><span class="big-u">' + (list.length === 1 ? "ulæst" : "ulæste") + (imp ? " · " + imp + " vigtig" + (imp > 1 ? "e" : "") : "") + "</span></div>";
+    if (!list.length) html += '<div class="empty ok">Ingen ulæste mails. Indbakken er ryddet.</div>';
     else html += '<ul class="mail-ro">' + list.slice(0, 5).map(function (m) {
-      var inner = '<span class="mf">' + (m.important ? '<i title="Vigtig"></i>' : "") + esc(m.from) + '</span><span class="mt">' + mailAgo(m.at) + '</span><span class="ms">' + esc(m.subject) + "</span>";
+      var inner = '<span class="mf">' + (m.important ? '<i title="Vigtig"></i>' : "") + esc(m.from) + (m.count > 1 ? " (" + m.count + ")" : "") + '</span><span class="mt">' + mailAgo(m.at) + '</span><span class="ms">' + esc(m.subject) + "</span>";
       return "<li>" + (m.url ? '<a href="' + esc(m.url) + '" target="_blank" rel="noopener noreferrer">' + inner + "</a>" : '<div class="m">' + inner + "</div>") + "</li>";
-    }).join("") + "</ul>";
+    }).join("") + "</ul>" + (list.length > 5 ? '<div class="sub muted">+ ' + (list.length - 5) + " flere ulæste</div>" : "");
     html += '<a class="w-foot" href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noopener noreferrer">Åbn Gmail ↗</a>';
     host.innerHTML = html;
     $("mail-src").textContent = "Gmail";
@@ -3608,7 +3609,7 @@
     // Mail: important unread from the last three days
     if (S.mail) {
       var DL_RE = /\b(frist|deadline|aflevering|afleveres|senest|i morgen|due|reminder|påmindelse|svar)\b/i;
-      S.mail.filter(function (m) { return m.important; }).slice(0, 4).forEach(function (m) {
+      S.mail.filter(function (m) { return Date.now() - m.at < 2 * 864e5; }).slice(0, 6).forEach(function (m) {
         add((m.important || DL_RE.test(m.subject + " " + m.snippet)) ? "med" : "low", "tasks", "mail", "Ny mail fra <b>" + esc(m.from) + "</b>: " + esc(m.subject), mailAgo(m.at) + " siden", "c-mail", "", "mail:" + m.id);
       });
     }
