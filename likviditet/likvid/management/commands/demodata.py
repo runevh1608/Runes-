@@ -8,9 +8,9 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from likvid import debitor, kreditor
+from likvid import bank, debitor, kreditor
 from likvid.economic import AabenFaktura, AabenKreditor
-from likvid.models import (Bankkonto, DebitorFaktura, DebitorVurdering, ForecastLinje, ManuelPost, PleoAfdeling,
+from likvid.models import (Bankkonto, KategoriRegel, DebitorFaktura, DebitorVurdering, ForecastLinje, ManuelPost, PleoAfdeling,
                            PleoBudget, Selskab)
 from likvid.perioder import perioder_mellem, uge_start
 
@@ -29,7 +29,7 @@ class Command(BaseCommand):
             raise CommandError("Der findes allerede fakturaer. Brug --force for at tilføje demodata alligevel.")
         rnd = random.Random(42)
         idag = timezone.localdate()
-        anker = uge_start(idag) - timedelta(days=1)  # Torsdag før aktuel uge
+        anker = uge_start(idag) - timedelta(days=8)  # Torsdag for to uger siden, så sidste uge kan lukkes
         U = get_user_model()
         bruger, ny = U.objects.get_or_create(username="demo", defaults={"is_staff": True, "is_superuser": True})
         if ny:
@@ -108,4 +108,25 @@ class Command(BaseCommand):
                         beloeb_p = Decimal(beloeb)
                     ManuelPost.objects.update_or_create(linje=linje, periode_start=p.start,
                                                         defaults={"beloeb": beloeb_p.quantize(Decimal(1)), "opdateret_af": bruger})
+        # Kontoudtog fra anker til i dag og regler til kategorisering.
+        for soeg, kode, s in (("STRIPE", "ind_stripe", med), ("PLEO", "ud_pleo", med), ("LØN", "loen", None),
+                              ("Indbetaling", "ind_debitor", None), ("Overførsel", "ud_kreditor", None),
+                              ("SKAT", "moms", None)):
+            KategoriRegel.objects.get_or_create(soegetekst=soeg, linje_kode=kode, selskab=s, defaults={"oprettet_af": bruger})
+        for s, saldo in ((med, Decimal(640000)), (web, Decimal(1150000))):
+            linjer, d = [], anker + timedelta(days=1)
+            while d <= idag:
+                if d.weekday() < 5:
+                    for tekst, beloeb in [
+                        (f"Indbetaling {rnd.choice(KUNDER)}", Decimal(rnd.randrange(5000, 60000))),
+                        (f"Overførsel {rnd.choice(leverandoerer)}", -Decimal(rnd.randrange(1000, 25000))),
+                    ] + ([("STRIPE PAYOUT", Decimal(rnd.randrange(3000, 9000)))] if s == med else []) \
+                      + ([("PLEO TOPUP", Decimal(-15000))] if s == med and d.weekday() == 0 else []) \
+                      + ([("Mobilepay 23 45 67", Decimal(-349))] if d.weekday() == 2 else []):
+                        saldo += beloeb
+                        linjer.append(f"{d:%d-%m-%Y};{tekst};{beloeb:,.2f};{saldo:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+                d += timedelta(days=1)
+            csv_tekst = "Dato;Tekst;Beløb;Saldo\n" + "\n".join(reversed(linjer))  # Nyeste først, som i netbanken
+            bank.importer(s.bankkonti.first(), f"kontoudtog_{s.kode}.csv", csv_tekst.encode("cp1252"), bruger)
+
         self.stdout.write(self.style.SUCCESS("Demodata oprettet. Log ind med demo / demo."))

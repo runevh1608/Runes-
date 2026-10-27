@@ -10,9 +10,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from . import debitor, economic, forecast, kreditor, spejl
+from . import bank, debitor, economic, forecast, kreditor, spejl
 from .models import (Aendringslog, Bankkonto, DebitorFaktura, ForecastLinje, ForecastSnapshot, ForventetFaktura,
-                     KreditorPost, KreditorVurdering, ManuelPost, PleoAfdeling, PleoBudget, Selskab, Synkronisering)
+                     KategoriRegel, Kontoudtog, KreditorPost, KreditorVurdering, ManuelPost,
+                     Postering, UgeLukning, PleoAfdeling, PleoBudget, Selskab, Synkronisering)
 from .perioder import kvartal_for, kvartal_interval, maanedsnavn, naeste_kvartal, periode_for, perioder_mellem
 from .talformat import formater_dato, fortolk_beloeb, fortolk_dato
 
@@ -36,7 +37,7 @@ def _log(bruger, objekt: str, gammel, ny):
 DAGENS_OPGAVER = {
     1: [("Debitoropfølgning", "debitorer_start")],
     3: [("Debitoropfølgning", "debitorer_start"), ("Kreditoropfølgning", "kreditorer_start")],
-    4: [("Likviditetsforecast", "forecast")],
+    4: [("Lukning af uge", "pengestroemme_start"), ("Likviditetsforecast", "forecast")],
 }
 
 
@@ -263,6 +264,160 @@ def kreditor_vurdering(request, post_id):
     return render(request, "likvid/_kreditor_raekke.html", {"r": {"p": p, "status": _kreditor_status(p, idag())}})
 
 
+# ---------------------------------------------------------------- Pengestrømme (bank)
+
+
+def _linjevalg(selskab):
+    return list(bank.bogfoerbare_linjer(selskab))
+
+
+@login_required
+def pengestroemme(request, kode=None):
+    selskaber = list(Selskab.objects.all())
+    if kode is None:
+        return redirect("pengestroemme", kode=selskaber[0].kode)
+    s = get_object_or_404(Selskab, kode=kode)
+    a = bank.afstemning(s)
+    aabne = Postering.objects.filter(bankkonto__selskab=s, lukning__isnull=True).select_related("linje", "regel")
+    i_ugen = [p for p in aabne if a and a.fra <= p.dato <= a.til]
+    senere = [p for p in aabne if not a or p.dato > a.til]
+    linjer = _linjevalg(s)
+    summer = {l.id: Decimal(0) for l in linjer}
+    for p in i_ugen:
+        if p.linje_id:
+            summer[p.linje_id] += p.beloeb
+    return render(request, "likvid/pengestroemme.html", {
+        "selskab": s, "selskaber": selskaber, "afstemning": a, "i_ugen": i_ugen, "senere": senere, "linjer": linjer,
+        "linjesummer": [(l, summer[l.id]) for l in linjer if summer[l.id]],
+        "konto": s.bankkonti.first(), "kontoudtog": Kontoudtog.objects.filter(bankkonto__selskab=s)[:8],
+        "lukninger": UgeLukning.objects.filter(selskab=s).select_related("lukket_af")[:12],
+        "kan_lukke": a and a.til < idag(),
+    })
+
+
+@login_required
+@require_POST
+def bank_import(request, kode):
+    s = get_object_or_404(Selskab, kode=kode)
+    konto = s.bankkonti.first()
+    fil = request.FILES.get("fil")
+    if not konto:
+        messages.error(request, "Opret først bankkontoen under Opsætning.")
+    elif not fil:
+        messages.error(request, "Vælg en CSV-fil.")
+    else:
+        try:
+            udtog = bank.importer(konto, fil.name, fil.read(), request.user)
+        except bank.ImportFejl as e:
+            messages.error(request, f"{fil.name}: {e}")
+        else:
+            messages.success(request, f"{fil.name}: {udtog.antal_nye} nye posteringer importeret"
+                                      f"{f', {udtog.antal_dubletter} sprunget over (allerede importeret eller i lukket uge)' if udtog.antal_dubletter else ''}.")
+    return redirect("pengestroemme", kode=kode)
+
+
+@login_required
+@require_POST
+def bank_import_slet(request, pk):
+    udtog = get_object_or_404(Kontoudtog, pk=pk)
+    kode = udtog.bankkonto.selskab.kode
+    if udtog.posteringer.filter(lukning__isnull=False).exists():
+        messages.error(request, "Importen indeholder posteringer i en lukket uge og kan ikke slettes.")
+    else:
+        with transaction.atomic():
+            udtog.posteringer.all().delete()
+            _log(request.user, f"Kontoudtog {udtog.filnavn} ({udtog.bankkonto})", f"{udtog.antal_nye} posteringer", "slettet")
+            udtog.delete()
+        messages.success(request, f"Importen {udtog.filnavn} er fjernet.")
+    return redirect("pengestroemme", kode=kode)
+
+
+@login_required
+@require_POST
+def postering_linje(request, pk):
+    p = get_object_or_404(Postering.objects.select_related("bankkonto__selskab"), pk=pk, lukning__isnull=True)
+    s = p.bankkonto.selskab
+    linje_id = request.POST.get("linje")
+    if linje_id:
+        p.linje = get_object_or_404(ForecastLinje, pk=linje_id, selskab=s, type=ForecastLinje.POST)
+        p.kategori_kilde, p.regel = Postering.MANUEL, None
+        p.save(update_fields=["linje", "kategori_kilde", "regel"])
+    else:
+        p.linje, p.kategori_kilde, p.regel = None, "", None
+        p.save(update_fields=["linje", "kategori_kilde", "regel"])
+        bank.anvend_regler(s)
+        p.refresh_from_db()
+    return render(request, "likvid/_postering_raekke.html", {"p": p, "linjer": _linjevalg(s)})
+
+
+@login_required
+@require_POST
+def luk_uge(request, kode):
+    s = get_object_or_404(Selskab, kode=kode)
+    d = idag()
+    try:
+        saldo = fortolk_beloeb(request.POST.get("faktisk_saldo", ""))
+        if saldo is None:
+            raise ValueError("Tast den faktiske banksaldo.")
+        lukning = bank.luk_uge(s, saldo, request.user, d,
+                               snapshot_data=lambda _: forecast.version_data(*kvartal_for(d), d))
+    except (ValueError, bank.LukFejl) as e:
+        messages.error(request, str(e))
+    else:
+        messages.success(request, f"Ugen {formater_dato(lukning.fra_dato)}–{formater_dato(lukning.til_dato)} er lukket for {s}. "
+                                  "Forecastet er gemt som version.")
+    return redirect("pengestroemme", kode=kode)
+
+
+@login_required
+def lukning_vis(request, pk):
+    l = get_object_or_404(UgeLukning.objects.select_related("selskab", "lukket_af"), pk=pk)
+    faktiske = {}
+    for f in l.faktiske.select_related("linje"):
+        faktiske[f.linje] = faktiske.get(f.linje, Decimal(0)) + f.beloeb
+    return render(request, "likvid/lukning.html", {"l": l, "faktiske": [(k, v) for k, v in faktiske.items() if v],
+                                                    "posteringer": l.posteringer.select_related("linje")})
+
+
+@login_required
+def regler(request):
+    if request.method == "POST":
+        soeg = request.POST.get("soegetekst", "").strip()
+        kode = request.POST.get("linje_kode", "")
+        selskab = Selskab.objects.filter(kode=request.POST.get("selskab")).first()
+        gyldige = set(ForecastLinje.objects.filter(type=ForecastLinje.POST, **({"selskab": selskab} if selskab else {}))
+                      .values_list("kode", flat=True))
+        if not soeg or kode not in gyldige:
+            messages.error(request, "Angiv søgetekst og en linje, der findes for det valgte selskab.")
+        else:
+            KategoriRegel.objects.create(soegetekst=soeg, linje_kode=kode, selskab=selskab, oprettet_af=request.user)
+            antal = sum(bank.anvend_regler(s) for s in Selskab.objects.all())
+            messages.success(request, f"Reglen '{soeg}' er oprettet og har kategoriseret {antal} åbne posteringer.")
+        return redirect("regler")
+    linjer = {}
+    for l in ForecastLinje.objects.filter(type=ForecastLinje.POST).select_related("selskab"):
+        linjer.setdefault(l.kode, {"kode": l.kode, "navn": l.navn, "selskaber": []})["selskaber"].append(l.selskab.navn)
+    aktive = list(KategoriRegel.objects.filter(aktiv=True).select_related("selskab", "oprettet_af"))
+    for r in aktive:
+        r.linje_navn = linjer.get(r.linje_kode, {}).get("navn", r.linje_kode)
+    return render(request, "likvid/regler.html", {
+        "regler": aktive, "linjer": sorted(linjer.values(), key=lambda x: x["navn"]), "selskaber": Selskab.objects.all(),
+    })
+
+
+@login_required
+@require_POST
+def regel_fjern(request, pk):
+    r = get_object_or_404(KategoriRegel, pk=pk)
+    r.aktiv = False
+    r.save(update_fields=["aktiv"])
+    _log(request.user, f"Regel '{r.soegetekst}' → {r.linje_kode}", "aktiv", "fjernet")
+    for s in Selskab.objects.all():
+        bank.anvend_regler(s)
+    messages.success(request, f"Reglen '{r.soegetekst}' er fjernet.")
+    return redirect("regler")
+
+
 # ---------------------------------------------------------------- Forecast
 
 
@@ -326,11 +481,9 @@ def forecast_post(request):
 @login_required
 @require_POST
 def forecast_gem_version(request, aar, kvartal):
-    ktx = _forecast_kontekst(aar, kvartal)
     ForecastSnapshot.objects.create(
         oprettet_af=request.user, aarsag=ForecastSnapshot.MANUEL, titel=f"Forecast Q{kvartal} {aar}",
-        note=request.POST.get("note", "").strip(),
-        data={"aar": aar, "kvartal": kvartal, "tabeller": ktx["tabeller"], "samlet": ktx["samlet"]},
+        note=request.POST.get("note", "").strip(), data=forecast.version_data(aar, kvartal, idag()),
     )
     messages.success(request, f"Forecast for Q{kvartal} {aar} er gemt som version.")
     return redirect("forecast_kvartal", aar=aar, kvartal=kvartal)

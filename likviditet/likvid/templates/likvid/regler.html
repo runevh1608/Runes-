@@ -1,0 +1,28 @@
+{% extends "likvid/base.html" %}{% load dk %}
+{% block titel %}Kategoriseringsregler{% endblock %}
+{% block indhold %}
+<div class="sidehoved"><div>
+  <h1>Kategoriseringsregler</h1>
+  <p class="daempet">Indeholder posteringsteksten søgeteksten (store/små bogstaver er ligegyldige), lægges posteringen på linjen. Regler for ét selskab går forud for fælles regler, og længere søgetekster går forud for kortere.</p>
+</div><div class="handlinger"><a class="knap" href="{% url 'pengestroemme_start' %}">Tilbage til pengestrømme</a></div></div>
+<section class="kort">
+  <form method="post" class="inline-form ingen-streg">{% csrf_token %}
+    <label>Søgetekst<input name="soegetekst" required placeholder="Fx STRIPE"></label>
+    <label>Linje<select name="linje_kode" required>{% for l in linjer %}<option value="{{ l.kode }}">{{ l.navn }}{% if l.selskaber|length == 1 %} ({{ l.selskaber.0 }}){% endif %}</option>{% endfor %}</select></label>
+    <label>Gælder<select name="selskab"><option value="">Begge selskaber</option>{% for s in selskaber %}<option value="{{ s.kode }}">Kun {{ s.navn }}</option>{% endfor %}</select></label>
+    <button class="knap primaer">Tilføj regel</button>
+  </form>
+</section>
+<section class="kort">
+  {% if regler %}<table class="liste">
+    <thead><tr><th>Søgetekst</th><th>Linje</th><th>Gælder</th><th>Oprettet</th><th></th></tr></thead>
+    <tbody>{% for r in regler %}<tr>
+      <td><code>{{ r.soegetekst }}</code></td>
+      <td>{{ r.linje_navn }}</td>
+      <td>{% if r.selskab %}{{ r.selskab.navn }}{% else %}Begge{% endif %}</td>
+      <td class="daempet">{{ r.oprettet|date:"d.m.Y" }} {{ r.oprettet_af.username }}</td>
+      <td><form method="post" action="{% url 'regel_fjern' r.id %}">{% csrf_token %}<button class="link">Fjern</button></form></td>
+    </tr>{% endfor %}</tbody>
+  </table>{% else %}<p class="tom">Ingen regler endnu.</p>{% endif %}
+</section>
+{% endblock %}

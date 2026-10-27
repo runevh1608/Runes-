@@ -2,8 +2,8 @@
 
 Intern app til den ugentlige likviditetsstyring for Mediating og Webbler.
 
-**Status:** Debitoropfølgning, kreditoropfølgning, forecast, Pleo-budget, versioner og opsætning er bygget.
-CSV-import/lukning af uge og økonomiopfølgning følger.
+**Status:** Debitor- og kreditoropfølgning, forecast, pengestrømme (CSV-import, regler, afstemning og lukning af uge),
+Pleo-budget, versioner og opsætning er bygget. Økonomiopfølgning følger.
 
 ## Teknik
 
@@ -43,6 +43,13 @@ Kreditorer hentes som posteringer af typen `supplierInvoice` med restbeløb fra
 `/accounting-years/{år}/entries` (de seneste regnskabsår) og leverandørnavne fra `/suppliers`.
 Restbeløbet er negativt på leverandørkontoen og vendes, så "til betaling" er positivt.
 
+## Kontoudtog (CSV)
+
+Kolonnerne findes ud fra overskriften (Dato/Bogført, Tekst, Beløb, Saldo). Separator (`;`, `,` eller tab) og tegnsæt
+(UTF-8 eller Windows-1252) gættes automatisk, og danske tal og datoer forstås. Uden overskrift antages
+`dato;tekst;beløb;saldo`. Posteringer, der allerede er importeret, springes over, så overlappende udtræk er ufarlige.
+Er formatet fra Ringkjøbing Landbobank anderledes, rettes det i `likvid/bank.py` (`KOLONNER`).
+
 ## Regler i beregningen
 
 - Perioder: fredag–torsdag, delt ved månedsskift. Ugenummer = ISO-ugen for ugens torsdag.
@@ -54,6 +61,9 @@ Restbeløbet er negativt på leverandørkontoen og vendes, så "til betaling" er
   betaling = fakturadag + kredit. Dele med fakturadag før i dag udløber.
 - Pleo: månedsbudget pr. afdeling fordelt efter antal dage i perioden.
 - Saldo: primosaldo pr. dato (torsdag eller månedsslut) fremskrives med "Pengestrømme i alt". Info-linjer tæller ikke med.
+- Lukning af uge: primo (forrige uges banksaldo) + ugens posteringer skal svare til den tastede banksaldo, og alle
+  posteringer skal have en linje. Ved lukning gemmes de faktiske tal pr. linje og periode, ugen låses, posteringerne
+  arkiveres, og forecastet gemmes som version. Lukkede uger viser faktiske tal i forecastet.
 - Historik: vurderinger gemmes som nye rækker, tastede tal logges, og gemte forecast-versioner kan ikke ændres eller slettes.
 
 ## Tests

@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
 
-from . import debitor, kreditor
+from . import bank, debitor, kreditor
 from .models import Bankkonto, ForecastLinje, ManuelPost, PleoBudget, Selskab
 from .perioder import Periode, kvartal_interval, maanedsnavn, perioder_mellem, uge_start
 
@@ -26,6 +26,8 @@ class Beregning:
     vaerdier: dict[str, list[Decimal | None]] = field(default_factory=dict)
     primo: list[Decimal | None] = field(default_factory=list)
     ultimo: list[Decimal | None] = field(default_factory=list)
+    lukket: list[bool] = field(default_factory=list)
+    lukninger: dict = field(default_factory=dict)
 
     def i_alt(self, i: int) -> Decimal:
         return self.vaerdier[I_ALT][i] or NUL
@@ -46,7 +48,10 @@ class Fordeler:
 
 
 def saldo_anker(selskab: Selskab) -> tuple[date, Decimal] | None:
-    """Seneste kendte saldo (dato, beløb) for selskabet."""
+    """Seneste kendte saldo (dato, beløb): den senest lukkede uge, ellers bankkontiens primosaldo."""
+    sidste = bank.seneste_lukning(selskab)
+    if sidste:
+        return sidste.til_dato, sidste.faktisk_saldo
     konti = list(Bankkonto.objects.filter(selskab=selskab))
     if not konti:
         return None
@@ -105,6 +110,16 @@ def beregn_linjer(selskab: Selskab, perioder: list[Periode], idag: date) -> Bere
                     beloeb[i] += bel
             b.vaerdier[linje.kode] = beloeb
 
+    # Lukkede perioder viser faktiske tal fra kontoudtoget.
+    faktisk = bank.faktiske(selskab, list(starter))
+    b.lukninger = faktisk["lukninger"]
+    b.lukket = [p.start in b.lukninger for p in perioder]
+    for linje in linjer:
+        if linje.type == ForecastLinje.POST:
+            for i, p in enumerate(perioder):
+                if b.lukket[i]:
+                    b.vaerdier[linje.kode][i] = faktisk["vaerdier"].get((linje.kode, p.start), NUL)
+
     sumlinjer = {l.kode: l for l in linjer if l.type == ForecastLinje.SUM}
 
     def summer(kode: str, i: int) -> Decimal:
@@ -132,10 +147,18 @@ def beregn(selskab: Selskab, fra: date, til: date, idag: date) -> Beregning:
         saldo += sum((mellem.i_alt(i) for i in range(len(mellem.perioder))), NUL)
     for i, p in enumerate(perioder):
         if p.slut <= anker_dato:
+            if b.lukket[i]:
+                b.primo[i] = bank.primo_i_lukket_periode(b.lukninger[p.start], p.start)
+                b.ultimo[i] = b.primo[i] + b.i_alt(i)
             continue
         b.primo[i] = saldo
         saldo += b.i_alt(i)
         b.ultimo[i] = saldo
+    # Perioder før startsaldoen, som ikke er lukkede, har ingen meningsfulde tal.
+    for i, p in enumerate(perioder):
+        if p.slut <= anker_dato and not b.lukket[i]:
+            for kode in b.vaerdier:
+                b.vaerdier[kode][i] = None
     return b
 
 
@@ -151,12 +174,14 @@ def _sum(vaerdier: list) -> Decimal | None:
     return sum(tal, NUL) if tal else None
 
 
-def kolonner(perioder: list[Periode], idag: date) -> list[dict]:
+def kolonner(perioder: list[Periode], idag: date, lukket: list[bool] | None = None) -> list[dict]:
     """Periodekolonner med en månedskolonne efter hver måned og en kvartalskolonne til sidst."""
+    lukket = lukket or [False] * len(perioder)
     res = []
     for i, p in enumerate(perioder):
         res.append({"type": "periode", "idx": [i], "start": p.start.isoformat(), "slut": p.slut.isoformat(),
-                    "label": p.label, "uge": p.uge, "maaned": maanedsnavn(p.start), "aktuel": p.indeholder(idag)})
+                    "label": p.label, "uge": p.uge, "maaned": maanedsnavn(p.start), "aktuel": p.indeholder(idag),
+                    "lukket": lukket[i]})
         if i == len(perioder) - 1 or perioder[i + 1].maaned != p.maaned:
             idx = [j for j, q in enumerate(perioder) if q.maaned == p.maaned]
             res.append({"type": "maaned", "idx": idx, "label": maanedsnavn(p.start).split()[0], "maaned": maanedsnavn(p.start)})
@@ -166,7 +191,7 @@ def kolonner(perioder: list[Periode], idag: date) -> list[dict]:
 
 def tabel(b: Beregning, idag: date) -> dict:
     """Serialiserbar tabel (bruges både til visning og til gemte versioner)."""
-    kols = kolonner(b.perioder, idag)
+    kols = kolonner(b.perioder, idag, b.lukket)
     min_saldo = b.selskab.minimumssaldo
 
     def celler(vaerdier):
@@ -234,3 +259,30 @@ def saldo_13_uger(selskab: Selskab, idag: date) -> dict:
         saldi.append(None if b.ultimo[i] is None else float(b.ultimo[i]))
     laveste = min((s for s in saldi if s is not None), default=None)
     return {"labels": labels, "saldi": saldi, "minimum": float(selskab.minimumssaldo), "laveste": laveste}
+
+
+def prognose(selskab: Selskab, idag: date, uger: int = 26) -> dict:
+    """Forventet debitorindbetaling og ultimosaldo pr. uge og pr. måned fra aktuel uge og frem.
+
+    Gemmes i hver version, så opfølgningen kan sammenligne med de faktiske tal senere.
+    """
+    start = uge_start(idag)
+    b = beregn(selskab, start, start + timedelta(weeks=uger, days=-1), idag)
+    pr_uge, pr_maaned = {}, {}
+    for i, p in enumerate(b.perioder):
+        deb = b.vaerdier.get("ind_debitor", [NUL] * len(b.perioder))[i] or NUL
+        u = pr_uge.setdefault(p.uge_start.isoformat(), {"debitor": NUL, "ultimo": None})
+        u["debitor"] += deb
+        u["ultimo"] = b.ultimo[i]
+        m = pr_maaned.setdefault(p.maaned.isoformat()[:7], {"debitor": NUL, "ultimo": None, "hel": p.maaned >= start})
+        m["debitor"] += deb
+        m["ultimo"] = b.ultimo[i]
+    for d in list(pr_uge.values()) + list(pr_maaned.values()):
+        d["debitor"], d["ultimo"] = _s(d["debitor"]), _s(d["ultimo"])
+    return {"uger": pr_uge, "maaneder": pr_maaned}
+
+
+def version_data(aar: int, kvartal: int, idag: date) -> dict:
+    tabeller = [kvartalstabel(s, aar, kvartal, idag) for s in Selskab.objects.all()]
+    return {"aar": aar, "kvartal": kvartal, "tabeller": tabeller, "samlet": samlet_tabel(tabeller) if tabeller else None,
+            "prognose": {s.kode: prognose(s, idag) for s in Selskab.objects.all()}}

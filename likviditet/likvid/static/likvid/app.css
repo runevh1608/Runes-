@@ -204,3 +204,21 @@ label.inline { flex-direction: row; align-items: center; gap: 6px; }
   .vurdering-raekke input, .vurdering-raekke textarea { border: 0; padding: 0; resize: none; }
   .meta { display: none; }
 }
+.fc td.lukket:not(.navn) { background-image: linear-gradient(rgba(6,118,71,.06), rgba(6,118,71,.06)); }
+.fc th.lukket small { color: var(--groen); }
+.upload { display: flex; gap: 6px; align-items: center; margin: 0; }
+.upload input[type=file] { border: 0; padding: 0; max-width: 230px; }
+.afstemning-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.afstemning-grid .kort { margin-bottom: 16px; }
+.afstem { width: 100%; }
+.afstem td { padding: 6px 0; border-bottom: 1px solid var(--linje); }
+.afstem .r-sum td { font-weight: 600; border-top: 1px solid var(--tekst); border-bottom: 0; }
+.luk-form { display: flex; align-items: flex-end; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.luk-form input { width: 170px; text-align: right; }
+.difference { font-weight: 600; padding-bottom: 7px; }
+.difference.ok { color: var(--groen); }
+.posteringer select { min-width: 220px; }
+.posteringer tr.mangler td { background: var(--roed-svag); }
+.kilde-celle { font-size: 12px; }
+.ingen-streg { border-top: 0; margin-top: 0; padding-top: 0; }
+@media (max-width: 900px) { .afstemning-grid { grid-template-columns: 1fr; } }

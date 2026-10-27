@@ -325,3 +325,104 @@ class KreditorVurdering(models.Model):
         ordering = ["-oprettet", "-id"]
         verbose_name = "kreditorvurdering"
         verbose_name_plural = "kreditorvurderinger"
+
+
+# ---------------------------------------------------------------- Bank og lukning af uger
+
+
+class KategoriRegel(models.Model):
+    """Posteringer hvis tekst indeholder søgeteksten, kategoriseres til linjen med denne kode."""
+
+    soegetekst = models.CharField(max_length=100)
+    linje_kode = models.SlugField(help_text="Kode på forecast-linjen, fx loen eller ind_stripe.")
+    selskab = models.ForeignKey(Selskab, null=True, blank=True, on_delete=models.PROTECT,
+                                help_text="Tom = gælder begge selskaber.")
+    aktiv = models.BooleanField(default=True)
+    oprettet = models.DateTimeField(auto_now_add=True)
+    oprettet_af = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        ordering = ["soegetekst"]
+        verbose_name = "kategoriseringsregel"
+        verbose_name_plural = "kategoriseringsregler"
+
+    def __str__(self):
+        return f"'{self.soegetekst}' → {self.linje_kode}"
+
+
+class Kontoudtog(models.Model):
+    bankkonto = models.ForeignKey(Bankkonto, on_delete=models.PROTECT, related_name="kontoudtog")
+    filnavn = models.CharField(max_length=200)
+    importeret = models.DateTimeField(auto_now_add=True)
+    importeret_af = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    antal_nye = models.PositiveIntegerField(default=0)
+    antal_dubletter = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["-importeret"]
+
+
+class UgeLukning(models.Model):
+    """En afstemt og lukket uge for ét selskab. Kan ikke ændres eller slettes."""
+
+    selskab = models.ForeignKey(Selskab, on_delete=models.PROTECT, related_name="lukninger")
+    fra_dato = models.DateField()
+    til_dato = models.DateField(help_text="Altid en torsdag.")
+    primo_saldo = models.DecimalField(**BELOEB)
+    bevaegelser = models.DecimalField(**BELOEB)
+    faktisk_saldo = models.DecimalField(**BELOEB)
+    lukket = models.DateTimeField(auto_now_add=True)
+    lukket_af = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        ordering = ["selskab", "-til_dato"]
+        unique_together = [("selskab", "til_dato")]
+        verbose_name = "lukket uge"
+        verbose_name_plural = "lukkede uger"
+
+    def __str__(self):
+        return f"{self.selskab}: {self.fra_dato:%d.%m}–{self.til_dato:%d.%m.%Y}"
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            raise ValidationError("En lukket uge kan ikke ændres.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("En lukket uge kan ikke slettes.")
+
+
+class UgeFaktisk(models.Model):
+    """Faktisk beløb pr. linje og periode i en lukket uge."""
+
+    lukning = models.ForeignKey(UgeLukning, on_delete=models.PROTECT, related_name="faktiske")
+    linje = models.ForeignKey(ForecastLinje, on_delete=models.PROTECT)
+    periode_start = models.DateField()
+    beloeb = models.DecimalField(**BELOEB)
+
+    class Meta:
+        unique_together = [("lukning", "linje", "periode_start")]
+
+
+class Postering(models.Model):
+    MANUEL, REGEL = "manuel", "regel"
+
+    bankkonto = models.ForeignKey(Bankkonto, on_delete=models.PROTECT, related_name="posteringer")
+    kontoudtog = models.ForeignKey(Kontoudtog, on_delete=models.PROTECT, related_name="posteringer")
+    dato = models.DateField()
+    tekst = models.CharField(max_length=300)
+    beloeb = models.DecimalField(**BELOEB)
+    saldo = models.DecimalField(**BELOEB, null=True, blank=True, help_text="Saldo efter posteringen, hvis banken oplyser den.")
+    noegle = models.CharField(max_length=64, help_text="Bruges til at springe dubletter over ved overlappende import.")
+    raekkefoelge = models.PositiveIntegerField(default=0)
+    linje = models.ForeignKey(ForecastLinje, null=True, blank=True, on_delete=models.PROTECT)
+    kategori_kilde = models.CharField(max_length=10, blank=True, choices=[(MANUEL, "Manuel"), (REGEL, "Regel")])
+    regel = models.ForeignKey(KategoriRegel, null=True, blank=True, on_delete=models.SET_NULL)
+    lukning = models.ForeignKey(UgeLukning, null=True, blank=True, on_delete=models.PROTECT, related_name="posteringer",
+                                help_text="Sat når ugen er lukket; posteringen er så arkiveret.")
+
+    class Meta:
+        ordering = ["dato", "raekkefoelge", "id"]
+        unique_together = [("bankkonto", "noegle")]
+        verbose_name = "postering"
+        verbose_name_plural = "posteringer"

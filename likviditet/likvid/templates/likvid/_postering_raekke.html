@@ -1,0 +1,14 @@
+{% load dk %}
+<tr class="{% if not p.linje_id %}mangler{% endif %}" data-k="post|{{ p.id }}">
+  <td class="dato">{{ p.dato|dkdato }}</td>
+  <td>{{ p.tekst }}</td>
+  <td class="tal{% if p.beloeb|negativ %} neg{% endif %}">{{ p.beloeb|kr:2 }}</td>
+  <td class="tal daempet">{% if p.saldo is not None %}{{ p.saldo|kr:2 }}{% endif %}</td>
+  <td>
+    <select class="kategori" data-url="{% url 'postering_linje' p.id %}" aria-label="Linje for {{ p.tekst }}">
+      <option value="">– Vælg linje –</option>
+      {% for l in linjer %}<option value="{{ l.id }}"{% if l.id == p.linje_id %} selected{% endif %}>{{ l.navn }}</option>{% endfor %}
+    </select>
+  </td>
+  <td class="daempet kilde-celle">{% if p.kategori_kilde == 'regel' %}Regel: "{{ p.regel.soegetekst }}"{% elif p.kategori_kilde == 'manuel' %}Manuel{% endif %}</td>
+</tr>

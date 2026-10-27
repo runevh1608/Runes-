@@ -127,3 +127,33 @@ function tegnSaldograf(id, data) {
     },
   });
 }
+
+// Pengestrømme: linjevalg gemmes straks, og afstemningen opdateres.
+document.addEventListener("change", async (ev) => {
+  const felt = ev.target;
+  if (!felt.matches("select.kategori")) return;
+  try {
+    opdater(await post(felt.dataset.url, { linje: felt.value }));
+    const side = await fetch(location.href).then((s) => s.text());
+    const ny = document.createElement("template");
+    ny.innerHTML = side;
+    const grid = ny.content.querySelector('[data-k="afstemning"]');
+    if (grid) opdater(grid.outerHTML);
+    toast("Gemt");
+  } catch (e) {
+    toast(e.message, true);
+  }
+});
+
+// Viser differencen mellem beregnet og tastet banksaldo.
+document.addEventListener("input", (ev) => {
+  const form = ev.target.closest(".luk-form");
+  if (!form) return;
+  const tekst = ev.target.value.replace(/\./g, "").replace(",", ".").replace("−", "-");
+  const diff = parseFloat(tekst) - parseFloat(form.dataset.beregnet);
+  const el = form.querySelector(".difference");
+  if (isNaN(diff)) return (el.textContent = "");
+  const kr = new Intl.NumberFormat("da-DK", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  el.textContent = Math.abs(diff) < 0.005 ? "Afstemt" : `Difference ${kr.format(diff)}`;
+  el.className = "difference " + (Math.abs(diff) < 0.005 ? "ok" : "neg");
+});
