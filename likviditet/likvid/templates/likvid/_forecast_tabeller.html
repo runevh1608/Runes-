@@ -1,0 +1,20 @@
+{% load dk %}
+{% for t in tabeller %}{% include "likvid/_forecast_tabel.html" %}{% endfor %}
+{% if samlet %}
+<section class="kort fc-kort">
+  <div class="kort-hoved"><h2>Samlet</h2><span class="daempet">Begge selskaber</span></div>
+  <div class="tabel-scroll">
+  <table class="fc">
+    <thead><tr><th class="navn">Kr.</th>{% for k in samlet.kolonner %}<th class="{{ k.type }}{% if k.aktuel %} aktuel{% endif %}">{% if k.type == 'periode' %}Uge {{ k.uge }}<small>{{ k.label }}</small>{% elif k.type == 'maaned' %}{{ k.label }}<small>i alt</small>{% else %}Kvartal<small>i alt</small>{% endif %}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for l in samlet.linjer %}{% with r=forloop.counter0 %}
+      <tr class="r-{{ l.type }}">
+        <td class="navn">{{ l.navn }}</td>
+        {% for k, c in samlet.kolonner|med:l.celler %}<td class="{{ k.type }}{% if k.aktuel %} aktuel{% endif %}{% if c|negativ %} neg{% endif %}{% if l.under|idx:forloop.counter0 %} under{% endif %}" data-k="samlet|{{ r }}|{{ forloop.counter0 }}">{{ c|kr }}</td>{% endfor %}
+      </tr>
+      {% endwith %}{% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endif %}

@@ -1,0 +1,71 @@
+{% extends "likvid/base.html" %}{% load dk %}
+{% block titel %}Debitorer {{ selskab.navn }}{% endblock %}
+{% block indhold %}
+<div class="sidehoved">
+  <div>
+    <h1>Debitoropfølgning</h1>
+    <div class="faner">{% for s in selskaber %}<a href="{% url 'debitorer' s.kode %}" class="{% if s == selskab %}aktiv{% endif %}">{{ s.navn }}</a>{% endfor %}</div>
+  </div>
+  <div class="handlinger">
+    <span class="daempet">{% if sidste_sync %}{% if sidste_sync.fejl %}Seneste hentning fejlede {{ sidste_sync.tidspunkt|date:"d.m.Y H:i" }}{% else %}Hentet {{ sidste_sync.tidspunkt|date:"d.m.Y H:i" }}{% if sidste_sync.bruger %} af {{ sidste_sync.bruger.username }}{% endif %}{% endif %}{% else %}Ikke hentet endnu{% endif %}</span>
+    <form method="post" action="{% url 'debitor_hent' selskab.kode %}">{% csrf_token %}
+      <button class="knap primaer" {% if not economic_klar %}disabled title="e-conomic er ikke sat op for {{ selskab.navn }}"{% endif %}>Hent fra e-conomic</button>
+    </form>
+  </div>
+</div>
+
+<div class="noegletal">
+  <div class="tal-kort"><span>Åbent i alt</span><b>{{ opsummering.aabent|kr }} kr.</b><small>{{ opsummering.antal.alle }} fakturaer</small></div>
+  <div class="tal-kort{% if opsummering.forfaldent %} orange{% endif %}"><span>Forfaldent</span><b>{{ opsummering.forfaldent|kr }} kr.</b><small>{{ opsummering.antal.forfaldne }} fakturaer</small></div>
+  <div class="tal-kort{% if opsummering.antal.ikke_som_forventet %} roed{% endif %}"><span>Ikke betalt som forventet</span><b>{{ opsummering.antal.ikke_som_forventet }}</b><small>fakturaer</small></div>
+  <div class="tal-kort"><span>Uvurderede</span><b>{{ opsummering.antal.uvurderede }}</b><small>forventes fakturadato + {{ selskab.standard_kredit_dage }} dage</small></div>
+</div>
+
+<section class="kort">
+  <div class="kort-hoved"><h2>Forventede indbetalinger</h2><span class="daempet">Pr. periode, inkl. forventede fakturaer. Overskredne ligger i aktuel periode.</span></div>
+  <div class="fremad">{% for x in fremad %}
+    <div class="{% if forloop.first %}aktuel{% endif %}"><span>Uge {{ x.periode.uge }}</span><small>{{ x.periode.label }}</small><b>{{ x.beloeb|kr }}</b></div>
+  {% endfor %}</div>
+</section>
+
+<section class="kort">
+  <div class="kort-hoved">
+    <h2>Åbne fakturaer</h2>
+    <div class="faner smaa">{% for k, navn in filtre %}<a href="?vis={{ k }}" class="{% if filter == k %}aktiv{% endif %}">{{ navn }} <span>{{ opsummering.antal|idx:k }}</span></a>{% endfor %}</div>
+  </div>
+  {% if raekker %}
+  <div class="tabel-scroll">
+  <table class="liste debitor">
+    <thead><tr><th>Nr.</th><th>Kunde</th><th>Fakturadato</th><th>Forfald</th><th class="tal">Rest (DKK)</th><th>Forventet betaling</th><th>Kommentar</th><th>Status</th><th>Seneste vurdering</th></tr></thead>
+    <tbody id="debitor-liste">{% for r in raekker %}{% include "likvid/_debitor_raekke.html" %}{% endfor %}</tbody>
+  </table>
+  </div>
+  {% else %}<p class="tom">Ingen fakturaer i denne visning.</p>{% endif %}
+</section>
+
+<section class="kort" id="forventede">
+  <div class="kort-hoved"><h2>Forventede fakturaer</h2><span class="daempet">Endnu ikke udstedt. Beløbet fordeles ligeligt på hverdage i fakturaintervallet; betaling forventes fakturadag + kredit. Dage før i dag udløber.</span></div>
+  {% if forventede %}
+  <table class="liste">
+    <thead><tr><th>Beskrivelse</th><th>Fakturadatoer</th><th>Kredit</th><th>Forventet betaling</th><th class="tal">Beløb</th><th class="tal">Udløbet</th><th></th></tr></thead>
+    <tbody>{% for x in forventede %}<tr>
+      <td>{{ x.ff.beskrivelse }}<small class="daempet"> · {{ x.ff.oprettet_af.username }}</small></td>
+      <td>{{ x.ff.fra_dato|dkdato }} – {{ x.ff.til_dato|dkdato }}</td>
+      <td>{{ x.ff.kredit_dage }} dage</td>
+      <td>{{ x.betaling_fra|dkdato }} – {{ x.betaling_til|dkdato }}</td>
+      <td class="tal">{{ x.ff.beloeb|kr:2 }}</td>
+      <td class="tal daempet">{% if x.udloebet %}{{ x.udloebet|kr:2 }}{% endif %}</td>
+      <td><form method="post" action="{% url 'forventet_fjern' x.ff.id %}" onsubmit="return confirm('Fjern den forventede faktura?')">{% csrf_token %}<button class="link">Fjern</button></form></td>
+    </tr>{% endfor %}</tbody>
+  </table>
+  {% endif %}
+  <form method="post" action="{% url 'forventet_opret' selskab.kode %}" class="inline-form">{% csrf_token %}
+    <label>Beskrivelse<input name="beskrivelse" placeholder="Fx salg via betalingslinks"></label>
+    <label>Beløb inkl. moms<input name="beloeb" inputmode="decimal" required placeholder="0"></label>
+    <label>Fakturadato fra<input class="dato-felt" name="fra_dato" required placeholder="dd.mm.åååå"></label>
+    <label>til<input class="dato-felt" name="til_dato" placeholder="dd.mm.åååå"></label>
+    <label>Kredit (dage)<input type="number" name="kredit_dage" min="0" value="{{ selskab.standard_kredit_dage }}"></label>
+    <button class="knap">Tilføj</button>
+  </form>
+</section>
+{% endblock %}

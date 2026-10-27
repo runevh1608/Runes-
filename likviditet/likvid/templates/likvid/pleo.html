@@ -1,0 +1,15 @@
+{% extends "likvid/base.html" %}
+{% block titel %}Pleo-budget{% endblock %}
+{% block indhold %}
+<div class="sidehoved">
+  <div><h1>Pleo-budget <span class="daempet">Q{{ kvartal }} {{ aar }}</span></h1>
+  <p class="daempet">Månedsbudget pr. afdeling. Indgår i forecastet som "Udbetalinger, PLEO".</p></div>
+  <div class="handlinger"><div class="knapgruppe">
+    <a class="knap" href="{% url 'pleo_kvartal' forrige.0 forrige.1 %}">‹</a>
+    <a class="knap" href="{% url 'pleo_kvartal' naeste.0 naeste.1 %}">›</a>
+  </div></div>
+</div>
+<div id="pleo" data-url="{% url 'pleo_budget' %}" data-aar="{{ aar }}" data-kvartal="{{ kvartal }}">
+{% include "likvid/_pleo_tabeller.html" %}
+</div>
+{% endblock %}

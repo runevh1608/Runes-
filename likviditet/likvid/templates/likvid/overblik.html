@@ -1,0 +1,36 @@
+{% extends "likvid/base.html" %}{% load dk static %}
+{% block titel %}Overblik{% endblock %}
+{% block indhold %}
+<div class="sidehoved">
+  <div>
+    <h1>Overblik</h1>
+    <p class="daempet">{{ idag|date:"l j. F Y"|capfirst }}{% if opgaver %} · I dag: {% for navn, url in opgaver %}{% if url %}<a href="{% url url %}">{{ navn }}</a>{% else %}{{ navn }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}</p>
+  </div>
+</div>
+
+<div class="selskaber">
+{% for x in selskaber %}
+  <section class="kort">
+    <div class="kort-hoved"><h2>{{ x.selskab.navn }}</h2><span class="daempet">Minimum {{ x.selskab.minimumssaldo|kr }} kr.</span></div>
+    {% if x.mangler_saldo %}<div class="besked warning">Angiv primosaldo under <a href="{% url 'opsaetning' %}">Opsætning</a> for at se saldi.</div>
+    {% elif x.under_minimum %}<div class="advarsel"><strong>Under minimumssaldo.</strong> Laveste forventede saldo de næste 13 uger er {{ x.graf.laveste|kr }} kr.</div>{% endif %}
+    <div class="noegletal">
+      <div class="tal-kort"><span>Laveste saldo, 13 uger</span><b class="{% if x.under_minimum %}neg{% endif %}">{% if x.graf.laveste is not None %}{{ x.graf.laveste|kr }} kr.{% else %}–{% endif %}</b></div>
+      <div class="tal-kort"><span>Åbne debitorer</span><b>{{ x.aabent|kr }} kr.</b><small>heraf forfaldent {{ x.forfaldent|kr }} kr.</small></div>
+      <div class="tal-kort{% if x.antal_ikke_som_forventet %} roed{% endif %}"><span>Ikke betalt som forventet</span><b>{{ x.antal_ikke_som_forventet }}</b><small><a href="{% url 'debitorer' x.selskab.kode %}?vis=ikke_som_forventet">Se fakturaer</a></small></div>
+      <div class="tal-kort"><span>Uvurderede fakturaer</span><b>{{ x.antal_uvurderede }}</b><small>{% if x.sidste_sync %}hentet {{ x.sidste_sync.tidspunkt|date:"d.m. H:i" }}{% else %}ikke hentet endnu{% endif %}</small></div>
+    </div>
+  </section>
+{% endfor %}
+</div>
+
+<section class="kort">
+  <div class="kort-hoved"><h2>Forventet banksaldo, 13 uger frem</h2><span class="daempet">Ultimo pr. uge (fre–tors). Stiplet linje er minimumssaldo.</span></div>
+  <div class="graf"><canvas id="saldograf" aria-label="Forventet banksaldo 13 uger frem"></canvas></div>
+</section>
+{{ graf_data|json_script:"graf-data" }}
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'likvid/chart.umd.js' %}"></script>
+<script>tegnSaldograf("saldograf", JSON.parse(document.getElementById("graf-data").textContent));</script>
+{% endblock %}

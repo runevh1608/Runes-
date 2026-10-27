@@ -1,0 +1,24 @@
+{% load dk %}{% with f=r.f st=r.status v=r.f.vurdering %}
+<tr class="deb-raekke{% if st.ikke_som_forventet %} ikke-forventet{% elif st.forfalden %} forfalden{% endif %}" data-url="{% url 'debitor_vurdering' f.id %}">
+  <td class="nr">{{ f.nummer }}</td>
+  <td class="kunde">{{ f.kunde_navn|default:"–" }}<small>{{ f.kunde_nummer }}</small></td>
+  <td class="dato">{{ f.fakturadato|dkdato }}</td>
+  <td class="dato">{{ f.forfaldsdato|dkdato }}</td>
+  <td class="tal">{% if f.valuta != 'DKK' %}<small class="valuta">{{ f.valuta }} {{ f.restbeloeb|kr:2 }}</small>{% endif %}{{ f.restbeloeb_dkk|kr:2 }}</td>
+  <td class="forventet">
+    <input class="dato-felt" name="forventet_dato" placeholder="dd.mm.åååå" value="{% if v.forventet_dato %}{{ v.forventet_dato|dkdato }}{% endif %}" data-k="deb|{{ f.id }}|dato" aria-label="Forventet betalingsdato for faktura {{ f.nummer }}">
+    <small data-k="deb|{{ f.id }}|std">{% if not v.forventet_dato %}Standard {{ f.standard_dato|dkdato }}{% elif st.udskudt_fra %}Udskudt fra {{ st.udskudt_fra|dkdato }}{% else %}&nbsp;{% endif %}</small>
+  </td>
+  <td class="kommentar"><textarea name="kommentar" rows="1" data-k="deb|{{ f.id }}|kommentar" aria-label="Kommentar til faktura {{ f.nummer }}">{{ v.kommentar }}</textarea></td>
+  <td class="status" data-k="deb|{{ f.id }}|status">
+    {% if st.ikke_som_forventet %}<span class="chip roed" title="Forventet betalt {{ v.forventet_dato|dkdato }}">Ikke betalt som forventet</span>{% endif %}
+    {% if st.forfalden %}<span class="chip orange">Forfalden {{ st.dage_forfalden }} d.</span>{% endif %}
+    {% if not st.vurderet %}<span class="chip graa">Uvurderet</span>{% endif %}
+  </td>
+  <td class="meta" data-k="deb|{{ f.id }}|meta">{% if v %}
+    <details><summary>{{ v.oprettet_af.get_full_name|default:v.oprettet_af.username|default:"–" }}, {{ v.oprettet|date:"d.m. H:i" }}</summary>
+      <ul class="historik">{% for h in f.alle_vurderinger %}<li><b>{{ h.oprettet|date:"d.m.Y H:i" }}</b> {{ h.oprettet_af.username }}: {% if h.forventet_dato %}{{ h.forventet_dato|dkdato }}{% else %}standard{% endif %}{% if h.kommentar %} – {{ h.kommentar }}{% endif %}</li>{% endfor %}</ul>
+    </details>{% endif %}
+  </td>
+</tr>
+{% endwith %}
