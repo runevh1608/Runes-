@@ -85,10 +85,10 @@ document.addEventListener("focusin", (ev) => {
   if (ev.target.matches("input.celle")) ev.target.select();
 });
 
-// Debitorvurderinger: dato og kommentar gemmes, når feltet forlades.
+// Debitor- og kreditorvurderinger: dato og kommentar gemmes, når feltet forlades.
 document.addEventListener("change", (ev) => {
   const felt = ev.target;
-  const raekke = felt.closest("tr.deb-raekke");
+  const raekke = felt.closest("tr.vurdering-raekke");
   if (!raekke) return;
   const data = {};
   raekke.querySelectorAll("[name]").forEach((f) => (data[f.name] = f.value));

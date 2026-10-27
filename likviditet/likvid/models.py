@@ -260,3 +260,68 @@ class ForecastSnapshot(models.Model):
 
     def delete(self, *args, **kwargs):
         raise ValidationError("En gemt forecast-version kan ikke slettes.")
+
+
+# ---------------------------------------------------------------- Kreditorer
+
+
+class KreditorPost(models.Model):
+    """Spejl af en åben leverandørfaktura i e-conomic. Slettes aldrig; lukkes når den er betalt."""
+
+    selskab = models.ForeignKey(Selskab, on_delete=models.PROTECT, related_name="kreditorposter")
+    noegle = models.CharField(max_length=40, help_text="Regnskabsår og posteringsnummer i e-conomic.")
+    leverandoer_nummer = models.CharField(max_length=40, blank=True)
+    leverandoer_navn = models.CharField(max_length=200, blank=True)
+    fakturanummer = models.CharField(max_length=60, blank=True)
+    tekst = models.CharField(max_length=250, blank=True)
+    bilagsdato = models.DateField()
+    forfaldsdato = models.DateField(null=True, blank=True)
+    valuta = models.CharField(max_length=3, default="DKK")
+    til_betaling = models.DecimalField(**BELOEB, help_text="Restbeløb i fakturaens valuta. Positivt = vi skal betale.")
+    til_betaling_dkk = models.DecimalField(**BELOEB)
+    aaben = models.BooleanField(default=True)
+    foerst_set = models.DateTimeField(auto_now_add=True)
+    sidst_set = models.DateTimeField()
+    lukket_dato = models.DateField(null=True, blank=True)
+
+    class Meta:
+        unique_together = [("selskab", "noegle")]
+        ordering = ["forfaldsdato", "bilagsdato"]
+        verbose_name = "kreditorpost"
+        verbose_name_plural = "kreditorposter"
+
+    def __str__(self):
+        return f"{self.selskab}: {self.leverandoer_navn} {self.fakturanummer}"
+
+    @property
+    def standard_dato(self) -> date:
+        return self.forfaldsdato or self.bilagsdato
+
+    @property
+    def vurdering(self):
+        cache = getattr(self, "_vurdering_cache", None)
+        if cache is not None:
+            return cache or None
+        v = self.vurderinger.order_by("-oprettet", "-id").first()
+        self._vurdering_cache = v or False
+        return v
+
+    @property
+    def betalingsdato(self) -> date:
+        v = self.vurdering
+        return v.betalingsdato if v and v.betalingsdato else self.standard_dato
+
+
+class KreditorVurdering(models.Model):
+    """Planlagt betalingsdato og kommentar. Kun nye rækker; den nyeste gælder."""
+
+    post = models.ForeignKey(KreditorPost, on_delete=models.PROTECT, related_name="vurderinger")
+    betalingsdato = models.DateField(null=True, blank=True)
+    kommentar = models.TextField(blank=True)
+    oprettet = models.DateTimeField(auto_now_add=True)
+    oprettet_af = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        ordering = ["-oprettet", "-id"]
+        verbose_name = "kreditorvurdering"
+        verbose_name_plural = "kreditorvurderinger"

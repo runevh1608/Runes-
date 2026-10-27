@@ -14,6 +14,7 @@
     <nav>
       <a href="{% url 'overblik' %}" class="{% if n == 'overblik' %}aktiv{% endif %}">Overblik</a>
       <a href="{% url 'debitorer_start' %}" class="{% if 'debitor' in n %}aktiv{% endif %}">Debitorer</a>
+      <a href="{% url 'kreditorer_start' %}" class="{% if 'kreditor' in n %}aktiv{% endif %}">Kreditorer</a>
       <a href="{% url 'forecast' %}" class="{% if 'forecast' in n %}aktiv{% endif %}">Forecast</a>
       <a href="{% url 'pleo' %}" class="{% if 'pleo' in n %}aktiv{% endif %}">Pleo-budget</a>
       <a href="{% url 'versioner' %}" class="{% if 'version' in n %}aktiv{% endif %}">Versioner</a>

@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
 
-from . import debitor
+from . import debitor, kreditor
 from .models import Bankkonto, ForecastLinje, ManuelPost, PleoBudget, Selskab
 from .perioder import Periode, kvartal_interval, maanedsnavn, perioder_mellem, uge_start
 
@@ -97,9 +97,13 @@ def beregn_linjer(selskab: Selskab, perioder: list[Periode], idag: date) -> Bere
             b.vaerdier[linje.kode] = list(debitor_beloeb)
         elif linje.kilde == ForecastLinje.PLEO:
             b.vaerdier[linje.kode] = _pleo(selskab, perioder)
-        else:
-            # Kreditoropfølgning bygges i næste trin.
-            b.vaerdier[linje.kode] = [NUL] * n
+        elif linje.kilde == ForecastLinje.KREDITOR:
+            beloeb = [NUL] * n
+            for d, bel in kreditor.forventede_udbetalinger(selskab, idag):
+                i = fordeler.indeks(d)
+                if i is not None:
+                    beloeb[i] += bel
+            b.vaerdier[linje.kode] = beloeb
 
     sumlinjer = {l.kode: l for l in linjer if l.type == ForecastLinje.SUM}
 

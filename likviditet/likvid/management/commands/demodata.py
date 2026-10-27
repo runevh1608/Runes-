@@ -8,8 +8,8 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from likvid import debitor
-from likvid.economic import AabenFaktura
+from likvid import debitor, kreditor
+from likvid.economic import AabenFaktura, AabenKreditor
 from likvid.models import (Bankkonto, DebitorFaktura, DebitorVurdering, ForecastLinje, ManuelPost, PleoAfdeling,
                            PleoBudget, Selskab)
 from likvid.perioder import perioder_mellem, uge_start
@@ -66,6 +66,18 @@ class Command(BaseCommand):
             DebitorVurdering.objects.create(faktura=f, forventet_dato=idag + timedelta(days=rnd.randint(-5, 20)),
                                             kommentar=rnd.choice(["Lovet betaling via mail", "Rykker sendt", "Venter på PO", ""]),
                                             oprettet_af=bruger)
+
+        leverandoerer = ["Telia", "Microsoft", "Google Ireland", "Kontorforsyningen", "DSV", "Advokatfirmaet Holm",
+                         "Ejendomsselskabet Nord", "Adobe"]
+        for s, antal in ((med, 14), (web, 8)):
+            poster = []
+            for n in range(antal):
+                bilag = idag - timedelta(days=rnd.randint(0, 40))
+                beloeb = Decimal(rnd.randrange(2000, 85000))
+                poster.append(AabenKreditor(f"{idag.year}-{5000 + n}", str(200 + n % 8), leverandoerer[n % 8],
+                                            f"F-{rnd.randint(10000, 99999)}", "Leverandørfaktura", bilag,
+                                            bilag + timedelta(days=rnd.choice([8, 14, 30])), "DKK", beloeb, beloeb))
+            kreditor.synkroniser(s, poster, idag)
 
         for s, afdelinger in ((med, {"Salg": 18000, "Marketing": 42000, "Administration": 6000}),):
             for navn, beloeb in afdelinger.items():

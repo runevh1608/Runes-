@@ -1,5 +1,5 @@
 {% load dk %}{% with f=r.f st=r.status v=r.f.vurdering %}
-<tr class="deb-raekke{% if st.ikke_som_forventet %} ikke-forventet{% elif st.forfalden %} forfalden{% endif %}" data-url="{% url 'debitor_vurdering' f.id %}">
+<tr class="vurdering-raekke{% if st.ikke_som_forventet %} ikke-forventet{% elif st.forfalden %} forfalden{% endif %}" data-url="{% url 'debitor_vurdering' f.id %}">
   <td class="nr">{{ f.nummer }}</td>
   <td class="kunde">{{ f.kunde_navn|default:"–" }}<small>{{ f.kunde_nummer }}</small></td>
   <td class="dato">{{ f.fakturadato|dkdato }}</td>

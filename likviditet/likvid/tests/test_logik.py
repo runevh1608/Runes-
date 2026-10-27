@@ -185,3 +185,61 @@ class EconomicTest(TestCase):
     def test_ikke_konfigureret(self):
         with self.assertRaises(economic.EconomicFejl):
             economic.EconomicKlient("webbler")
+
+
+class KreditorTest(TestCase):
+    def setUp(self):
+        self.med = Selskab.objects.get(kode="mediating")
+        self.bruger = get_user_model().objects.create(username="a")
+        Bankkonto.objects.create(selskab=self.med, navn="Drift", primo_saldo=Decimal(1000), primo_dato=date(2026, 10, 22))
+
+    def kreditor(self, noegle, forfald, beloeb):
+        return economic.AabenKreditor(noegle, "1", "Lev", "F1", "", forfald - timedelta(days=8), forfald, "DKK",
+                                      Decimal(beloeb), Decimal(beloeb))
+
+    def test_betalingsdato_og_forecast(self):
+        from likvid import kreditor
+        kreditor.synkroniser(self.med, [self.kreditor("2026-1", date(2026, 11, 3), 400),
+                                        self.kreditor("2026-2", date(2026, 10, 1), 100)], IDAG)
+        p = next(x for x in kreditor.aabne_poster(self.med) if x.noegle == "2026-1")
+        kreditor.gem_vurdering(p, date(2026, 11, 20), "Aftalt", self.bruger)
+        res = sorted(kreditor.forventede_udbetalinger(self.med, IDAG))
+        self.assertEqual(res, [(IDAG, Decimal(-100)), (date(2026, 11, 20), Decimal(-400))])
+        b = forecast.beregn(self.med, date(2026, 10, 23), date(2026, 11, 26), IDAG)
+        self.assertEqual(b.vaerdier["ud_kreditor"][0], Decimal(-100))
+        self.assertEqual(b.vaerdier["ud_kreditor"][-1], Decimal(-400))
+        self.assertEqual(b.ultimo[-1], Decimal(500))
+        kreditor.synkroniser(self.med, [self.kreditor("2026-2", date(2026, 10, 1), 100)], IDAG)
+        lukket = kreditor.KreditorPost.objects.get(noegle="2026-1")
+        self.assertFalse(lukket.aaben)
+        self.assertEqual(lukket.vurderinger.count(), 1)
+
+
+@override_settings(ECONOMIC_APP_SECRET_TOKEN="app", ECONOMIC_BASE_URL="https://e.test")
+class EconomicKreditorTest(TestCase):
+    def svar(self, status, data):
+        return mock.Mock(status_code=status, json=lambda: data, text="fejl")
+
+    def test_hent_kreditorer_med_fallback_og_fortegn(self):
+        session = mock.Mock(headers={})
+        poster = {"collection": [
+            {"entryNumber": 11, "entryType": "supplierInvoice", "date": "2026-10-01", "dueDate": "2026-10-15",
+             "currency": "EUR", "remainder": -100, "remainderInBaseCurrency": -746, "supplier": {"supplierNumber": 3},
+             "supplierInvoiceNumber": "A-1", "text": "Licens"},
+            {"entryNumber": 12, "entryType": "supplierInvoice", "date": "2026-10-02", "remainder": 0,
+             "supplier": {"supplierNumber": 3}}], "pagination": {}}
+        session.get.side_effect = [
+            self.svar(200, {"collection": [{"supplierNumber": 3, "name": "Adobe"}], "pagination": {}}),
+            self.svar(200, {"collection": [{"year": "2026", "toDate": "2026-12-31", "self": "https://e.test/accounting-years/2026"},
+                                           {"year": "2020", "toDate": "2020-12-31", "self": "https://e.test/accounting-years/2020"}],
+                            "pagination": {}}),
+            self.svar(400, {}),
+            self.svar(200, poster),
+        ]
+        with mock.patch.dict("os.environ", {"ECONOMIC_GRANT_TOKEN_MEDIATING": "g"}):
+            res = economic.hent_aabne_kreditorer(economic.EconomicKlient("mediating", session=session), IDAG)
+        self.assertEqual(len(res), 1)
+        k = res[0]
+        self.assertEqual((k.noegle, k.leverandoer_navn, k.til_betaling, k.til_betaling_dkk), ("2026-11", "Adobe", Decimal(100), Decimal(746)))
+        self.assertEqual(session.get.call_args_list[2].args[0], "https://e.test/accounting-years/2026/entries")
+        self.assertEqual(session.get.call_count, 4)  # 2020 springes over

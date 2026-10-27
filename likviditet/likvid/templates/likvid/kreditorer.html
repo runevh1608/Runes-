@@ -1,0 +1,48 @@
+{% extends "likvid/base.html" %}{% load dk %}
+{% block titel %}Kreditorer {{ selskab.navn }}{% endblock %}
+{% block indhold %}
+<div class="sidehoved">
+  <div>
+    <h1>Kreditoropfølgning <span class="daempet print-vis">{{ selskab.navn }}</span></h1>
+    <div class="faner">{% for s in selskaber %}<a href="{% url 'kreditorer' s.kode %}" class="{% if s == selskab %}aktiv{% endif %}">{{ s.navn }}</a>{% endfor %}</div>
+  </div>
+  <div class="handlinger">
+    <span class="daempet">{% if sidste_sync %}{% if sidste_sync.fejl %}Seneste hentning fejlede {{ sidste_sync.tidspunkt|date:"d.m.Y H:i" }}{% else %}Hentet {{ sidste_sync.tidspunkt|date:"d.m.Y H:i" }}{% if sidste_sync.bruger %} af {{ sidste_sync.bruger.username }}{% endif %}{% endif %}{% else %}Ikke hentet endnu{% endif %}</span>
+    <form method="post" action="{% url 'kreditor_hent' selskab.kode %}">{% csrf_token %}
+      <button class="knap primaer" {% if not economic_klar %}disabled title="e-conomic er ikke sat op for {{ selskab.navn }}"{% endif %}>Hent fra e-conomic</button>
+    </form>
+  </div>
+</div>
+
+<div class="noegletal">
+  <div class="tal-kort"><span>Åbne kreditorer</span><b>{{ opsummering.aabent|kr }} kr.</b><small>{{ opsummering.antal_alle }} fakturaer</small></div>
+  <div class="tal-kort{% if opsummering.forfaldent %} orange{% endif %}"><span>Forfaldent</span><b>{{ opsummering.forfaldent|kr }} kr.</b><small>{{ opsummering.antal_forfaldne }} fakturaer</small></div>
+  <div class="tal-kort"><span>Betalingsforslag til og med {{ til|dkdato }}</span><b>{{ opsummering.forslag|kr }} kr.</b><small>{{ opsummering.antal_forslag }} fakturaer</small></div>
+  <div class="tal-kort"><span>Udskudt efter forfald</span><b>{{ opsummering.antal_udskudte }}</b><small>fakturaer</small></div>
+</div>
+
+<section class="kort">
+  <div class="kort-hoved">
+    <h2>{% if vis == 'forslag' %}Betalingsforslag{% else %}Alle åbne kreditorer{% endif %}</h2>
+    <form method="get" class="filter-form">
+      <input type="hidden" name="vis" value="{{ vis }}">
+      {% if vis == 'forslag' %}<label class="inline">til og med <input class="dato-felt" name="til" value="{{ til|dkdato }}" onchange="this.form.submit()"></label>{% endif %}
+    </form>
+    <div class="faner smaa">
+      <a href="?vis=forslag&til={{ til|dkdato }}" class="{% if vis == 'forslag' %}aktiv{% endif %}">Betalingsforslag <span>{{ opsummering.antal_forslag }}</span></a>
+      <a href="?vis=alle" class="{% if vis == 'alle' %}aktiv{% endif %}">Alle åbne <span>{{ opsummering.antal_alle }}</span></a>
+      <button class="link" onclick="window.print()">Udskriv</button>
+    </div>
+  </div>
+  <p class="daempet hjaelp">Betalingsdato er forfaldsdatoen, medmindre I angiver en anden. Ændringer gemmes, når feltet forlades, og indgår i forecastet. Passerede datoer ligger i aktuel periode.</p>
+  {% if raekker %}
+  <div class="tabel-scroll">
+  <table class="liste debitor">
+    <thead><tr><th>Leverandør</th><th>Faktura</th><th>Bilagsdato</th><th>Forfald</th><th class="tal">Til betaling (DKK)</th><th>Betalingsdato</th><th>Kommentar</th><th>Status</th><th>Seneste vurdering</th></tr></thead>
+    <tbody>{% for r in raekker %}{% include "likvid/_kreditor_raekke.html" %}{% endfor %}</tbody>
+    <tfoot><tr class="r-sum"><td colspan="4">I alt</td><td class="tal">{{ total_vist|kr:2 }}</td><td colspan="4"></td></tr></tfoot>
+  </table>
+  </div>
+  {% else %}<p class="tom">Ingen fakturaer i denne visning.</p>{% endif %}
+</section>
+{% endblock %}

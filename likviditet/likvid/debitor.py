@@ -4,38 +4,15 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
 
-from django.db import transaction
-from django.db.models import Prefetch
-from django.utils import timezone
-
-from . import economic
+from . import economic, spejl
 from .models import DebitorFaktura, DebitorVurdering, ForventetFaktura, Selskab, Synkronisering
 
 
-@transaction.atomic
+FELTER = ("kunde_nummer", "kunde_navn", "fakturadato", "forfaldsdato", "valuta", "beloeb", "restbeloeb", "restbeloeb_dkk")
+
+
 def synkroniser(selskab: Selskab, aabne: list[economic.AabenFaktura], idag: date) -> dict:
-    """Opdaterer spejlet med listen af åbne fakturaer. Vurderinger røres ikke."""
-    nu = timezone.now()
-    eksisterende = {f.nummer: f for f in DebitorFaktura.objects.filter(selskab=selskab)}
-    set_numre, nye, genaabnet = set(), 0, 0
-    for a in aabne:
-        set_numre.add(a.nummer)
-        f = eksisterende.get(a.nummer)
-        if f is None:
-            f = DebitorFaktura(selskab=selskab, nummer=a.nummer)
-            nye += 1
-        elif not f.aaben:
-            genaabnet += 1
-        for felt in ("kunde_nummer", "kunde_navn", "fakturadato", "forfaldsdato", "valuta",
-                     "beloeb", "restbeloeb", "restbeloeb_dkk"):
-            setattr(f, felt, getattr(a, felt))
-        f.aaben, f.sidst_set, f.lukket_dato = True, nu, None
-        f.save()
-    lukkede = [f for n, f in eksisterende.items() if f.aaben and n not in set_numre]
-    for f in lukkede:
-        f.aaben, f.lukket_dato = False, idag
-        f.save(update_fields=["aaben", "lukket_dato"])
-    return {"aabne": len(aabne), "nye": nye, "lukkede": len(lukkede), "genaabnet": genaabnet}
+    return spejl.synkroniser(DebitorFaktura, selskab, "nummer", aabne, FELTER, idag)
 
 
 def hent_fra_economic(selskab: Selskab, bruger, idag: date) -> dict:
@@ -53,13 +30,7 @@ def hent_fra_economic(selskab: Selskab, bruger, idag: date) -> dict:
 
 
 def med_vurdering(qs):
-    """Forudindlæser vurderinger, så faktura.vurdering ikke giver en forespørgsel pr. række."""
-    fakturaer = list(qs.select_related("selskab").prefetch_related(
-        Prefetch("vurderinger", queryset=DebitorVurdering.objects.select_related("oprettet_af").order_by("-oprettet", "-id"),
-                 to_attr="alle_vurderinger")))
-    for f in fakturaer:
-        f._vurdering_cache = f.alle_vurderinger[0] if f.alle_vurderinger else False
-    return fakturaer
+    return spejl.med_vurdering(qs, DebitorVurdering)
 
 
 def aabne_fakturaer(selskab: Selskab):

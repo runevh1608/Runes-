@@ -129,8 +129,8 @@ table { border-collapse: collapse; width: 100%; }
 .debitor .kommentar textarea { width: 100%; min-width: 200px; resize: vertical; min-height: 32px; }
 .debitor .status { min-width: 140px; }
 .debitor .meta { font-size: 12px; color: var(--daempet); min-width: 150px; }
-.debitor tr.forfalden td:first-child { box-shadow: inset 3px 0 0 var(--orange); }
-.debitor tr.ikke-forventet td:first-child { box-shadow: inset 3px 0 0 var(--roed); }
+.vurdering-raekke.forfalden td:first-child { box-shadow: inset 3px 0 0 var(--orange); }
+.vurdering-raekke.ikke-forventet td:first-child { box-shadow: inset 3px 0 0 var(--roed); }
 details summary { cursor: pointer; }
 .historik { margin: 6px 0 0; padding-left: 16px; font-size: 12px; }
 input.gemmer, textarea.gemmer { background: var(--accent-svag); }
@@ -192,4 +192,15 @@ input.fejl, textarea.fejl { border-color: var(--roed); background: var(--roed-sv
   .top, .handlinger, .inline-form { display: none; }
   body { background: #fff; }
   .kort { border: 0; padding: 0; }
+}
+.filter-form { margin: 0; }
+label.inline { flex-direction: row; align-items: center; gap: 6px; }
+.hjaelp { margin: -4px 0 10px; font-size: 12px; }
+.liste tfoot td { font-weight: 600; border-top: 1px solid var(--tekst); padding: 8px; }
+.print-vis { display: none; }
+@media print {
+  .print-vis { display: inline; }
+  .faner, .noegletal, .hjaelp, .filter-form { display: none; }
+  .vurdering-raekke input, .vurdering-raekke textarea { border: 0; padding: 0; resize: none; }
+  .meta { display: none; }
 }

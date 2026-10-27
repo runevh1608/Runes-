@@ -2,8 +2,8 @@
 
 Intern app til den ugentlige likviditetsstyring for Mediating og Webbler.
 
-**Status:** Debitoropfølgning, forecast, Pleo-budget, versioner og opsætning er bygget.
-Kreditoropfølgning, CSV-import/lukning af uge og økonomiopfølgning følger.
+**Status:** Debitoropfølgning, kreditoropfølgning, forecast, Pleo-budget, versioner og opsætning er bygget.
+CSV-import/lukning af uge og økonomiopfølgning følger.
 
 ## Teknik
 
@@ -39,11 +39,17 @@ Sæt `ECONOMIC_APP_SECRET_TOKEN` og et grant-token pr. selskab (`ECONOMIC_GRANT_
 `ECONOMIC_GRANT_TOKEN_WEBBLER`). Debitorer hentes fra `/invoices/unpaid`; beløb i DKK er e-conomics egen
 omregning (`remainderInBaseCurrency`).
 
+Kreditorer hentes som posteringer af typen `supplierInvoice` med restbeløb fra
+`/accounting-years/{år}/entries` (de seneste regnskabsår) og leverandørnavne fra `/suppliers`.
+Restbeløbet er negativt på leverandørkontoen og vendes, så "til betaling" er positivt.
+
 ## Regler i beregningen
 
 - Perioder: fredag–torsdag, delt ved månedsskift. Ugenummer = ISO-ugen for ugens torsdag.
 - Debitorer: forventet dato = seneste vurdering, ellers fakturadato + standardkredit (Mediating 0, Webbler 8).
   Er datoen passeret, og fakturaen stadig åben, ligger beløbet i den aktuelle periode.
+- Kreditorer: betalingsdato = seneste vurdering, ellers forfaldsdato (ellers bilagsdato). Passerede datoer ligger i
+  aktuel periode. Betalingsforslaget viser posterne med betalingsdato til og med den valgte dato.
 - Forventede fakturaer: beløbet fordeles ligeligt på hverdage i fakturaintervallet (ingen hverdage → alle dage);
   betaling = fakturadag + kredit. Dele med fakturadag før i dag udløber.
 - Pleo: månedsbudget pr. afdeling fordelt efter antal dage i perioden.

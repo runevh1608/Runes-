@@ -10,9 +10,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from . import debitor, economic, forecast
+from . import debitor, economic, forecast, kreditor, spejl
 from .models import (Aendringslog, Bankkonto, DebitorFaktura, ForecastLinje, ForecastSnapshot, ForventetFaktura,
-                     ManuelPost, PleoAfdeling, PleoBudget, Selskab, Synkronisering)
+                     KreditorPost, KreditorVurdering, ManuelPost, PleoAfdeling, PleoBudget, Selskab, Synkronisering)
 from .perioder import kvartal_for, kvartal_interval, maanedsnavn, naeste_kvartal, periode_for, perioder_mellem
 from .talformat import formater_dato, fortolk_beloeb, fortolk_dato
 
@@ -35,7 +35,7 @@ def _log(bruger, objekt: str, gammel, ny):
 
 DAGENS_OPGAVER = {
     1: [("Debitoropfølgning", "debitorer_start")],
-    3: [("Debitoropfølgning", "debitorer_start"), ("Kreditoropfølgning", None)],
+    3: [("Debitoropfølgning", "debitorer_start"), ("Kreditoropfølgning", "kreditorer_start")],
     4: [("Likviditetsforecast", "forecast")],
 }
 
@@ -191,6 +191,76 @@ def forventet_fjern(request, pk):
     _log(request.user, f"Forventet faktura {ff.pk} ({ff.selskab}: {ff.beskrivelse})", "aktiv", "fjernet")
     messages.success(request, f"Forventet faktura fjernet: {ff.beskrivelse}.")
     return redirect(f"/debitorer/{ff.selskab.kode}/#forventede")
+
+
+# ---------------------------------------------------------------- Kreditorer
+
+
+def _kreditor_status(p: KreditorPost, d: date) -> dict:
+    v = p.vurdering
+    udskudt = bool(v and v.betalingsdato and v.betalingsdato > p.standard_dato)
+    return {"forfalden": p.standard_dato < d, "dage_forfalden": max(0, (d - p.standard_dato).days),
+            "udskudt": udskudt, "vurderet": bool(v and (v.betalingsdato or v.kommentar))}
+
+
+@login_required
+def kreditorer(request, kode=None):
+    selskaber = list(Selskab.objects.all())
+    if kode is None:
+        return redirect("kreditorer", kode=selskaber[0].kode)
+    s = get_object_or_404(Selskab, kode=kode)
+    d = idag()
+    try:
+        til = fortolk_dato(request.GET.get("til", "")) or periode_for(d).uge_start + timedelta(days=6)
+    except ValueError:
+        til = periode_for(d).uge_start + timedelta(days=6)
+    vis = request.GET.get("vis", "forslag")
+    alle = sorted(({"p": p, "status": _kreditor_status(p, d)} for p in kreditor.aabne_poster(s)),
+                  key=lambda r: (r["p"].betalingsdato, r["p"].leverandoer_navn))
+    forslag = [r for r in alle if r["p"].betalingsdato <= til]
+    raekker = forslag if vis == "forslag" else alle
+    return render(request, "likvid/kreditorer.html", {
+        "selskab": s, "selskaber": selskaber, "raekker": raekker, "vis": vis, "til": til, "idag": d,
+        "total_vist": sum((r["p"].til_betaling_dkk for r in raekker), Decimal(0)),
+        "opsummering": {
+            "aabent": sum((r["p"].til_betaling_dkk for r in alle), Decimal(0)),
+            "forfaldent": sum((r["p"].til_betaling_dkk for r in alle if r["status"]["forfalden"]), Decimal(0)),
+            "forslag": sum((r["p"].til_betaling_dkk for r in forslag), Decimal(0)),
+            "antal_alle": len(alle), "antal_forslag": len(forslag),
+            "antal_forfaldne": sum(1 for r in alle if r["status"]["forfalden"]),
+            "antal_udskudte": sum(1 for r in alle if r["status"]["udskudt"]),
+        },
+        "sidste_sync": Synkronisering.objects.filter(selskab=s, type="kreditor").first(),
+        "economic_klar": economic.er_konfigureret(s.kode),
+    })
+
+
+@login_required
+@require_POST
+def kreditor_hent(request, kode):
+    s = get_object_or_404(Selskab, kode=kode)
+    try:
+        res = kreditor.hent_fra_economic(s, request.user, idag())
+    except economic.EconomicFejl as e:
+        messages.error(request, str(e))
+    else:
+        messages.success(request, f"Hentet {res['aabne']} åbne leverandørfakturaer fra e-conomic: {res['nye']} nye, "
+                                  f"{res['lukkede']} betalt siden sidst.")
+    return redirect("kreditorer", kode=kode)
+
+
+@login_required
+@require_POST
+def kreditor_vurdering(request, post_id):
+    p = next(iter(spejl.med_vurdering(KreditorPost.objects.filter(pk=post_id, aaben=True), KreditorVurdering)), None)
+    if p is None:
+        return _fejl("Posten findes ikke eller er ikke længere åben.")
+    try:
+        dato = fortolk_dato(request.POST.get("betalingsdato", ""))
+    except ValueError as e:
+        return _fejl(str(e))
+    kreditor.gem_vurdering(p, dato, request.POST.get("kommentar", "").strip(), request.user)
+    return render(request, "likvid/_kreditor_raekke.html", {"r": {"p": p, "status": _kreditor_status(p, idag())}})
 
 
 # ---------------------------------------------------------------- Forecast
