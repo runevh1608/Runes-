@@ -157,3 +157,24 @@ document.addEventListener("input", (ev) => {
   el.textContent = Math.abs(diff) < 0.005 ? "Afstemt" : `Difference ${kr.format(diff)}`;
   el.className = "difference " + (Math.abs(diff) < 0.005 ? "ok" : "neg");
 });
+
+// Graf: debitorindbetalinger forventet mod faktisk pr. uge
+function tegnDebitorgraf(id, data) {
+  const css = getComputedStyle(document.documentElement);
+  const kr = new Intl.NumberFormat("da-DK", { maximumFractionDigits: 0 });
+  new Chart(document.getElementById(id), {
+    type: "bar",
+    data: {
+      labels: data.labels,
+      datasets: [
+        { label: "Forventet", data: data.forventet, backgroundColor: css.getPropertyValue("--linje").trim(), borderColor: css.getPropertyValue("--daempet").trim(), borderWidth: 1 },
+        { label: "Faktisk", data: data.faktisk, backgroundColor: css.getPropertyValue("--serie-1").trim() },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${kr.format(c.parsed.y)} kr.` } } },
+      scales: { y: { ticks: { callback: (v) => kr.format(v) } }, x: { grid: { display: false } } },
+    },
+  });
+}

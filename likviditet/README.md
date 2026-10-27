@@ -2,8 +2,8 @@
 
 Intern app til den ugentlige likviditetsstyring for Mediating og Webbler.
 
-**Status:** Debitor- og kreditoropfølgning, forecast, pengestrømme (CSV-import, regler, afstemning og lukning af uge),
-Pleo-budget, versioner og opsætning er bygget. Økonomiopfølgning følger.
+Indhold: overblik, debitor- og kreditoropfølgning, forecast pr. kvartal, pengestrømme (CSV-import, regler, afstemning
+og lukning af uge), økonomiopfølgning, Pleo-budget, gemte versioner og opsætning.
 
 ## Teknik
 
@@ -64,6 +64,8 @@ Er formatet fra Ringkjøbing Landbobank anderledes, rettes det i `likvid/bank.py
 - Lukning af uge: primo (forrige uges banksaldo) + ugens posteringer skal svare til den tastede banksaldo, og alle
   posteringer skal have en linje. Ved lukning gemmes de faktiske tal pr. linje og periode, ugen låses, posteringerne
   arkiveres, og forecastet gemmes som version. Lukkede uger viser faktiske tal i forecastet.
+- Opfølgning: faktiske tal fra lukkede uger sammenlignes med den seneste version gemt før perioden begyndte
+  (måned: før den 1.; uge: senest ugens fredag, hvor versionen gemmes automatisk ved lukning af forrige uge).
 - Historik: vurderinger gemmes som nye rækker, tastede tal logges, og gemte forecast-versioner kan ikke ændres eller slettes.
 
 ## Tests

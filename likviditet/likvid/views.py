@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from . import bank, debitor, economic, forecast, kreditor, spejl
+from . import bank, debitor, economic, forecast, kreditor, opfoelgning, spejl
 from .models import (Aendringslog, Bankkonto, DebitorFaktura, ForecastLinje, ForecastSnapshot, ForventetFaktura,
                      KategoriRegel, Kontoudtog, KreditorPost, KreditorVurdering, ManuelPost,
                      Postering, UgeLukning, PleoAfdeling, PleoBudget, Selskab, Synkronisering)
@@ -62,7 +62,7 @@ def overblik(request):
         })
     opgaver = list(DAGENS_OPGAVER.get(d.weekday(), []))
     if d.day == 20:
-        opgaver.append(("Økonomiopfølgning", None))
+        opgaver.append(("Økonomiopfølgning", "opfoelgning_start"))
     return render(request, "likvid/overblik.html", {
         "selskaber": selskaber, "opgaver": opgaver, "idag": d,
         "graf_data": {"labels": selskaber[0]["graf"]["labels"] if selskaber else [],
@@ -416,6 +416,25 @@ def regel_fjern(request, pk):
         bank.anvend_regler(s)
     messages.success(request, f"Reglen '{r.soegetekst}' er fjernet.")
     return redirect("regler")
+
+
+# ---------------------------------------------------------------- Økonomiopfølgning
+
+
+@login_required
+def opfoelgning_vis(request, kode=None):
+    selskaber = list(Selskab.objects.all())
+    if kode is None:
+        return redirect("opfoelgning", kode=selskaber[0].kode)
+    s = get_object_or_404(Selskab, kode=kode)
+    d = idag()
+    uger = opfoelgning.uger(s, d)
+    graf = {"labels": [f"Uge {u['uge']}" for u in uger],
+            "forventet": [float(u["forventet"]) if u["forventet"] is not None else None for u in uger],
+            "faktisk": [float(u["faktisk"]) for u in uger]}
+    return render(request, "likvid/opfoelgning.html", {
+        "selskab": s, "selskaber": selskaber, "maaneder": opfoelgning.maaneder(s, d), "uger": uger, "graf": graf,
+    })
 
 
 # ---------------------------------------------------------------- Forecast

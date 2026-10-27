@@ -17,6 +17,7 @@
       <a href="{% url 'kreditorer_start' %}" class="{% if 'kreditor' in n %}aktiv{% endif %}">Kreditorer</a>
       <a href="{% url 'forecast' %}" class="{% if 'forecast' in n %}aktiv{% endif %}">Forecast</a>
       <a href="{% url 'pengestroemme_start' %}" class="{% if 'pengestroem' in n or n == 'regler' or n == 'lukning' %}aktiv{% endif %}">Pengestrømme</a>
+      <a href="{% url 'opfoelgning_start' %}" class="{% if 'opfoelgning' in n %}aktiv{% endif %}">Opfølgning</a>
       <a href="{% url 'pleo' %}" class="{% if 'pleo' in n %}aktiv{% endif %}">Pleo-budget</a>
       <a href="{% url 'versioner' %}" class="{% if 'version' in n %}aktiv{% endif %}">Versioner</a>
       <a href="{% url 'opsaetning' %}" class="{% if n == 'opsaetning' %}aktiv{% endif %}">Opsætning</a>
