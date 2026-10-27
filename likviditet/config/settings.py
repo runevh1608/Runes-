@@ -16,7 +16,7 @@ def _env_bool(navn: str, standard: bool = False) -> bool:
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-ikke-til-produktion")
 DEBUG = _env_bool("DJANGO_DEBUG", True)
-if not DEBUG and SECRET_KEY == "dev-only-ikke-til-produktion" and os.environ.get("DJANGO_SECRET_KEY") != "build":
+if not DEBUG and "DJANGO_SECRET_KEY" not in os.environ:
     raise RuntimeError("Sæt DJANGO_SECRET_KEY, når DJANGO_DEBUG=false.")
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]
