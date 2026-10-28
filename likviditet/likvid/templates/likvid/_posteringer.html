@@ -1,8 +1,0 @@
-{% if poster %}
-<div class="tabel-scroll">
-<table class="liste posteringer">
-  <thead><tr><th>Dato</th><th>Tekst</th><th class="tal">Beløb</th><th class="tal">Saldo</th><th>Linje</th><th></th></tr></thead>
-  <tbody>{% for p in poster %}{% include "likvid/_postering_raekke.html" %}{% endfor %}</tbody>
-</table>
-</div>
-{% else %}<p class="tom">Ingen posteringer. Importér et kontoudtog.</p>{% endif %}

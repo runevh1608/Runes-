@@ -1,9 +1,0 @@
-{% extends "likvid/base.html" %}
-{% block titel %}{{ v.titel }}{% endblock %}
-{% block indhold %}
-<div class="sidehoved"><div>
-  <h1>{{ v.titel }} <span class="daempet">gemt {{ v.oprettet|date:"d.m.Y H:i" }}</span></h1>
-  <p class="daempet">{{ v.get_aarsag_display }}{% if v.oprettet_af %} af {{ v.oprettet_af.username }}{% endif %}{% if v.note %} · {{ v.note }}{% endif %} · <a href="{% url 'versioner' %}">Alle versioner</a></p>
-</div></div>
-<div class="laast">{% include "likvid/_forecast_tabeller.html" %}</div>
-{% endblock %}
